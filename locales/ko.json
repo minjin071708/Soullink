@@ -1,0 +1,98 @@
+{
+  "common": {
+    "continue": "계속하기",
+    "chooseLanguage": "언어를 선택하세요"
+  },
+  "onboarding": {
+    "understand": {
+      "title": "불안의 원인을 이해해요",
+      "description": "매일 감정을 기록하고 불안을 일으키는 요인과 반복되는 패턴을 발견해 보세요."
+    },
+    "balance": {
+      "title": "나를 기분 좋게 하는 순간을 찾아요",
+      "description": "편안하고 행복했던 순간을 기록하며 감정의 균형에 도움이 되는 것을 알아보세요."
+    },
+    "next": "다음",
+    "start": "시작하기"
+  },
+  "home": {
+    "goodMorning": "좋은 아침이에요,",
+    "goodAfternoon": "좋은 오후예요,",
+    "goodEvening": "좋은 저녁이에요,",
+    "friend": "친구",
+    "dayMascot": "낮 마스코트",
+    "nightMascot": "밤 마스코트",
+    "howAreYouFeeling": "오늘 기분은 어때요?",
+    "mood": {
+      "unhappy": "안 좋아요",
+      "sad": "슬퍼요",
+      "normal": "보통",
+      "good": "좋아요",
+      "happy": "행복해요"
+    },
+    "weeklyMood": {
+      "title": "이번 주",
+      "subtitle": "나의 기분 여정",
+      "viewCalendar": "캘린더 보기",
+      "checkedIn": "이번 주 {{count}}일 기록했어요",
+      "keepGoing": "잘하고 있어요, 계속 해봐요! 💜",
+      "days": {
+        "mon": "월",
+        "tue": "화",
+        "wed": "수",
+        "thu": "목",
+        "fri": "금",
+        "sat": "토",
+        "sun": "일"
+      }
+    }
+  },
+  "profile": {
+    "title": "프로필",
+    "tagline": "당신의 여정이 소중해요. 우리가 함께할게요.",
+    "editProfile": "프로필 수정",
+    "settings": "설정",
+    "notifications": "알림",
+    "language": "언어",
+    "biometricLogin": "생체 로그인",
+    "logout": "로그아웃",
+    "edit": "수정"
+  },
+  "journal": {
+    "mood": {
+      "title": "새 일기"
+    },
+    "write": {
+      "title": "일기 작성",
+      "selectedMood": "선택한 기분",
+      "inputMode": "어떤 방식으로 기록할까요?",
+      "mode": {
+        "text": "텍스트",
+        "voice": "음성"
+      },
+      "textPlaceholder": "오늘의 기분을 자유롭게 적어 보세요...",
+      "voiceTitle": "음성 일기",
+      "voiceBody": "음성 녹음은 아직 준비 중입니다. 제출하려면 텍스트 모드로 전환해 주세요.",
+      "submit": "제출",
+      "submitFailed": "제출 실패",
+      "submitError": "일기를 저장하는 중 오류가 발생했습니다.",
+      "invalidMoodTitle": "기분을 찾을 수 없습니다",
+      "invalidMoodBody": "일기를 작성하기 전에 기분을 선택해 주세요.",
+      "chooseMood": "기분 선택",
+      "changeMood": "기분 변경"
+    },
+    "result": {
+      "title": "일기 결과",
+      "missingIdTitle": "일기를 찾을 수 없습니다",
+      "missingIdBody": "표시할 일기를 찾지 못했습니다. 홈에서 새 일기를 시작해 주세요.",
+      "loading": "일기 분석을 불러오는 중...",
+      "errorTitle": "결과를 불러오지 못했습니다",
+      "errorBody": "일기 결과를 불러오는 중 오류가 발생했습니다.",
+      "apiTodo": "GET api/v1/emotion-diaries/:diaryId 요청을 불러오지 못했습니다.",
+      "successTitle": "일기가 저장되었습니다",
+      "successBody": "일기 {{diaryId}}가 성공적으로 생성되었습니다.",
+      "analysisTodo": "결과 API가 연결되면 AI 분석이 여기에 표시됩니다.",
+      "goHome": "홈으로 돌아가기"
+    }
+  }
+}

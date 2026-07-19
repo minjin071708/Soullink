@@ -1,0 +1,98 @@
+{
+  "common": {
+    "continue": "Continue",
+    "chooseLanguage": "Choose your language"
+  },
+  "onboarding": {
+    "understand": {
+      "title": "UNDERSTAND YOUR ANXIETY",
+      "description": "Record your emotions and discover the triggers and patterns behind your anxious moments."
+    },
+    "balance": {
+      "title": "NOTICE WHAT LIFTS YOU UP",
+      "description": "Remember your calm and happy moments, and learn what helps you feel emotionally balanced."
+    },
+    "next": "Next",
+    "start": "Let's Start"
+  },
+  "home": {
+    "goodMorning": "Good morning,",
+    "goodAfternoon": "Good afternoon,",
+    "goodEvening": "Good evening,",
+    "friend": "friend",
+    "dayMascot": "Day mascot",
+    "nightMascot": "Night mascot",
+    "howAreYouFeeling": "How are you today?",
+    "mood": {
+      "unhappy": "Unhappy",
+      "sad": "Sad",
+      "normal": "Normal",
+      "good": "Good",
+      "happy": "Happy"
+    },
+    "weeklyMood": {
+      "title": "This week",
+      "subtitle": "Your mood journey",
+      "viewCalendar": "View calendar",
+      "checkedIn": "You checked in {{count}} days this week",
+      "keepGoing": "Keep going, you're doing great! 💜",
+      "days": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      }
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "tagline": "Your journey matters. We're here for you.",
+    "editProfile": "Edit Profile",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "language": "Language",
+    "biometricLogin": "Biometric Login",
+    "logout": "Logout",
+    "edit": "Edit"
+  },
+  "journal": {
+    "mood": {
+      "title": "New journal"
+    },
+    "write": {
+      "title": "Write journal",
+      "selectedMood": "Selected mood",
+      "inputMode": "How would you like to journal?",
+      "mode": {
+        "text": "Text",
+        "voice": "Voice"
+      },
+      "textPlaceholder": "Write about how you're feeling today...",
+      "voiceTitle": "Voice journaling",
+      "voiceBody": "Voice recording is not available yet. Switch to Text to submit your journal.",
+      "submit": "Submit",
+      "submitFailed": "Submission failed",
+      "submitError": "Something went wrong while saving your journal.",
+      "invalidMoodTitle": "Mood not found",
+      "invalidMoodBody": "Choose a mood before writing your journal entry.",
+      "chooseMood": "Choose mood",
+      "changeMood": "Change mood"
+    },
+    "result": {
+      "title": "Journal result",
+      "missingIdTitle": "Journal not found",
+      "missingIdBody": "We could not find a journal to show. Start a new entry from Home.",
+      "loading": "Loading your journal analysis...",
+      "errorTitle": "Could not load result",
+      "errorBody": "Something went wrong while loading your journal result.",
+      "apiTodo": "Could not load GET api/v1/emotion-diaries/:diaryId.",
+      "successTitle": "Journal saved",
+      "successBody": "Diary {{diaryId}} was created successfully.",
+      "analysisTodo": "AI analysis will appear here once the result API is connected.",
+      "goHome": "Back to Home"
+    }
+  }
+}

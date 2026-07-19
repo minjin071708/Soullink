@@ -1,98 +1,236 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { WeeklyMoodJourneyCard } from "@/components/home/WeeklyMoodJourneyCard";
+import { MOODS } from "@/constants/moods";
+import { useDayNightPeriod } from "@/hooks/use-day-night-period";
+import { useAuthStore } from "@/store/authStore";
+import type { MoodId } from "@/types/moodType";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const DAY_MASCOT = require("@/assets/mascotImages/Day.png");
+const NIGHT_MASCOT = require("@/assets/mascotImages/night.png");
+
+const DAY_BG = "#f7f8fc";
+const NIGHT_BG = "#3c3866";
+const DAY_TEXT = "#2A2A6A";
+const NIGHT_TEXT = "#FFFFFF";
+const MOOD_CIRCLE_DAY = "#EDE7FF";
+const MOOD_CIRCLE_NIGHT = "rgba(255,255,255,0.14)";
+
+type GreetingKey =
+  | "Good Morning"
+  | "Good Afternoon"
+  | "Good Evening";
+
+function getGreetingKey(date: Date = new Date()): {
+  key: GreetingKey;
+  emoji: string;
+} {
+  const hour = date.getHours();
+
+  if (hour >= 6 && hour < 12) {
+    return { key: "Good Morning", emoji: "☀️✨" };
+  }
+
+  if (hour >= 12 && hour < 18) {
+    return { key: "Good Afternoon", emoji: "🌤️✨" };
+  }
+
+  return { key: "Good Evening", emoji: "🌙✨" };
+}
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { t } = useTranslation();
+  const period = useDayNightPeriod();
+  const member = useAuthStore((state) => state.member);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const isNight = period === "night";
+  const backgroundColor = isNight ? NIGHT_BG : DAY_BG;
+  const textColor = isNight ? NIGHT_TEXT : DAY_TEXT;
+  const moodCircleColor = isNight ? MOOD_CIRCLE_NIGHT : MOOD_CIRCLE_DAY;
+
+  const displayName =
+    member?.nickname?.trim() ||
+    member?.memberId?.trim() ||
+    t("home.friend");
+
+  const greeting = getGreetingKey();
+  const mascotSource = isNight ? NIGHT_MASCOT : DAY_MASCOT;
+
+  const handleMoodPress = (mood: MoodId) => {
+    router.push({
+      pathname: "/journal/write",
+      params: { mood },
+    });
+  };
+
+  return (
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor }]}
+      edges={["top"]}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={[styles.container, { backgroundColor }]}>
+          <View style={styles.greetingBlock}>
+            <Text style={[styles.greetingLine, { color: textColor }]}>
+              {t(greeting.key)}
+            </Text>
+            <View style={styles.nameRow}>
+              <Text style={[styles.name, { color: textColor }]}>
+                {displayName}
+              </Text>
+              <Text style={styles.emoji}>{greeting.emoji}</Text>
+            </View>
+          </View>
+
+          <View style={styles.mascotWrap}>
+            <Image
+              source={mascotSource}
+              style={styles.mascot}
+              contentFit="contain"
+              accessibilityLabel={
+                isNight ? t("home.nightMascot") : t("home.dayMascot")
+              }
+            />
+          </View>
+
+          <Text style={[styles.howAreYouFeeling, { color: textColor }]}>
+            {t("home.howAreYouFeeling")}
+          </Text>
+
+          <View style={styles.moodRow}>
+            {MOODS.map((mood) => (
+              <Pressable
+                key={mood.id}
+                accessibilityRole="button"
+                accessibilityLabel={t(mood.labelKey)}
+                onPress={() => handleMoodPress(mood.id)}
+                style={({ pressed }) => [
+                  styles.moodItem,
+                  pressed && styles.moodPressed,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.moodCircle,
+                    { backgroundColor: moodCircleColor },
+                  ]}
+                >
+                  <Image
+                    source={mood.image}
+                    style={styles.moodImage}
+                    contentFit="contain"
+                  />
+                </View>
+                <Text style={[styles.moodLabel, { color: textColor }]}>
+                  {t(mood.labelKey)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        <WeeklyMoodJourneyCard />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  safeArea: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 12,
+  },
+  container: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  greetingBlock: {
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  greetingLine: {
+    fontSize: 28,
+    lineHeight: 36,
+    fontWeight: "500",
+    letterSpacing: -0.6,
+  },
+  howAreYouFeeling: {
+    marginTop: 8,
+    marginBottom: 18,
+    textAlign: "left",
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: "700",
+    letterSpacing: -0.4,
+    textTransform: "capitalize",
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  name: {
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: "700",
+    letterSpacing: -0.6,
+  },
+  emoji: {
+    fontSize: 28,
+    lineHeight: 36,
+  },
+  mascotWrap: {
+    width: "100%",
+    height: 230,
+    marginTop: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mascot: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 24,
+  },
+  moodRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 2,
+  },
+  moodItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  moodPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.96 }],
+  },
+  moodCircle: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  moodImage: {
+    width:  "100%",
+    height: "100%",
+  },
+  moodLabel: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 16,
+    fontWeight: "500",
+    textAlign: "center",
   },
 });

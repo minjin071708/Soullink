@@ -1,0 +1,215 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+@import "nativewind/theme";
+
+/* =========================================================
+   SOULINK SEMANTIC COLOR UTILITIES
+
+   Usage:
+   bg-background
+   bg-card
+   text-foreground
+   text-muted
+   border-border
+   bg-primary
+   text-primary
+   ========================================================= */
+
+@theme inline {
+  /* Main UI */
+  --color-background: var(--soul-background);
+  --color-surface: var(--soul-surface);
+  --color-card: var(--soul-card);
+  --color-foreground: var(--soul-foreground);
+  --color-muted: var(--soul-muted);
+  --color-border: var(--soul-border);
+
+  /* Brand */
+  --color-primary: var(--soul-primary);
+  --color-primary-soft: var(--soul-primary-soft);
+  --color-primary-foreground: var(--soul-primary-foreground);
+
+  /* Navigation */
+  --color-tab: var(--soul-tab);
+  --color-tab-active: var(--soul-tab-active);
+  --color-tab-inactive: var(--soul-tab-inactive);
+
+  /* State colors */
+  --color-success: var(--soul-success);
+  --color-success-soft: var(--soul-success-soft);
+  --color-warning: var(--soul-warning);
+  --color-warning-soft: var(--soul-warning-soft);
+  --color-danger: var(--soul-danger);
+  --color-danger-soft: var(--soul-danger-soft);
+
+  /* Mood palette */
+  --color-mood-sad: var(--soul-mood-sad);
+  --color-mood-calm: var(--soul-mood-calm);
+  --color-mood-happy: var(--soul-mood-happy);
+  --color-mood-angry: var(--soul-mood-angry);
+  --color-mood-love: var(--soul-mood-love);
+  --color-mood-tired: var(--soul-mood-tired);
+
+  /* Mascot palette */
+  --color-cloud-white: #f7f8fc;
+  --color-soft-snow: #ffffff;
+  --color-warm-mist: #f6f2f4;
+  --color-lavender-mist: #ede7ff;
+  --color-soft-lilac: #d8ccff;
+  --color-soulink-purple: #8a6be8;
+  --color-deep-indigo: #27265e;
+  --color-muted-slate: #6e7198;
+  --color-blush-pink: #ffd6e0;
+  --color-rose-accent: #f7afc2;
+  --color-sad-blue: #b9d8ff;
+  --color-sky-accent: #79b7f2;
+  --color-mint-mist: #c8f7e1;
+  --color-sprout-green: #78d6a6;
+  --color-happy-cream: #fff5d6;
+  --color-sun-yellow: #ffd56a;
+  --color-warm-orange: #ffb84d;
+  --color-rainbow-coral: #ff8fa3;
+  --color-moon-lavender: #c9c2f4;
+  --color-storm-gray: #b9bdd5;
+  --color-storm-purple: #7b6fa8;
+  --color-night-navy: #28345f;
+  --color-soft-peach: #ffe1cc;
+  --color-heart-pink: #f5a7d0;
+  --color-aqua-glow: #bdeef2;
+  --color-soft-periwinkle: #c9d8ff;
+
+   /* =========================
+     TYPOGRAPHY
+     ========================= */
+
+     --text-caption: 12px;
+     --text-caption--line-height: 16px;
+   
+     --text-small: 14px;
+     --text-small--line-height: 20px;
+   
+     --text-body: 16px;
+     --text-body--line-height: 24px;
+   
+     --text-subtitle: 20px;
+     --text-subtitle--line-height: 28px;
+   
+     --text-title: 28px;
+     --text-title--line-height: 36px;
+   
+     --text-display: 34px;
+     --text-display--line-height: 42px;
+   
+     /* =========================
+        BORDER RADIUS
+        ========================= */
+   
+     --radius-small: 8px;
+     --radius-medium: 12px;
+     --radius-large: 16px;
+     --radius-card: 24px;
+     --radius-pill: 999px;
+   
+     /* =========================
+        SPACING
+        ========================= */
+   
+     --spacing-screen: 20px;
+     --spacing-section: 24px;
+     --spacing-card: 16px;
+     --spacing-tabbar: 20px;
+   
+     /* =========================
+        SHADOW COLORS
+        ========================= */
+   
+     --color-shadow: var(--soul-shadow);
+}
+
+/* =========================================================
+   LIGHT MODE — default
+   ========================================================= */
+
+:root {
+  color-scheme: light;
+
+  --soul-background: #f7f8fc;
+  --soul-surface: #f6f2f4;
+  --soul-card: #fcfbff;
+
+  --soul-foreground: #27265e;
+  --soul-muted: #77799c;
+  --soul-border: #e8e4f5;
+
+  --soul-primary: #8a6be8;
+  --soul-primary-soft: #ede7ff;
+  --soul-primary-foreground: #ffffff;
+
+  --soul-tab: #ffffff;
+  --soul-tab-active: #8a6be8;
+  --soul-tab-inactive: #77799c;
+
+  --soul-success: #78d6a6;
+  --soul-success-soft: #aee7c8;
+
+  --soul-warning: #ffb84d;
+  --soul-warning-soft: #fff5d6;
+
+  --soul-danger: #ff8fa3;
+  --soul-danger-soft: #ffd6e0;
+
+  --soul-mood-sad: #b9d8ff;
+  --soul-mood-calm: #c8f7e1;
+  --soul-mood-happy: #ffd56a;
+  --soul-mood-angry: #ff8fa3;
+  --soul-mood-love: #f5a7d0;
+  --soul-mood-tired: #c9c2f4;
+
+  --soul-shadow: #8a6be8;
+}
+
+/* =========================================================
+   DARK MODE — follows phone system theme
+   ========================================================= */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --soul-background: #17182d;
+    --soul-surface: #20213c;
+    --soul-card: #282a49;
+
+    --soul-foreground: #f7f8fc;
+    --soul-muted: #b9bdd5;
+    --soul-border: #3b3c61;
+
+    --soul-primary: #a994f2;
+    --soul-primary-soft: #39335f;
+    --soul-primary-foreground: #ffffff;
+
+    --soul-tab: #20213c;
+    --soul-tab-active: #c9c2f4;
+    --soul-tab-inactive: #8e91ae;
+
+    --soul-success: #78d6a6;
+    --soul-success-soft: #264d43;
+
+    --soul-warning: #ffd56a;
+    --soul-warning-soft: #50442c;
+
+    --soul-danger: #ff8fa3;
+    --soul-danger-soft: #54303f;
+
+    --soul-mood-sad: #79b7f2;
+    --soul-mood-calm: #78d6a6;
+    --soul-mood-happy: #ffd56a;
+    --soul-mood-angry: #ff8fa3;
+    --soul-mood-love: #f5a7d0;
+    --soul-mood-tired: #9d94d6;
+
+    --soul-shadow: #000000;
+  }
+}
