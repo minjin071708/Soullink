@@ -17,9 +17,14 @@ export type CalendarMonthResponse = {
 export type CalendarJournalPreview = {
   diaryId: number;
   date: string;
+  emotionDate: string;
+  emotionCode: string;
+  emotionName: string;
   createdAt: string;
   mood: MoodType;
   contentPreview: string;
+  aiAnalysisSummary?: string | null;
+  riskLevel?: string | null;
   hasAiAnalysis: boolean;
 };
 

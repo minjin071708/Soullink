@@ -24,11 +24,12 @@
     "nightMascot": "밤 마스코트",
     "howAreYouFeeling": "오늘 기분은 어때요?",
     "mood": {
-      "unhappy": "안 좋아요",
-      "sad": "슬퍼요",
-      "normal": "보통",
-      "good": "좋아요",
-      "happy": "행복해요"
+      "angry": "분노",
+      "anxious": "불안",
+      "calm": "평온",
+      "happy": "행복",
+      "sad": "슬픔",
+      "tired": "피곤"
     },
     "weeklyMood": {
       "title": "이번 주",
@@ -56,11 +57,46 @@
     "language": "언어",
     "biometricLogin": "생체 로그인",
     "logout": "로그아웃",
-    "edit": "수정"
+    "edit": "수정",
+    "editPage": {
+      "loading": "프로필을 불러오는 중...",
+      "loadFailed": "프로필을 불러오지 못했어요",
+      "loadFailedBody": "연결을 확인한 뒤 다시 시도해 주세요.",
+      "retry": "다시 시도",
+      "back": "뒤로",
+      "nickname": "닉네임",
+      "email": "이메일",
+      "memberId": "회원 ID",
+      "preferredLanguage": "언어",
+      "validation": "닉네임과 언어 코드를 올바르게 입력해 주세요.",
+      "save": "저장",
+      "updateSuccess": "프로필이 업데이트되었습니다.",
+      "updateFailed": "프로필을 업데이트하지 못했습니다. 다시 시도해 주세요."
+    }
   },
   "journal": {
     "mood": {
-      "title": "새 일기"
+      "title": "새 일기",
+      "options": {
+        "ANGRY": {
+          "subtitle": "화가 나고 힘들게 느껴져요"
+        },
+        "ANXIOUS": {
+          "subtitle": "불안하고 마음이 조마조마해요"
+        },
+        "CALM": {
+          "subtitle": "차분하고 평온해요"
+        },
+        "HAPPY": {
+          "subtitle": "오늘은 정말 행복해요"
+        },
+        "SAD": {
+          "subtitle": "마음이 조금 무거워요"
+        },
+        "TIRED": {
+          "subtitle": "피곤하고 지쳐 있어요"
+        }
+      }
     },
     "write": {
       "title": "일기 작성",
@@ -74,6 +110,15 @@
       "voiceTitle": "음성 일기",
       "voiceBody": "음성 녹음은 아직 준비 중입니다. 제출하려면 텍스트 모드로 전환해 주세요.",
       "submit": "제출",
+      "saveChanges": "저장",
+      "editTitle": "일기 수정",
+      "loadingEdit": "일기를 불러오는 중...",
+      "loadEditFailed": "일기를 불러오지 못했어요",
+      "loadEditFailedBody": "수정할 일기를 불러오지 못했습니다.",
+      "backToCalendar": "캘린더로 돌아가기",
+      "updateSuccess": "수정됨",
+      "updateSuccessBody": "일기가 성공적으로 수정되었습니다.",
+      "updateFailed": "수정 실패",
       "submitFailed": "제출 실패",
       "submitError": "일기를 저장하는 중 오류가 발생했습니다.",
       "invalidMoodTitle": "기분을 찾을 수 없습니다",

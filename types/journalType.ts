@@ -1,6 +1,8 @@
 import {
   createJournalResponseSchema,
   emotionDiaryDataSchema,
+  emotionDiariesListResponseSchema,
+  updateEmotionDiaryRequestSchema,
 } from "@/schemas/journalSchema";
 import type { MoodId } from "@/types/moodType";
 import { z } from "zod";
@@ -12,6 +14,10 @@ export type CreateJournalRequestType = {
   content: string;
   inputMode: JournalInputMode;
 };
+
+export type UpdateEmotionDiaryRequestType = z.infer<
+  typeof updateEmotionDiaryRequestSchema
+>;
 
 export type EmotionDiaryData = z.infer<typeof emotionDiaryDataSchema>;
 
@@ -30,6 +36,7 @@ export type EmotionDiaryByDateData = {
   emotionScore?: number | null;
   title?: string | null;
   content?: string | null;
+  contentPreview?: string | null;
   sleepHours?: number | null;
   weatherCode?: string | null;
   weatherName?: string | null;
@@ -39,7 +46,10 @@ export type EmotionDiaryByDateData = {
     tagCode: string;
     tagName: string;
   }> | null;
+  tagNames?: string[] | null;
   analysisStatus?: AnalysisStatus;
+  aiAnalysisSummary?: string | null;
+  riskLevel?: string | null;
   version?: number;
   createdAt: string;
   updatedAt: string;
@@ -51,3 +61,10 @@ export type CreateJournalResponseType = z.infer<
 
 /** GET /api/v1/emotion-diaries/{diaryId} returns the diary `data` object. */
 export type JournalResultDataType = EmotionDiaryData;
+
+/** GET /api/v1/emotion-diaries?fromDate=&toDate= list items. */
+export type EmotionDiariesListItem = EmotionDiaryData;
+
+export type EmotionDiariesListResponseType = z.infer<
+  typeof emotionDiariesListResponseSchema
+>;

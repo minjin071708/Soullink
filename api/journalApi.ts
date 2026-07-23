@@ -1,14 +1,17 @@
-import { MOOD_TO_EMOTION_CODE } from "@/constants/moodEmotionMap";
 import {
   createJournalResponseSchema,
+  emotionDiariesListResponseSchema,
   emotionDiaryByDateResponseSchema,
   emotionDiaryResponseSchema,
+  updateEmotionDiaryRequestSchema,
 } from "@/schemas/journalSchema";
 import type {
   CreateJournalRequestType,
   CreateJournalResponseType,
+  EmotionDiariesListItem,
   EmotionDiaryByDateData,
   JournalResultDataType,
+  UpdateEmotionDiaryRequestType,
 } from "@/types/journalType";
 import { formatEmotionDate } from "@/utils/emotionDate";
 import axiosInstance from "./axiosInstance";
@@ -25,7 +28,7 @@ export const createJournalApi = async (
     {
       emotionDate: formatEmotionDate(),
       content: payload.content,
-      emotionCode: MOOD_TO_EMOTION_CODE[payload.mood],
+      emotionCode: payload.mood,
       autoCreateDailyAnalysis: true,
     }
   );
@@ -46,6 +49,45 @@ export const fetchJournalResultApi = async (
 
   const parsed = emotionDiaryResponseSchema.parse(response.data);
   return parsed.data;
+};
+
+/**
+ * PATCH /api/v1/emotion-diaries/{diaryId}
+ * Updates diary fields and returns the diary `data` object.
+ */
+export const updateEmotionDiaryApi = async (params: {
+  diaryId: number;
+  payload: UpdateEmotionDiaryRequestType;
+}): Promise<JournalResultDataType> => {
+  const body = updateEmotionDiaryRequestSchema.parse(params.payload);
+  const response = await axiosInstance.patch(
+    `api/v1/emotion-diaries/${params.diaryId}`,
+    body
+  );
+
+  const parsed = emotionDiaryResponseSchema.parse(response.data);
+  return parsed.data;
+};
+
+/**
+ * GET /api/v1/emotion-diaries?fromDate=&toDate=
+ * Returns diary list items from the paginated `data.content` array.
+ */
+export const fetchEmotionDiariesByRangeApi = async (params: {
+  fromDate: string;
+  toDate: string;
+}): Promise<EmotionDiariesListItem[]> => {
+  const response = await axiosInstance.get("api/v1/emotion-diaries", {
+    params: {
+      fromDate: params.fromDate,
+      toDate: params.toDate,
+      page: 0,
+      size: 31,
+    },
+  });
+
+  const parsed = emotionDiariesListResponseSchema.parse(response.data);
+  return parsed.data.content;
 };
 
 /**
@@ -73,12 +115,16 @@ export const fetchJournalByDateApi = async (
     emotionScore: parsed.data.emotionScore,
     title: parsed.data.title,
     content: parsed.data.content,
+    contentPreview: parsed.data.contentPreview,
     sleepHours: parsed.data.sleepHours,
     weatherCode: parsed.data.weatherCode,
     weatherName: parsed.data.weatherName,
     memo: parsed.data.memo,
     tags: parsed.data.tags,
+    tagNames: parsed.data.tagNames,
     analysisStatus: parsed.data.analysisStatus,
+    aiAnalysisSummary: parsed.data.aiAnalysisSummary,
+    riskLevel: parsed.data.riskLevel,
     version: parsed.data.version,
     createdAt: parsed.data.createdAt,
     updatedAt: parsed.data.updatedAt,

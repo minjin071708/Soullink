@@ -1,14 +1,23 @@
+import { useSocialAuthActions } from "@/hooks/auth/useSocialAuthActions";
 import { useAppStore, type Language } from "@/store/use-language-store";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, type Href } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const APPLE_INK = "#1d1d1f";
 const MUTED = "#6E6E73";
 const SCREEN_GRADIENT = ["#f3edff", "#fff6f5"] as const;
 const EMAIL_LOGIN_HREF = "/(auth)/email-login" as Href;
+const SIGNUP_HREF = "/(auth)/signup" as Href;
 
 const COPY: Record<
   Language,
@@ -19,6 +28,7 @@ const COPY: Record<
     apple: string;
     or: string;
     regularLogin: string;
+    createAccount: string;
   }
 > = {
   en: {
@@ -28,6 +38,7 @@ const COPY: Record<
     apple: "Continue with Apple",
     or: "or",
     regularLogin: "Sign in with email",
+    createAccount: "Create account",
   },
   mn: {
     title: "Тавтай морил",
@@ -36,6 +47,7 @@ const COPY: Record<
     apple: "Apple-р үргэлжлүүлэх",
     or: "эсвэл",
     regularLogin: "Имэйлээр нэвтрэх",
+    createAccount: "Бүртгэл үүсгэх",
   },
   ko: {
     title: "다시 오신 걸 환영해요",
@@ -44,12 +56,14 @@ const COPY: Record<
     apple: "Apple로 계속하기",
     or: "또는",
     regularLogin: "일반 로그인",
+    createAccount: "계정 만들기",
   },
 };
 
 export default function LoginScreen() {
   const language = useAppStore((state) => state.language) ?? "mn";
   const copy = COPY[language];
+  const { isPending, startSocialAuth } = useSocialAuthActions();
 
   return (
     <LinearGradient
@@ -72,29 +86,49 @@ export default function LoginScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={copy.google}
+              disabled={isPending}
+              onPress={() => startSocialAuth("GOOGLE")}
               style={({ pressed }) => [
                 styles.socialButton,
                 pressed && styles.pressed,
+                isPending && styles.disabled,
               ]}
             >
-              <Ionicons name="logo-google" size={20} color={APPLE_INK} />
-              <Text style={styles.socialLabel}>{copy.google}</Text>
+              {isPending ? (
+                <ActivityIndicator color={APPLE_INK} />
+              ) : (
+                <>
+                  <Ionicons name="logo-google" size={20} color={APPLE_INK} />
+                  <Text style={styles.socialLabel}>{copy.google}</Text>
+                </>
+              )}
             </Pressable>
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={copy.apple}
-              style={({ pressed }) => [
-                styles.socialButton,
-                styles.appleButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Ionicons name="logo-apple" size={22} color="#FFFFFF" />
-              <Text style={[styles.socialLabel, styles.appleLabel]}>
-                {copy.apple}
-              </Text>
-            </Pressable>
+            {Platform.OS === "ios" ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={copy.apple}
+                disabled={isPending}
+                onPress={() => startSocialAuth("APPLE")}
+                style={({ pressed }) => [
+                  styles.socialButton,
+                  styles.appleButton,
+                  pressed && styles.pressed,
+                  isPending && styles.disabled,
+                ]}
+              >
+                {isPending ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-apple" size={22} color="#FFFFFF" />
+                    <Text style={[styles.socialLabel, styles.appleLabel]}>
+                      {copy.apple}
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+            ) : null}
 
             <View style={styles.orRow}>
               <View style={styles.orLine} />
@@ -109,6 +143,14 @@ export default function LoginScreen() {
               hitSlop={8}
             >
               <Text style={styles.regularLogin}>{copy.regularLogin}</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel={copy.createAccount}
+              onPress={() => router.push(SIGNUP_HREF)}
+              hitSlop={8}
+            >
+              <Text style={styles.regularLogin}>{copy.createAccount}</Text>
             </Pressable>
           </View>
         </View>
@@ -205,5 +247,8 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.86,
     transform: [{ scale: 0.99 }],
+  },
+  disabled: {
+    opacity: 0.7,
   },
 });

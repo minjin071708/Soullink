@@ -6,6 +6,7 @@ import { normalizeTokenPayload } from "./normalizeAuthPayload";
 
 export { normalizeTokenPayload } from "./normalizeAuthPayload";
 export { refreshTokenApi } from "./refreshApi";
+export { socialLoginApi, socialSignupApi } from "./socialAuthApi";
 
 type AuthRequestConfig = AxiosRequestConfig & {
   skipAuthRefresh?: boolean;

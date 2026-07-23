@@ -24,11 +24,12 @@
     "nightMascot": "Night mascot",
     "howAreYouFeeling": "How are you today?",
     "mood": {
-      "unhappy": "Unhappy",
+      "angry": "Angry",
+      "anxious": "Anxious",
+      "calm": "Calm",
+      "happy": "Happy",
       "sad": "Sad",
-      "normal": "Normal",
-      "good": "Good",
-      "happy": "Happy"
+      "tired": "Tired"
     },
     "weeklyMood": {
       "title": "This week",
@@ -56,11 +57,46 @@
     "language": "Language",
     "biometricLogin": "Biometric Login",
     "logout": "Logout",
-    "edit": "Edit"
+    "edit": "Edit",
+    "editPage": {
+      "loading": "Loading profile...",
+      "loadFailed": "Could not load profile",
+      "loadFailedBody": "Check your connection and try again.",
+      "retry": "Retry",
+      "back": "Back",
+      "nickname": "Nickname",
+      "email": "Email",
+      "memberId": "Member ID",
+      "preferredLanguage": "Language",
+      "validation": "Enter a valid nickname and language code.",
+      "save": "Save",
+      "updateSuccess": "Profile updated successfully.",
+      "updateFailed": "Could not update profile. Please try again."
+    }
   },
   "journal": {
     "mood": {
-      "title": "New journal"
+      "title": "New journal",
+      "options": {
+        "ANGRY": {
+          "subtitle": "I feel angry and overwhelmed"
+        },
+        "ANXIOUS": {
+          "subtitle": "I feel anxious and uneasy"
+        },
+        "CALM": {
+          "subtitle": "I feel calm and steady"
+        },
+        "HAPPY": {
+          "subtitle": "I feel very happy today"
+        },
+        "SAD": {
+          "subtitle": "My heart feels a little heavy"
+        },
+        "TIRED": {
+          "subtitle": "I feel tired and drained"
+        }
+      }
     },
     "write": {
       "title": "Write journal",
@@ -74,6 +110,15 @@
       "voiceTitle": "Voice journaling",
       "voiceBody": "Voice recording is not available yet. Switch to Text to submit your journal.",
       "submit": "Submit",
+      "saveChanges": "Save changes",
+      "editTitle": "Edit journal",
+      "loadingEdit": "Loading journal...",
+      "loadEditFailed": "Could not load journal",
+      "loadEditFailedBody": "We could not load this journal for editing.",
+      "backToCalendar": "Back to calendar",
+      "updateSuccess": "Updated",
+      "updateSuccessBody": "Your journal was updated successfully.",
+      "updateFailed": "Update failed",
       "submitFailed": "Submission failed",
       "submitError": "Something went wrong while saving your journal.",
       "invalidMoodTitle": "Mood not found",

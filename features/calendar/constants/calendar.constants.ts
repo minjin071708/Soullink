@@ -71,4 +71,4 @@ export const MOOD_CONFIG = {
   },
 } satisfies Record<MoodType, MoodConfig>;
 
-export const CALENDAR_MASCOT = require("@/assets/mascotImages/happy.png");
+export const CALENDAR_MASCOT = require("@/assets/mascotImages/calendarMascot.png");

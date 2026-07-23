@@ -1,5 +1,6 @@
 import { refreshSession } from "@/api/sessionRefresh";
 import { getAccessToken } from "@/api/tokenManager";
+import i18n from "@/i18n";
 import axios, {
   type AxiosError,
   type InternalAxiosRequestConfig,
@@ -10,10 +11,24 @@ type RetriableConfig = InternalAxiosRequestConfig & {
   skipAuthRefresh?: boolean;
 };
 
+type AcceptLanguage = "en" | "ko" | "mn";
+
 const baseURL = process.env.EXPO_PUBLIC_API_URL;
 
 if (!baseURL) {
   throw new Error("EXPO_PUBLIC_API_URL is not defined in .env");
+}
+
+function resolveAcceptLanguage(): AcceptLanguage {
+  const language = (i18n.resolvedLanguage ?? i18n.language ?? "mn")
+    .toLowerCase()
+    .split("-")[0];
+
+  if (language === "en" || language === "ko" || language === "mn") {
+    return language;
+  }
+
+  return "mn";
 }
 
 const axiosInstance = axios.create({
@@ -26,6 +41,8 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   async (config: RetriableConfig) => {
+    config.headers["Accept-Language"] = resolveAcceptLanguage();
+
     if (config.skipAuthRefresh) {
       return config;
     }
@@ -58,6 +75,8 @@ axiosInstance.interceptors.response.use(
     const url = originalRequest.url ?? "";
     if (
       url.includes("auth/login") ||
+      url.includes("auth/social/login") ||
+      url.includes("auth/social/signup") ||
       url.includes("auth/token/refresh") ||
       url.includes("auth/logout")
     ) {

@@ -9,17 +9,20 @@ import {
 import { VStack } from "@/components/ui/vstack";
 import { useCreateJournal } from "@/hooks/useCreateJournal";
 import { useDayNightPeriod } from "@/hooks/use-day-night-period";
+import { useJournalResult } from "@/hooks/useJournalResult";
+import { useUpdateEmotionDiary } from "@/hooks/useUpdateEmotionDiary";
 import type { JournalInputMode } from "@/types/journalType";
 import type { MoodId } from "@/types/moodType";
-import { getMoodItem, parseMoodParam } from "@/utils/mood";
+import { getMoodItem, isMoodId, parseMoodParam } from "@/utils/mood";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { AxiosError } from "axios";
 import { Image } from "expo-image";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -45,28 +48,48 @@ const BORDER_NIGHT = "rgba(255,255,255,0.16)";
 
 const INPUT_MODES: JournalInputMode[] = ["text", "voice"];
 
+function parseDiaryIdParam(
+  value: string | string[] | undefined
+): number | undefined {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) {
+    return undefined;
+  }
+
+  const diaryId = Number(raw);
+  return Number.isInteger(diaryId) && diaryId > 0 ? diaryId : undefined;
+}
+
 export default function JournalWriteScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { t } = useTranslation();
   const toast = useToast();
   const period = useDayNightPeriod();
   const params = useLocalSearchParams<{
     mood?: string | string[];
+    diaryId?: string | string[];
   }>();
 
+  const diaryId = parseDiaryIdParam(params.diaryId);
+  const isEditMode = diaryId !== undefined;
   const initialMood = parseMoodParam(params.mood);
 
   const [selectedMood, setSelectedMood] = useState<MoodId | undefined>(
     initialMood
   );
-  const [isChoosingMood, setIsChoosingMood] = useState(!initialMood);
+  const [isChoosingMood, setIsChoosingMood] = useState(!initialMood && !isEditMode);
   const [inputMode, setInputMode] = useState<JournalInputMode>("text");
   const [journalText, setJournalText] = useState("");
+  const [hasHydratedEdit, setHasHydratedEdit] = useState(!isEditMode);
 
   const mood = selectedMood;
   const moodItem = mood ? getMoodItem(mood) : undefined;
 
-  const { mutate: createJournal, isPending } = useCreateJournal();
+  const editQuery = useJournalResult(diaryId);
+  const { mutate: createJournal, isPending: isCreating } = useCreateJournal();
+  const { mutate: updateDiary, isPending: isUpdating } = useUpdateEmotionDiary();
+  const isPending = isCreating || isUpdating;
 
   const isNight = period === "night";
   const backgroundColor = isNight ? NIGHT_BG : DAY_BG;
@@ -75,11 +98,82 @@ export default function JournalWriteScreen() {
   const inputBackground = isNight ? INPUT_BG_NIGHT : INPUT_BG_DAY;
   const borderColor = isNight ? BORDER_NIGHT : BORDER_DAY;
 
+  useEffect(() => {
+    navigation.setOptions({
+      title: isEditMode
+        ? t("journal.write.editTitle")
+        : t("journal.write.title"),
+    });
+  }, [isEditMode, navigation, t]);
+
+  useEffect(() => {
+    if (!isEditMode || !editQuery.data || hasHydratedEdit) {
+      return;
+    }
+
+    const emotionCode = editQuery.data.emotionCode?.toUpperCase();
+    if (emotionCode && isMoodId(emotionCode)) {
+      setSelectedMood(emotionCode);
+      setIsChoosingMood(false);
+      router.setParams({ mood: emotionCode });
+    }
+
+    setJournalText(editQuery.data.content?.trim() || "");
+    setHasHydratedEdit(true);
+  }, [editQuery.data, hasHydratedEdit, isEditMode, router]);
+
   const canSubmit =
     Boolean(mood) &&
     inputMode === "text" &&
     journalText.trim().length > 0 &&
-    !isPending;
+    !isPending &&
+    (!isEditMode || hasHydratedEdit);
+
+  const showErrorToast = (message: string) => {
+    toast.show({
+      placement: "top",
+      duration: 4000,
+      render: ({ id }) => (
+        <Toast
+          nativeID={`journal-write-error-${id}`}
+          action="error"
+          variant="solid"
+          className="px-14 py-6 gap-6 shadow-soft-1 flex-row bg-white"
+        >
+          <MaterialIcons name="error-outline" size={32} color="red" />
+          <VStack space="xs">
+            <ToastTitle size="md">
+              {isEditMode
+                ? t("journal.write.updateFailed")
+                : t("journal.write.submitFailed")}
+            </ToastTitle>
+            <ToastDescription size="md">{message}</ToastDescription>
+          </VStack>
+        </Toast>
+      ),
+    });
+  };
+
+  const showSuccessToast = (message: string) => {
+    toast.show({
+      placement: "top",
+      duration: 3000,
+      render: ({ id }) => (
+        <Toast
+          nativeID={`journal-write-success-${id}`}
+          action="success"
+          variant="solid"
+          className="px-14 py-6 gap-6 shadow-soft-1 flex-row bg-white"
+        >
+          <MaterialIcons name="check-circle-outline" size={32} color="#3A9B69" />
+          <VStack space="xs">
+            <ToastTitle size="md">{t("journal.write.updateSuccess")}</ToastTitle>
+            <ToastDescription size="md">{message}</ToastDescription>
+          </VStack>
+        </Toast>
+      ),
+    });
+  };
 
   const handleMoodSelect = (nextMood: MoodId) => {
     setSelectedMood(nextMood);
@@ -89,6 +183,34 @@ export default function JournalWriteScreen() {
 
   const handleSubmit = () => {
     if (!mood || inputMode !== "text" || !journalText.trim()) {
+      return;
+    }
+
+    if (isEditMode && diaryId !== undefined) {
+      updateDiary(
+        {
+          diaryId,
+          payload: {
+            content: journalText.trim(),
+            emotionCode: mood,
+          },
+        },
+        {
+          onSuccess: () => {
+            showSuccessToast(t("journal.write.updateSuccessBody"));
+            router.replace("/calendar-tab");
+          },
+          onError: (error) => {
+            const axiosError = error as AxiosError<{ message?: string }>;
+            const message =
+              axiosError.response?.data?.message ??
+              (error instanceof Error
+                ? error.message
+                : t("journal.write.submitError"));
+            showErrorToast(message);
+          },
+        }
+      );
       return;
     }
 
@@ -112,29 +234,48 @@ export default function JournalWriteScreen() {
             (error instanceof Error
               ? error.message
               : t("journal.write.submitError"));
-
-          toast.show({
-            placement: "top",
-            duration: 4000,
-            render: ({ id }) => (
-              <Toast
-                nativeID={`journal-submit-error-${id}`}
-                action="error"
-                variant="solid"
-                className="px-14 py-6 gap-6 shadow-soft-1 flex-row bg-white"
-              >
-                <MaterialIcons name="error-outline" size={32} color="red" />
-                <VStack space="xs">
-                  <ToastTitle size="md">{t("journal.write.submitFailed")}</ToastTitle>
-                  <ToastDescription size="md">{message}</ToastDescription>
-                </VStack>
-              </Toast>
-            ),
-          });
+          showErrorToast(message);
         },
       }
     );
   };
+
+  if (isEditMode && editQuery.isLoading) {
+    return (
+      <SafeAreaView
+        style={[styles.safeArea, { backgroundColor }]}
+        edges={["bottom"]}
+      >
+        <View style={[styles.centered, { backgroundColor }]}>
+          <ActivityIndicator size="large" color={PRIMARY} />
+          <Text style={[styles.loadingText, { color: mutedColor }]}>
+            {t("journal.write.loadingEdit")}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isEditMode && (editQuery.isError || (!editQuery.isLoading && !editQuery.data))) {
+    return (
+      <SafeAreaView
+        style={[styles.safeArea, { backgroundColor }]}
+        edges={["bottom"]}
+      >
+        <View style={[styles.container, { backgroundColor }]}>
+          <Text style={[styles.invalidTitle, { color: textColor }]}>
+            {t("journal.write.loadEditFailed")}
+          </Text>
+          <Text style={[styles.invalidBody, { color: mutedColor }]}>
+            {t("journal.write.loadEditFailedBody")}
+          </Text>
+          <Button variant="default" onPress={() => router.replace("/calendar-tab")}>
+            <ButtonText>{t("journal.write.backToCalendar")}</ButtonText>
+          </Button>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!mood || !moodItem) {
     return (
@@ -306,7 +447,11 @@ export default function JournalWriteScreen() {
               onPress={handleSubmit}
             >
               {isPending ? <ButtonSpinner /> : null}
-              <ButtonText>{t("journal.write.submit")}</ButtonText>
+              <ButtonText>
+                {isEditMode
+                  ? t("journal.write.saveChanges")
+                  : t("journal.write.submit")}
+              </ButtonText>
             </Button>
           </View>
         </ScrollView>
@@ -330,6 +475,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 24,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    fontSize: 14,
   },
   invalidTitle: {
     fontSize: 20,

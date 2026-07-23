@@ -68,6 +68,20 @@ export function shiftMonth(
   };
 }
 
+/** Inclusive month range as yyyy-MM-dd for emotion-diaries list API. */
+export function getMonthDateRange(
+  year: number,
+  month: number
+): { fromDate: string; toDate: string } {
+  const lastDay = new Date(year, month, 0).getDate();
+  const paddedMonth = String(month).padStart(2, "0");
+
+  return {
+    fromDate: `${year}-${paddedMonth}-01`,
+    toDate: `${year}-${paddedMonth}-${String(lastDay).padStart(2, "0")}`,
+  };
+}
+
 /** Monday = 0 ... Sunday = 6 */
 export function getMondayBasedWeekday(date: Date): number {
   return (date.getDay() + 6) % 7;
@@ -222,15 +236,26 @@ export function emotionCodeToMoodType(emotionCode: string): MoodType {
 export function mapDiaryByDateToPreview(
   diary: EmotionDiaryByDateData
 ): CalendarJournalPreview {
-  const content = diary.content?.trim() || diary.title?.trim() || "";
+  const contentPreview =
+    diary.contentPreview?.trim() ||
+    diary.content?.trim() ||
+    diary.title?.trim() ||
+    "";
+  const aiAnalysisSummary = diary.aiAnalysisSummary?.trim() || null;
 
   return {
     diaryId: diary.diaryId,
     date: diary.emotionDate || "",
+    emotionDate: diary.emotionDate || "",
+    emotionCode: diary.emotionCode || "",
+    emotionName: diary.emotionName || "",
     createdAt: diary.createdAt || "",
-    mood: emotionCodeToMoodType(diary.emotionCode || "NORMAL"),
-    contentPreview: content,
-    hasAiAnalysis:
-      diary.analysisStatus === "SUCCESS" || diary.analysisStatus === "READY",
+    mood: emotionCodeToMoodType(diary.emotionCode || "CALM"),
+    contentPreview,
+    aiAnalysisSummary,
+    riskLevel: diary.riskLevel ?? null,
+    hasAiAnalysis: Boolean(aiAnalysisSummary) ||
+      diary.analysisStatus === "SUCCESS" ||
+      diary.analysisStatus === "READY",
   };
 }

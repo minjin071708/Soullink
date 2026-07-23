@@ -26,12 +26,12 @@ type WeekDayEntry = {
 
 /** Temporary mock data until weekly mood API is connected. */
 const MOCK_WEEK_ENTRIES: WeekDayEntry[] = [
-  { dayKey: "mon", moodId: "Unhappy" },
-  { dayKey: "tue", moodId: "Sad" },
-  { dayKey: "wed", moodId: "Normal" },
-  { dayKey: "thu", moodId: "Good" },
-  { dayKey: "fri", moodId: "Happy" },
-  { dayKey: "sat", placeholderImage: NIGHT_MASCOT },
+  { dayKey: "mon", moodId: "ANGRY" },
+  { dayKey: "tue", moodId: "ANXIOUS" },
+  { dayKey: "wed", moodId: "CALM" },
+  { dayKey: "thu", moodId: "HAPPY" },
+  { dayKey: "fri", moodId: "SAD" },
+  { dayKey: "sat", moodId: "TIRED" },
   { dayKey: "sun", placeholderImage: DAY_MASCOT },
 ];
 
@@ -39,11 +39,12 @@ const MOOD_JOURNEY_THEME: Record<
   MoodId,
   { pill: string; text: string; dot: string }
 > = {
-  Unhappy: { pill: "#F3EEFF", text: "#8A6BE8", dot: "#8A6BE8" },
-  Sad: { pill: "#EAF2FF", text: "#5B8DEF", dot: "#5B8DEF" },
-  Normal: { pill: "#EEF1F8", text: "#7A82A8", dot: "#9AA3C7" },
-  Good: { pill: "#EAF8F0", text: "#4FAF7A", dot: "#4FAF7A" },
-  Happy: { pill: "#FFF6E5", text: "#E6A23B", dot: "#F0B429" },
+  ANGRY: { pill: "#F3EEFF", text: "#8A6BE8", dot: "#8A6BE8" },
+  ANXIOUS: { pill: "#EAF2FF", text: "#5B8DEF", dot: "#5B8DEF" },
+  CALM: { pill: "#EEF1F8", text: "#7A82A8", dot: "#9AA3C7" },
+  HAPPY: { pill: "#FFF6E5", text: "#E6A23B", dot: "#F0B429" },
+  SAD: { pill: "#EAF2FF", text: "#5B8DEF", dot: "#5B8DEF" },
+  TIRED: { pill: "#EAF8F0", text: "#4FAF7A", dot: "#4FAF7A" },
 };
 
 const EMPTY_DAY_THEME = {

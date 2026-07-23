@@ -9,6 +9,7 @@ import {
   getTodayDateString,
   toMoodMap,
 } from "@/features/calendar/utils/calendar.utils";
+import type { EmotionDiariesListItem } from "@/types/journalType";
 import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -17,6 +18,7 @@ type MoodCalendarProps = {
   month: number;
   days: CalendarMood[];
   selectedDate: string;
+  diariesByDate: Record<string, EmotionDiariesListItem>;
   onSelectDate: (date: string) => void;
 };
 
@@ -25,6 +27,7 @@ export function MoodCalendar({
   month,
   days,
   selectedDate,
+  diariesByDate,
   onSelectDate,
 }: MoodCalendarProps) {
   const today = getTodayDateString();
@@ -54,6 +57,7 @@ export function MoodCalendar({
             key={cell.key}
             cell={cell}
             selected={cell.date === selectedDate}
+            diary={cell.date ? diariesByDate[cell.date] : undefined}
             onSelect={onSelectDate}
           />
         ))}

@@ -6,6 +6,7 @@ import { MoodCalendar } from "@/features/calendar/components/MoodCalendar";
 import { SelectedDateSection } from "@/features/calendar/components/SelectedDateSection";
 import { CALENDAR_COLORS } from "@/features/calendar/constants/calendar.constants";
 import { useCalendarMonth } from "@/features/calendar/hooks/useCalendarMonth";
+import { useEmotionDiariesRange } from "@/features/calendar/hooks/useEmotionDiariesRange";
 import { useJournalByDate } from "@/features/calendar/hooks/useJournalByDate";
 import type { CalendarJournalPreview } from "@/features/calendar/types/calendar.types";
 import {
@@ -31,12 +32,21 @@ export function CalendarScreen() {
 
   const monthQuery = useCalendarMonth(year, month);
   const diaryQuery = useJournalByDate(selectedDate);
+  const { data: diaries } = useEmotionDiariesRange(year, month);
 
   useEffect(() => {
     setSelectedDate((current) =>
       resolveSelectedDateForMonth(year, month, current, today)
     );
   }, [year, month, today]);
+
+  const diariesByDate = useMemo(
+    () =>
+      Object.fromEntries(
+        (diaries ?? []).map((diary) => [diary.emotionDate, diary])
+      ),
+    [diaries]
+  );
 
   const diaryPreview = useMemo(() => {
     if (!diaryQuery.data?.exists) {
@@ -66,15 +76,15 @@ export function CalendarScreen() {
 
   const handlePressJournal = (journal: CalendarJournalPreview) => {
     router.push({
-      pathname: "/journal/result",
+      pathname: "/calendar/journal/[diaryId]",
       params: { diaryId: String(journal.diaryId) },
     });
   };
 
-  const handlePressAiAnalysis = () => {
+  const handlePressAiAnalysis = (journal: CalendarJournalPreview) => {
     router.push({
-      pathname: "/calendar/analysis/[date]",
-      params: { date: selectedDate },
+      pathname: "/calendar/journal/[diaryId]",
+      params: { diaryId: String(journal.diaryId) },
     });
   };
 
@@ -109,6 +119,7 @@ export function CalendarScreen() {
             month={month}
             days={monthQuery.data.days}
             selectedDate={selectedDate}
+            diariesByDate={diariesByDate}
             onSelectDate={handleSelectDate}
           />
         ) : null}

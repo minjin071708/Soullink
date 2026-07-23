@@ -1,8 +1,8 @@
-import { getJournalDetail } from "@/features/calendar/api/calendarApi";
+import { fetchJournalResultApi } from "@/api/journalApi";
 import { useQuery } from "@tanstack/react-query";
 
 export const journalDetailQueryKey = (diaryId: number) =>
-  ["calendar", "journal", diaryId] as const;
+  ["emotion-diary", "detail", diaryId] as const;
 
 export function useJournalDetail(diaryId: number | undefined) {
   return useQuery({
@@ -11,8 +11,9 @@ export function useJournalDetail(diaryId: number | undefined) {
       if (diaryId === undefined) {
         throw new Error("A valid diaryId is required.");
       }
-      return getJournalDetail(diaryId);
+      return fetchJournalResultApi(diaryId);
     },
     enabled: diaryId !== undefined,
+    retry: 1,
   });
 }

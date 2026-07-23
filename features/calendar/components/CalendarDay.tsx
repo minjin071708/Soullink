@@ -1,26 +1,42 @@
+import { MOOD_IMAGES } from "@/constants/moods";
 import {
   CALENDAR_COLORS,
   MOOD_CONFIG,
 } from "@/features/calendar/constants/calendar.constants";
 import type { CalendarDayCell } from "@/features/calendar/types/calendar.types";
+import type { EmotionCode } from "@/types/emotionType";
+import type { EmotionDiariesListItem } from "@/types/journalType";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type CalendarDayProps = {
   cell: CalendarDayCell;
   selected: boolean;
+  diary?: EmotionDiariesListItem;
   onSelect: (date: string) => void;
 };
 
-export function CalendarDay({ cell, selected, onSelect }: CalendarDayProps) {
+function isEmotionCode(value: string): value is EmotionCode {
+  return value in MOOD_IMAGES;
+}
+
+export function CalendarDay({
+  cell,
+  selected,
+  diary,
+  onSelect,
+}: CalendarDayProps) {
   if (!cell.isCurrentMonth || !cell.date || cell.dayNumber === null) {
     return <View style={styles.cell} />;
   }
 
   const disabled = cell.isFuture;
-  const hasMood = Boolean(cell.mood);
+  const emotionCode = diary?.emotionCode?.toUpperCase() ?? "";
+  const moodImage =
+    emotionCode && isEmotionCode(emotionCode)
+      ? MOOD_IMAGES[emotionCode]
+      : undefined;
   const moodColor = cell.mood ? MOOD_CONFIG[cell.mood].color : undefined;
-  const showMascot = hasMood && (cell.journalCount > 0 || Boolean(cell.mood));
 
   return (
     <Pressable
@@ -45,13 +61,13 @@ export function CalendarDay({ cell, selected, onSelect }: CalendarDayProps) {
         {cell.dayNumber}
       </Text>
 
-      {showMascot && cell.mood ? (
+      {moodImage ? (
         <Image
-          source={MOOD_CONFIG[cell.mood].image}
+          source={moodImage}
           style={styles.moodImage}
           contentFit="contain"
         />
-      ) : hasMood && moodColor ? (
+      ) : moodColor ? (
         <View style={[styles.dot, { backgroundColor: moodColor }]} />
       ) : (
         <View style={styles.placeholder} />

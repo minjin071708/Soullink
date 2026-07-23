@@ -1,14 +1,9 @@
 import type { ImageSourcePropType } from "react-native";
+import { EMOTION_CODES, type EmotionCode } from "@/types/emotionType";
 
-export const MOOD_IDS = [
-  "Unhappy",
-  "Sad",
-  "Normal",
-  "Good",
-  "Happy",
-] as const;
+export const MOOD_IDS = EMOTION_CODES;
 
-export type MoodId = (typeof MOOD_IDS)[number];
+export type MoodId = EmotionCode;
 
 export type MoodItem = {
   id: MoodId;

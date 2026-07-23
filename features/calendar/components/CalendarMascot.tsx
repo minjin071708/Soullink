@@ -21,10 +21,14 @@ const styles = StyleSheet.create({
     paddingRight: 8,
     marginTop: 8,
     marginBottom: 8,
+    position: "relative"
   },
   image: {
-    width: 120,
-    height: 120,
+    width: 150,
+    height: 150,
     opacity: 0.95,
+    position: "absolute",
+    top: -30,
+    right: 0,
   },
 });

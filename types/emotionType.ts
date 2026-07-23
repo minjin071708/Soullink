@@ -1,3 +1,4 @@
+/** Backend EMOTION_CODE common codes. */
 export const EMOTION_CODES = [
   "ANGRY",
   "ANXIOUS",
@@ -5,7 +6,6 @@ export const EMOTION_CODES = [
   "HAPPY",
   "SAD",
   "TIRED",
-  "NORMAL",
 ] as const;
 
 export type EmotionCode = (typeof EMOTION_CODES)[number];

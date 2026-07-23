@@ -108,6 +108,7 @@ export default function Profile() {
           </View>
 
           <Pressable
+            onPress={() => router.push("/profile/edit")}
             accessibilityRole="button"
             accessibilityLabel={t("profile.edit")}
             style={({ pressed }) => [

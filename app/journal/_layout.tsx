@@ -11,6 +11,7 @@ export default function JournalLayout() {
         options={{
           title: t("journal.mood.title"),
           headerShown: true,
+          headerTitleAlign: "center",
         }}
       />
       <Stack.Screen
