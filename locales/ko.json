@@ -23,6 +23,7 @@
     "dayMascot": "낮 마스코트",
     "nightMascot": "밤 마스코트",
     "howAreYouFeeling": "오늘 기분은 어때요?",
+    "chooseYourFeeling": "기분을 선택해 주세요",
     "mood": {
       "angry": "분노",
       "anxious": "불안",
@@ -46,6 +47,49 @@
         "sat": "토",
         "sun": "일"
       }
+    },
+    "weeklyJournal": {
+      "today": "오늘",
+      "noEntry": "이 날의 일기가 아직 없어요",
+      "tags": {
+        "focused": "집중",
+        "grateful": "감사",
+        "peaceful": "평온",
+        "reflective": "성찰",
+        "gentle": "부드러움",
+        "rest": "휴식"
+      },
+      "previews": {
+        "mon": "한 주를 맑은 마음으로 시작하며 아침 루틴을 차분히 마쳤어요.",
+        "tue": "오늘 일을 잘 마치고 마음이 편안해졌어요.",
+        "wed": "조용한 저녁이 숨을 고르게 도와줬어요.",
+        "thu": "생각이 많았지만 기록하니 한결 가벼워졌어요.",
+        "fri": "부드러운 하루였고 스스로 쉬어도 된다고 느꼈어요.",
+        "sat": "잠은 조금 부족했지만 짧은 산책이 도움이 됐어요."
+      }
+    },
+    "weeklyInsight": {
+      "title": "이번 주의 작은 발견",
+      "aiBadge": "✨ AI 인사이트",
+      "tryToday": "오늘 해볼 작은 일",
+      "basedOnDays": "최근 {{count}}일 기록 기준",
+      "viewInsights": "인사이트 보기",
+      "loading": "이번 주 인사이트를 준비하고 있어요…",
+      "requested": "주간 분석 요청이 접수되었어요.",
+      "processing": "AI 분석을 생성하고 있어요…",
+      "failed": "주간 분석에 실패했어요. 다시 분석해 볼 수 있어요.",
+      "invalidated": "이 분석은 더 이상 유효하지 않아요. 다시 분석해 주세요.",
+      "timeout": "AI 분석에 시간이 조금 더 걸리고 있어요.\n잠시 후 다시 확인해 주세요.",
+      "error": "주간 인사이트를 불러오지 못했어요.",
+      "retry": "다시 시도",
+      "regenerate": "다시 분석하기"
+    },
+    "similarStories": {
+      "title": "비슷한 이야기",
+      "subtitle": "같은 감정을 느낀 사람들. AI가 당신의 일기와 관련된 이야기를 골랐어요.",
+      "daysAgo": "{{count}}일 전",
+      "monthsAgo": "{{count}}개월 전",
+      "seeAll": "더 많은 이야기 보기"
     }
   },
   "profile": {
@@ -58,6 +102,15 @@
     "biometricLogin": "생체 로그인",
     "logout": "로그아웃",
     "edit": "수정",
+    "photo": {
+      "title": "프로필 사진",
+      "change": "사진 업로드",
+      "remove": "사진 삭제",
+      "cancel": "취소",
+      "uploadFailed": "프로필 사진을 업데이트하지 못했습니다. 다시 시도해 주세요.",
+      "invalidType": "JPG, PNG, WEBP 이미지만 업로드할 수 있어요.",
+      "tooLarge": "이미지는 5MB 이하여야 해요."
+    },
     "editPage": {
       "loading": "프로필을 불러오는 중...",
       "loadFailed": "프로필을 불러오지 못했어요",
@@ -68,7 +121,13 @@
       "email": "이메일",
       "memberId": "회원 ID",
       "preferredLanguage": "언어",
-      "validation": "닉네임과 언어 코드를 올바르게 입력해 주세요.",
+      "selectLanguage": "언어 선택",
+      "languages": {
+        "en": "영어",
+        "mn": "몽골어",
+        "ko": "한국어"
+      },
+      "validation": "닉네임을 입력하고 언어를 선택해 주세요.",
       "save": "저장",
       "updateSuccess": "프로필이 업데이트되었습니다.",
       "updateFailed": "프로필을 업데이트하지 못했습니다. 다시 시도해 주세요."
@@ -108,7 +167,25 @@
       },
       "textPlaceholder": "오늘의 기분을 자유롭게 적어 보세요...",
       "voiceTitle": "음성 일기",
-      "voiceBody": "음성 녹음은 아직 준비 중입니다. 제출하려면 텍스트 모드로 전환해 주세요.",
+      "voiceBody": "현재 앱 언어(KO / EN / MN)로 녹음하거나 오디오 파일을 선택하세요(최대 3MB, 최소 0.5초). 텍스트로 변환한 뒤 확인·수정할 수 있습니다.",
+      "voiceRecord": "녹음",
+      "voiceStop": "중지 후 변환",
+      "voicePick": "오디오 파일 선택",
+      "voiceRecording": "녹음 중…",
+      "voiceTranscribing": "음성을 텍스트로 변환 중…",
+      "voiceTranscribeSuccess": "변환 완료",
+      "voiceTranscribeSuccessBody": "텍스트를 확인하고 필요하면 수정한 뒤 제출하세요.",
+      "voiceTranscribeFailed": "음성 변환 실패",
+      "voiceEmptyTranscription": "음성이 인식되지 않았습니다. 다시 녹음해 주세요.",
+      "voiceTooLarge": "오디오는 3MB 이하여야 합니다.",
+      "voiceAudioRequired": "녹음 파일을 다시 첨부해 주세요.",
+      "voiceAudioInvalid": "녹음이 너무 짧거나 형식이 올바르지 않습니다. 0.5초 이상 녹음한 뒤 다시 시도해 주세요.",
+      "voiceProviderError": "음성 인식이 일시적으로 불가합니다. 잠시 후 다시 시도해 주세요.",
+      "voiceConfigError": "음성 인식 기능을 지금은 사용할 수 없습니다. 나중에 다시 시도해 주세요.",
+      "voicePermissionDenied": "녹음하려면 마이크 권한이 필요합니다.",
+      "voiceNativeUnavailable": "마이크 녹음은 네이티브 재빌드가 필요합니다. npx expo run:android(또는 run:ios) 후 앱을 다시 여세요. 오디오 파일 선택은 가능합니다.",
+      "voiceRecordFailed": "녹음에 실패했습니다. 다시 시도해 주세요.",
+      "voicePickFailed": "오디오 파일을 열 수 없습니다. 다시 시도해 주세요.",
       "submit": "제출",
       "saveChanges": "저장",
       "editTitle": "일기 수정",
@@ -138,6 +215,41 @@
       "successBody": "일기 {{diaryId}}가 성공적으로 생성되었습니다.",
       "analysisTodo": "결과 API가 연결되면 AI 분석이 여기에 표시됩니다.",
       "goHome": "홈으로 돌아가기"
+    }
+  },
+  "community": {
+    "title": "Community",
+    "subtitle": "당신은 혼자가 아니에요. 우리가 함께해요.",
+    "addPost": "게시물 추가",
+    "addPostTitle": "Add Post",
+    "empty": "아직 이야기가 없어요.",
+    "filters": {
+      "all": "All",
+      "counsel": "Counsel",
+      "knowledge": "Knowledge"
+    },
+    "sort": {
+      "latest": "Latest",
+      "popular": "Popular"
+    },
+    "add": {
+      "feelingTitle": "지금 기분이 어때요?",
+      "feelingSubtitle": "가장 가까운 감정을 선택해 주세요.",
+      "categoryTitle": "Category",
+      "categorySubtitle": "게시물 유형을 선택해 주세요.",
+      "counselDesc": "감정을 나누고 지지를 받아보세요.",
+      "knowledgeDesc": "도움이 되는 팁과 경험을 공유해보세요.",
+      "storyTitle": "Write your story",
+      "storySubtitle": "경험, 생각, 표현하고 싶은 이야기를 적어 주세요...",
+      "storyPlaceholder": "자유롭게 적어 보세요...",
+      "imagesTitle": "Add Images (optional)",
+      "imagesSubtitle": "이미지는 최대 5장까지 추가할 수 있어요.",
+      "tagsTitle": "Tags (optional)",
+      "tagsSubtitle": "다른 사람이 찾기 쉽도록 태그를 추가해 주세요.",
+      "tagsPlaceholder": "예: Anxiety, Work, Sleep...",
+      "anonymousTitle": "Anonymous post",
+      "anonymousSubtitle": "신원은 숨겨집니다.",
+      "submit": "Post to Community"
     }
   }
 }

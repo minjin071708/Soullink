@@ -6,32 +6,32 @@ export const MOODS: MoodItem[] = [
   {
     id: "ANGRY",
     labelKey: "home.mood.angry",
-    image: require("@/assets/mascotImages/unhappy.png"),
+    image: require("@/assets/facialExpressions/angry.png"),
   },
   {
     id: "ANXIOUS",
     labelKey: "home.mood.anxious",
-    image: require("@/assets/mascotImages/sad.png"),
+    image: require("@/assets/facialExpressions/anxious.png"),
   },
   {
     id: "CALM",
     labelKey: "home.mood.calm",
-    image: require("@/assets/mascotImages/normal.png"),
+    image: require("@/assets/facialExpressions/calm.png"),
   },
   {
     id: "HAPPY",
     labelKey: "home.mood.happy",
-    image: require("@/assets/mascotImages/happy.png"),
+    image: require("@/assets/facialExpressions/happy.png"),
   },
   {
     id: "SAD",
     labelKey: "home.mood.sad",
-    image: require("@/assets/mascotImages/sad.png"),
+    image: require("@/assets/facialExpressions/sad.png"),
   },
   {
     id: "TIRED",
     labelKey: "home.mood.tired",
-    image: require("@/assets/mascotImages/good.png"),
+    image: require("@/assets/facialExpressions/tired.png"),
   },
 ];
 

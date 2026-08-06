@@ -12,14 +12,20 @@ export const memberSchema = z
       .enum(["ACTIVE", "INACTIVE", "SUSPENDED"])
       .default("ACTIVE"),
     marketingAgree: z.boolean().optional().default(false),
+    profileImageUrl: z.string().nullish(),
     createdAt: z.string().optional().default(""),
     updatedAt: z.string().optional().default(""),
   })
   .transform((member) => {
-    const preferredLanguageCode =
+    const raw =
       member.preferredLanguageCode || member.languageCode || "";
+    const preferredLanguageCode = raw.trim().toLowerCase();
     const { languageCode: _languageCode, ...rest } = member;
-    return { ...rest, preferredLanguageCode };
+    return {
+      ...rest,
+      preferredLanguageCode,
+      profileImageUrl: rest.profileImageUrl?.trim() || null,
+    };
   });
 
 export const authTokensSchema = z.object({
@@ -59,9 +65,11 @@ export const memberMeResponseSchema = z.object({
   requestId: z.string().optional().default(""),
 });
 
+export const preferredLanguageCodeSchema = z.enum(["en", "mn", "ko"]);
+
 export const updateMemberRequestSchema = z.object({
   nickname: z.string().trim().min(1).max(50),
-  preferredLanguageCode: z.string().trim().min(2).max(10),
+  preferredLanguageCode: preferredLanguageCodeSchema,
 });
 
 export const socialProviderSchema = z.enum(["GOOGLE", "APPLE"]);

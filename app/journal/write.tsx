@@ -1,3 +1,4 @@
+import { VoiceJournalPanel } from "@/components/journal/VoiceJournalPanel";
 import { MoodPicker } from "@/components/mood/MoodPicker";
 import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
 import {
@@ -80,6 +81,9 @@ export default function JournalWriteScreen() {
   );
   const [isChoosingMood, setIsChoosingMood] = useState(!initialMood && !isEditMode);
   const [inputMode, setInputMode] = useState<JournalInputMode>("text");
+  /** Tracks whether content originated from voice STT (for create payload). */
+  const [contentSource, setContentSource] =
+    useState<JournalInputMode>("text");
   const [journalText, setJournalText] = useState("");
   const [hasHydratedEdit, setHasHydratedEdit] = useState(!isEditMode);
 
@@ -129,7 +133,15 @@ export default function JournalWriteScreen() {
     !isPending &&
     (!isEditMode || hasHydratedEdit);
 
-  const showErrorToast = (message: string) => {
+  const showErrorToast = (
+    message: string,
+    options?: { title?: string; requestId?: string }
+  ) => {
+    const detail =
+      options?.requestId && options.requestId.trim()
+        ? `${message}\n(${options.requestId})`
+        : message;
+
     toast.show({
       placement: "top",
       duration: 4000,
@@ -143,11 +155,12 @@ export default function JournalWriteScreen() {
           <MaterialIcons name="error-outline" size={32} color="red" />
           <VStack space="xs">
             <ToastTitle size="md">
-              {isEditMode
-                ? t("journal.write.updateFailed")
-                : t("journal.write.submitFailed")}
+              {options?.title ??
+                (isEditMode
+                  ? t("journal.write.updateFailed")
+                  : t("journal.write.submitFailed"))}
             </ToastTitle>
-            <ToastDescription size="md">{message}</ToastDescription>
+            <ToastDescription size="md">{detail}</ToastDescription>
           </VStack>
         </Toast>
       ),
@@ -218,7 +231,7 @@ export default function JournalWriteScreen() {
       {
         mood,
         content: journalText.trim(),
-        inputMode,
+        inputMode: contentSource,
       },
       {
         onSuccess: (response) => {
@@ -409,7 +422,12 @@ export default function JournalWriteScreen() {
             {inputMode === "text" ? (
               <TextInput
                 value={journalText}
-                onChangeText={setJournalText}
+                onChangeText={(next) => {
+                  setJournalText(next);
+                  if (contentSource === "voice" && next.trim().length === 0) {
+                    setContentSource("text");
+                  }
+                }}
                 placeholder={t("journal.write.textPlaceholder")}
                 placeholderTextColor={mutedColor}
                 multiline
@@ -424,20 +442,49 @@ export default function JournalWriteScreen() {
                 ]}
               />
             ) : (
-              <View
-                style={[
-                  styles.voicePlaceholder,
-                  { backgroundColor: inputBackground, borderColor },
-                ]}
-              >
-                <Ionicons name="mic-outline" size={36} color={PRIMARY} />
-                <Text style={[styles.voiceTitle, { color: textColor }]}>
-                  {t("journal.write.voiceTitle")}
-                </Text>
-                <Text style={[styles.voiceBody, { color: mutedColor }]}>
-                  {t("journal.write.voiceBody")}
-                </Text>
-              </View>
+              <VoiceJournalPanel
+                textColor={textColor}
+                mutedColor={mutedColor}
+                inputBackground={inputBackground}
+                borderColor={borderColor}
+                onTranscribed={(transcription) => {
+                  setJournalText(transcription);
+                  setContentSource("voice");
+                  setInputMode("text");
+                  toast.show({
+                    placement: "top",
+                    duration: 2500,
+                    render: ({ id }) => (
+                      <Toast
+                        nativeID={`journal-voice-ok-${id}`}
+                        action="success"
+                        variant="solid"
+                        className="px-14 py-6 gap-6 shadow-soft-1 flex-row bg-white"
+                      >
+                        <MaterialIcons
+                          name="check-circle-outline"
+                          size={32}
+                          color="#3A9B69"
+                        />
+                        <VStack space="xs">
+                          <ToastTitle size="md">
+                            {t("journal.write.voiceTranscribeSuccess")}
+                          </ToastTitle>
+                          <ToastDescription size="md">
+                            {t("journal.write.voiceTranscribeSuccessBody")}
+                          </ToastDescription>
+                        </VStack>
+                      </Toast>
+                    ),
+                  });
+                }}
+                onError={(message, requestId) => {
+                  showErrorToast(message, {
+                    title: t("journal.write.voiceTranscribeFailed"),
+                    requestId,
+                  });
+                }}
+              />
             )}
 
             <Button
@@ -568,24 +615,5 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     lineHeight: 24,
-  },
-  voicePlaceholder: {
-    minHeight: 180,
-    borderWidth: 1,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-    gap: 8,
-  },
-  voiceTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  voiceBody: {
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
   },
 });

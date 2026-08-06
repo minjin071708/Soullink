@@ -23,6 +23,7 @@
     "dayMascot": "Day mascot",
     "nightMascot": "Night mascot",
     "howAreYouFeeling": "How are you today?",
+    "chooseYourFeeling": "Choose how you feel",
     "mood": {
       "angry": "Angry",
       "anxious": "Anxious",
@@ -46,6 +47,49 @@
         "sat": "Sat",
         "sun": "Sun"
       }
+    },
+    "weeklyJournal": {
+      "today": "Today",
+      "noEntry": "No journal for this day yet",
+      "tags": {
+        "focused": "Focused",
+        "grateful": "Grateful",
+        "peaceful": "Peaceful",
+        "reflective": "Reflective",
+        "gentle": "Gentle",
+        "rest": "Rest"
+      },
+      "previews": {
+        "mon": "Started the week with a clear mind and finished my morning routine calmly.",
+        "tue": "I finished work successfully today and felt peaceful afterward.",
+        "wed": "A quiet evening helped me slow down and breathe more easily.",
+        "thu": "My thoughts were busy, but writing helped me feel lighter.",
+        "fri": "It was a softer day, and I gave myself permission to rest.",
+        "sat": "I slept less than usual, but a short walk helped me reset."
+      }
+    },
+    "weeklyInsight": {
+      "title": "This week's small discoveries",
+      "aiBadge": "✨ AI Insight",
+      "tryToday": "Small thing to try today",
+      "basedOnDays": "Based on the last {{count}} days of records",
+      "viewInsights": "View insights",
+      "loading": "Preparing this week's insight…",
+      "requested": "Your weekly analysis request was accepted.",
+      "processing": "AI analysis is still being generated…",
+      "failed": "Weekly analysis failed. You can try regenerating.",
+      "invalidated": "This analysis is no longer valid. Please regenerate.",
+      "timeout": "AI analysis is taking a little longer.\nPlease check again in a moment.",
+      "error": "Could not load weekly insight.",
+      "retry": "Try again",
+      "regenerate": "Regenerate analysis"
+    },
+    "similarStories": {
+      "title": "Similar Stories",
+      "subtitle": "People who felt the same. AI carefully selected stories related to your journal.",
+      "daysAgo": "{{count}} days ago",
+      "monthsAgo": "{{count}} months ago",
+      "seeAll": "See more stories"
     }
   },
   "profile": {
@@ -58,6 +102,15 @@
     "biometricLogin": "Biometric Login",
     "logout": "Logout",
     "edit": "Edit",
+    "photo": {
+      "title": "Profile photo",
+      "change": "Upload photo",
+      "remove": "Remove photo",
+      "cancel": "Cancel",
+      "uploadFailed": "Could not update profile photo. Please try again.",
+      "invalidType": "Only JPG, PNG, or WEBP images are allowed.",
+      "tooLarge": "Image must be 5MB or smaller."
+    },
     "editPage": {
       "loading": "Loading profile...",
       "loadFailed": "Could not load profile",
@@ -68,7 +121,13 @@
       "email": "Email",
       "memberId": "Member ID",
       "preferredLanguage": "Language",
-      "validation": "Enter a valid nickname and language code.",
+      "selectLanguage": "Select language",
+      "languages": {
+        "en": "English",
+        "mn": "Mongolian",
+        "ko": "Korean"
+      },
+      "validation": "Enter a nickname and select a language.",
       "save": "Save",
       "updateSuccess": "Profile updated successfully.",
       "updateFailed": "Could not update profile. Please try again."
@@ -108,7 +167,25 @@
       },
       "textPlaceholder": "Write about how you're feeling today...",
       "voiceTitle": "Voice journaling",
-      "voiceBody": "Voice recording is not available yet. Switch to Text to submit your journal.",
+      "voiceBody": "Record in your current app language (KO / EN / MN) or pick an audio file (max 3MB, at least 0.5s). We’ll convert it to text for you to review.",
+      "voiceRecord": "Record",
+      "voiceStop": "Stop & convert",
+      "voicePick": "Choose audio file",
+      "voiceRecording": "Recording…",
+      "voiceTranscribing": "Converting speech to text…",
+      "voiceTranscribeSuccess": "Converted",
+      "voiceTranscribeSuccessBody": "Review the text, edit if needed, then submit.",
+      "voiceTranscribeFailed": "Voice conversion failed",
+      "voiceEmptyTranscription": "No speech was detected. Try recording again.",
+      "voiceTooLarge": "Audio must be 3MB or smaller.",
+      "voiceAudioRequired": "Please attach a recording and try again.",
+      "voiceAudioInvalid": "Recording is too short or the format is invalid. Record at least 0.5 seconds and try again.",
+      "voiceProviderError": "Speech recognition is temporarily unavailable. Please try again shortly.",
+      "voiceConfigError": "Speech recognition is not available right now. Please try again later.",
+      "voicePermissionDenied": "Microphone permission is required to record.",
+      "voiceNativeUnavailable": "Microphone recording needs a native rebuild. Run npx expo run:android (or run:ios), then reopen the app. You can still pick an audio file.",
+      "voiceRecordFailed": "Could not record audio. Please try again.",
+      "voicePickFailed": "Could not open the audio file. Please try again.",
       "submit": "Submit",
       "saveChanges": "Save changes",
       "editTitle": "Edit journal",
@@ -138,6 +215,41 @@
       "successBody": "Diary {{diaryId}} was created successfully.",
       "analysisTodo": "AI analysis will appear here once the result API is connected.",
       "goHome": "Back to Home"
+    }
+  },
+  "community": {
+    "title": "Community",
+    "subtitle": "You are not alone. We're here together.",
+    "addPost": "Add post",
+    "addPostTitle": "Add Post",
+    "empty": "No stories yet.",
+    "filters": {
+      "all": "All",
+      "counsel": "Counsel",
+      "knowledge": "Knowledge"
+    },
+    "sort": {
+      "latest": "Latest",
+      "popular": "Popular"
+    },
+    "add": {
+      "feelingTitle": "How are you feeling right now?",
+      "feelingSubtitle": "Choose the emotion that fits you most.",
+      "categoryTitle": "Category",
+      "categorySubtitle": "Choose the type of your post.",
+      "counselDesc": "Share your feelings and get support.",
+      "knowledgeDesc": "Share helpful tips and experiences.",
+      "storyTitle": "Write your story",
+      "storySubtitle": "Share your experience, thoughts, or anything you want to express...",
+      "storyPlaceholder": "Write freely...",
+      "imagesTitle": "Add Images (optional)",
+      "imagesSubtitle": "Add up to 5 images.",
+      "tagsTitle": "Tags (optional)",
+      "tagsSubtitle": "Add tags to help others find your post.",
+      "tagsPlaceholder": "e.g. Anxiety, Work, Sleep...",
+      "anonymousTitle": "Anonymous post",
+      "anonymousSubtitle": "Your identity will be hidden.",
+      "submit": "Post to Community"
     }
   }
 }

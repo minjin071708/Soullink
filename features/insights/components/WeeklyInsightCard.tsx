@@ -8,7 +8,16 @@ import { StyleSheet, Text, View } from "react-native";
 const INSIGHT_MASCOT = require("@/assets/mascotImages/insightMascot.png");
 
 type WeeklyInsightCardProps = {
-  data: WeeklyInsightMock;
+  data: Pick<
+    WeeklyInsightMock,
+    | "periodLabel"
+    | "dateRangeLabel"
+    | "headline"
+    | "totalDays"
+    | "journalCount"
+    | "dominantEmotion"
+    | "emotionShares"
+  >;
 };
 
 export function WeeklyInsightCard({ data }: WeeklyInsightCardProps) {

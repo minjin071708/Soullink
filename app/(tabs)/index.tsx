@@ -1,10 +1,15 @@
+import { GreetingSection } from "@/components/home/GreetingSection";
+import { SimilarStoriesSection } from "@/components/home/SimilarStoriesSection";
+import { WeeklyInsightCard } from "@/components/home/WeeklyInsightCard";
 import { WeeklyMoodJourneyCard } from "@/components/home/WeeklyMoodJourneyCard";
 import { MOODS } from "@/constants/moods";
 import { useDayNightPeriod } from "@/hooks/use-day-night-period";
 import { useAuthStore } from "@/store/authStore";
 import type { MoodId } from "@/types/moodType";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Pressable,
@@ -12,19 +17,13 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
-const DAY_MASCOT = require("@/assets/mascotImages/Day.png");
-const NIGHT_MASCOT = require("@/assets/mascotImages/night.png");
-const DAY_BG = require("@/assets/images/daybg.png");
-const NIGHT_BG = require("@/assets/images/nightBg.png");
-
-const DAY_TEXT = "#2A2A6A";
-const NIGHT_TEXT = "#FFFFFF";
-const MOOD_CIRCLE_DAY = "#EDE7FF";
-const MOOD_CIRCLE_NIGHT = "rgba(255,255,255,0.14)";
+const DAY_SCREEN_BG = "#F3E5D9";
+const NIGHT_SCREEN_BG = "#D0c0c7";
+const CONTENT_TEXT = "#2A2A6A";
+const GLASS_CARD_PADDING = 18;
+const CONTENT_HORIZONTAL_PADDING = 20;
 
 type GreetingKey = "Good Morning" | "Good Afternoon" | "Good Evening";
 
@@ -47,16 +46,9 @@ function getGreetingKey(date: Date = new Date()): {
 
 export default function HomeScreen() {
   const { t } = useTranslation();
-  const { height: windowHeight } = useWindowDimensions();
-  const period = useDayNightPeriod();
   const member = useAuthStore((state) => state.member);
-
-  const isNight = period === "night";
-  const textColor = isNight ? NIGHT_TEXT : DAY_TEXT;
-  const moodCircleColor = isNight ? MOOD_CIRCLE_NIGHT : MOOD_CIRCLE_DAY;
-  const backgroundSource = isNight ? NIGHT_BG : DAY_BG;
-  const mascotSource = isNight ? NIGHT_MASCOT : DAY_MASCOT;
-  const heroHeight = Math.max(windowHeight * 0.48, 320);
+  const period = useDayNightPeriod();
+  const [selectedMood, setSelectedMood] = useState<MoodId | null>(null);
 
   const displayName =
     member?.nickname?.trim() ||
@@ -64,197 +56,167 @@ export default function HomeScreen() {
     t("home.friend");
 
   const greeting = getGreetingKey();
+  const screenBackground =
+    period === "night" ? NIGHT_SCREEN_BG : DAY_SCREEN_BG;
 
   const handleMoodPress = (mood: MoodId) => {
-    router.push({
-      pathname: "/journal/write",
-      params: { mood },
-    });
+    setSelectedMood(mood);
+
+    setTimeout(() => {
+      router.push({
+        pathname: "/journal/write",
+        params: { mood },
+      });
+    }, 140);
   };
 
   return (
-    <View style={styles.root}>
-      <Image
-        source={backgroundSource}
-        style={StyleSheet.absoluteFillObject}
-        contentFit="cover"
-        accessibilityIgnoresInvertColors
-      />
+    <View style={[styles.screen, { backgroundColor: screenBackground }]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <GreetingSection
+          greeting={`${t(greeting.key)},`}
+          username={displayName}
+          greetingIcon={greeting.emoji}
+        />
 
-      <SafeAreaView style={styles.safeArea} edges={["top"]}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <View style={[styles.hero, { minHeight: heroHeight }]}>
-            <View
-              style={[
-                styles.greetingBlock,
-                { marginTop: Math.round(windowHeight * 0.14) },
-              ]}
-            >
-              <Text style={[styles.greetingLine, { color: textColor }]}>
-                {t(greeting.key)},
-              </Text>
-              <View style={styles.nameRow}>
-                <Text style={[styles.name, { color: textColor }]}>
-                  {displayName}
-                </Text>
-                <Text style={styles.emoji}>{greeting.emoji}</Text>
-              </View>
-            </View>
+        <View style={[styles.content, { backgroundColor: screenBackground }]}>
+          <View style={styles.glassCard}>
+           
 
-            <Image
-              source={mascotSource}
-              style={[
-                styles.mascot,
-                isNight ? styles.mascotNight : styles.mascotDay,
-              ]}
-              contentFit="contain"
-              accessibilityLabel={
-                isNight ? t("home.nightMascot") : t("home.dayMascot")
-              }
-            />
-          </View>
-
-          <View style={styles.content}>
-            <Text style={[styles.howAreYouFeeling, { color: textColor }]}>
+            <Text style={styles.glassTitle}>
               {t("home.howAreYouFeeling")}
             </Text>
+            <Text style={styles.glassSubtitle}>
+              {t("home.chooseYourFeeling")}
+            </Text>
 
-            <View style={styles.moodRow}>
-              {MOODS.map((mood) => (
-                <Pressable
-                  key={mood.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={t(mood.labelKey)}
-                  onPress={() => handleMoodPress(mood.id)}
-                  style={({ pressed }) => [
-                    styles.moodItem,
-                    pressed && styles.moodPressed,
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.moodCircle,
-                      { backgroundColor: moodCircleColor },
+            <View style={styles.moodGrid}>
+              {MOODS.map((mood) => {
+                const isSelected = selectedMood === mood.id;
+
+                return (
+                  <Pressable
+                    key={mood.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(mood.labelKey)}
+                    accessibilityState={{ selected: isSelected }}
+                    onPress={() => handleMoodPress(mood.id)}
+                    style={({ pressed }) => [
+                      styles.moodPill,
+                      {
+                        borderColor: isSelected
+                          ? "rgba(255, 255, 255, 0.55)"
+                          : "rgba(255,255,255,0.72)",
+                      },
+                      isSelected && styles.moodPillSelected,
+                      pressed && styles.moodPressed,
                     ]}
                   >
-                    <Image
-                      source={mood.image}
-                      style={styles.moodImage}
-                      contentFit="contain"
-                    />
-                  </View>
-                  <Text style={[styles.moodLabel, { color: textColor }]}>
-                    {t(mood.labelKey)}
-                  </Text>
-                </Pressable>
-              ))}
+                    <View style={styles.moodCircle}>
+                      <Image
+                        source={mood.image}
+                        style={styles.moodImage}
+                        contentFit="contain"
+                      />
+                    </View>
+                    <Text style={styles.moodLabel} numberOfLines={1}>
+                      {t(mood.labelKey)}
+                    </Text>
+                    {isSelected ? (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={CONTENT_TEXT}
+                      />
+                    ) : null}
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
 
           <WeeklyMoodJourneyCard />
-        </ScrollView>
-      </SafeAreaView>
+        </View>
+
+        <WeeklyInsightCard />
+        <SimilarStoriesSection />
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
+  screen: {
     flex: 1,
-    backgroundColor: "#1a1838",
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: "transparent",
   },
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 12,
   },
-  hero: {
-    position: "relative",
-    paddingHorizontal: 24,
-    paddingTop: 8,
+  content: {
+    paddingHorizontal: CONTENT_HORIZONTAL_PADDING,
+    paddingTop: 16,
+  },
+  glassCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.72)",
+    backgroundColor: "rgba(255, 255, 255, 0.66)",
+    padding: GLASS_CARD_PADDING,
     overflow: "hidden",
   },
-  greetingBlock: {
-    zIndex: 2,
-    maxWidth: "72%",
-    paddingLeft: 4,
-  },
-  greetingLine: {
-    fontSize: 36,
-    lineHeight: 44,
-    fontWeight: "700",
-    letterSpacing: -0.8,
-  },
-  nameRow: {
-    marginTop: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  name: {
-    fontSize: 20,
+  glassTitle: {
+    color: CONTENT_TEXT,
+    fontSize: 22,
     lineHeight: 28,
-    fontWeight: "400",
-    letterSpacing: -0.3,
-  },
-  emoji: {
-    fontSize: 20,
-    lineHeight: 28,
-  },
-  mascot: {
-    position: "absolute",
-    zIndex: 1,
-  },
-  mascotNight: {
-    right: -12,
-    bottom: -8,
-    width: 280,
-    height: 280,
-  },
-  mascotDay: {
-    right: -8,
-    bottom: -4,
-    width: 260,
-    height: 260,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-  },
-  howAreYouFeeling: {
-    marginBottom: 18,
-    textAlign: "left",
-    fontSize: 18,
-    lineHeight: 26,
     fontWeight: "700",
     letterSpacing: -0.4,
-    textTransform: "capitalize",
   },
-  moodRow: {
+  glassSubtitle: {
+    color: CONTENT_TEXT,
+    opacity: 0.68,
+    marginTop: 4,
+    marginBottom: 16,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
+  },
+  moodGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 2,
+    rowGap: 10,
   },
-  moodItem: {
-    flex: 1,
+  moodPill: {
+    width: "48.5%",
+    minHeight: 58,
+    borderRadius: 20,
+    borderWidth: 1,
+    backgroundColor: "rgb(255, 255, 255)",
+    flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  moodPillSelected: {
+    shadowColor: "#8A6BE8",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    elevation: 4,
   },
   moodPressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.96 }],
+    opacity: 0.88,
+    transform: [{ scale: 0.98 }],
   },
   moodCircle: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
+    width: 45,
+    height: 45,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -264,10 +226,11 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   moodLabel: {
-    marginTop: 8,
-    fontSize: 14,
+    flex: 1,
+    color: CONTENT_TEXT,
+    fontSize: 12,
     lineHeight: 16,
-    fontWeight: "500",
-    textAlign: "center",
+    fontWeight: "600",
+    textAlign: "left",
   },
 });

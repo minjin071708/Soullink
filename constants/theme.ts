@@ -1,53 +1,86 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * App color tokens.
+ *
+ * Two independent systems:
+ * 1) System Light/Dark (`lightColors` / `darkColors` via `useAppTheme`) — UI chrome only
+ * 2) Time-based day/night (`useDayNightPeriod`) — greeting, hero bg, mascot only
+ *
+ * Do not mix them.
  */
 
-import { Platform } from 'react-native';
+import { Platform } from "react-native";
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+export const lightColors = {
+  background: "#FCFAFF",
+  surface: "#FFFFFF",
+  surfaceSecondary: "#F3EEFF",
+  text: "#29263B",
+  textSecondary: "#9692AA",
+  primary: "#8B6FE8",
+  border: "#EEEAF5",
+  icon: "#777287",
+  tabBar: "#FFFFFF",
+  tabInactive: "#B9BDD5",
+  danger: "#E5484D",
+  overlay: "rgba(23, 23, 42, 0.45)",
+} as const;
 
+export const darkColors: { [K in keyof typeof lightColors]: string } = {
+  background: "#17172A",
+  surface: "#25233A",
+  surfaceSecondary: "#302C49",
+  text: "#F7F5FF",
+  textSecondary: "#AAA6BE",
+  primary: "#A58AF3",
+  border: "#37334D",
+  icon: "#C4BED7",
+  tabBar: "#211F34",
+  tabInactive: "#7A7693",
+  danger: "#FF6369",
+  overlay: "rgba(0, 0, 0, 0.55)",
+};
+
+export type AppColors = { [K in keyof typeof lightColors]: string };
+export type ColorSchemeMode = "light" | "dark";
+
+/** @deprecated Prefer `lightColors` / `darkColors` + `useAppTheme()`. Kept for Expo template helpers. */
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: lightColors.text,
+    background: lightColors.background,
+    tint: lightColors.primary,
+    icon: lightColors.icon,
+    tabIconDefault: lightColors.tabInactive,
+    tabIconSelected: lightColors.primary,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: darkColors.text,
+    background: darkColors.background,
+    tint: darkColors.primary,
+    icon: darkColors.icon,
+    tabIconDefault: darkColors.tabInactive,
+    tabIconSelected: darkColors.primary,
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+    sans: "system-ui",
+    serif: "ui-serif",
+    rounded: "ui-rounded",
+    mono: "ui-monospace",
   },
   default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
+    sans: "normal",
+    serif: "serif",
+    rounded: "normal",
+    mono: "monospace",
   },
   web: {
     sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
+    rounded:
+      "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });

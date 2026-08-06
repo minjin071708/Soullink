@@ -1,10 +1,16 @@
-import { useMemberMe } from "@/hooks/useMemberMe";
+import i18n from "@/i18n";
+import { memberMeQueryKey, useMemberMe } from "@/hooks/useMemberMe";
 import { useUpdateMemberMe } from "@/hooks/useUpdateMemberMe";
+import { useAuthStore } from "@/store/authStore";
+import { useAppStore, type Language } from "@/store/use-language-store";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,13 +26,29 @@ const MUTED = "#8B8FA8";
 const PRIMARY = "#8A6BE8";
 const CARD_BG = "#FFFFFF";
 
+const LANGUAGE_OPTIONS: Language[] = ["ko", "mn", "en"];
+
+function normalizeLanguageCode(value: string): Language | "" {
+  const code = value.trim().toLowerCase();
+  if (code === "en" || code === "mn" || code === "ko") {
+    return code;
+  }
+  return "";
+}
+
 export default function ProfileEditScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const setLanguage = useAppStore((state) => state.setLanguage);
+  const setMember = useAuthStore((state) => state.setMember);
   const { data, isLoading, isError, refetch, isFetching } = useMemberMe();
   const updateMember = useUpdateMemberMe();
   const [nickname, setNickname] = useState("");
-  const [preferredLanguageCode, setPreferredLanguageCode] = useState("");
+  const [preferredLanguageCode, setPreferredLanguageCode] = useState<
+    Language | ""
+  >("");
+  const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
 
   useEffect(() => {
     if (!data) {
@@ -34,31 +56,50 @@ export default function ProfileEditScreen() {
     }
 
     setNickname(data.nickname);
-    setPreferredLanguageCode(data.preferredLanguageCode);
+    setPreferredLanguageCode(normalizeLanguageCode(data.preferredLanguageCode));
   }, [data]);
 
+  const selectedLanguageLabel = useMemo(() => {
+    if (!preferredLanguageCode) {
+      return t("profile.editPage.selectLanguage");
+    }
+    return t(`profile.editPage.languages.${preferredLanguageCode}`);
+  }, [preferredLanguageCode, t]);
+
   const isValid =
-    nickname.trim().length > 0 &&
-    preferredLanguageCode.trim().length >= 2;
+    nickname.trim().length > 0 && preferredLanguageCode.length > 0;
   const hasChanges =
     data !== undefined &&
     (nickname.trim() !== data.nickname ||
-      preferredLanguageCode.trim() !== data.preferredLanguageCode);
+      preferredLanguageCode !==
+        normalizeLanguageCode(data.preferredLanguageCode));
 
   const handleSave = () => {
-    if (!isValid || updateMember.isPending) {
+    if (!isValid || !preferredLanguageCode || updateMember.isPending) {
       return;
     }
 
+    const selectedLanguage = preferredLanguageCode;
+
     updateMember.mutate(
       {
-        nickname,
-        preferredLanguageCode,
+        nickname: nickname.trim(),
+        preferredLanguageCode: selectedLanguage,
       },
       {
-        onSuccess: (member) => {
-          setNickname(member.nickname);
-          setPreferredLanguageCode(member.preferredLanguageCode);
+        onSuccess: async (member) => {
+          // Keep the language the user selected; API may still echo an old code.
+          const patchedMember = {
+            ...member,
+            preferredLanguageCode: selectedLanguage,
+          };
+
+          queryClient.setQueryData(memberMeQueryKey, patchedMember);
+          setMember(patchedMember);
+          setNickname(patchedMember.nickname);
+          setPreferredLanguageCode(selectedLanguage);
+          setLanguage(selectedLanguage);
+          await i18n.changeLanguage(selectedLanguage);
         },
       }
     );
@@ -130,17 +171,12 @@ export default function ProfileEditScreen() {
             autoCapitalize="words"
             maxLength={50}
           />
-          <ReadOnlyField
-            label={t("profile.editPage.memberId")}
-            value={data.memberId?.trim() || "—"}
-          />
-          <EditableField
+
+          <LanguageSelectField
             label={t("profile.editPage.preferredLanguage")}
-            value={preferredLanguageCode}
-            onChangeText={setPreferredLanguageCode}
-            autoCapitalize="characters"
-            maxLength={10}
-            last
+            valueLabel={selectedLanguageLabel}
+            hasValue={preferredLanguageCode.length > 0}
+            onPress={() => setLanguagePickerOpen(true)}
           />
         </View>
 
@@ -183,6 +219,56 @@ export default function ProfileEditScreen() {
           )}
         </Pressable>
       </ScrollView>
+
+      <Modal
+        visible={languagePickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLanguagePickerOpen(false)}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setLanguagePickerOpen(false)}
+        >
+          <Pressable style={styles.modalCard} onPress={() => undefined}>
+            <Text style={styles.modalTitle}>
+              {t("profile.editPage.selectLanguage")}
+            </Text>
+
+            {LANGUAGE_OPTIONS.map((code) => {
+              const selected = preferredLanguageCode === code;
+              return (
+                <Pressable
+                  key={code}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => {
+                    setPreferredLanguageCode(code);
+                    setLanguagePickerOpen(false);
+                  }}
+                  style={({ pressed }) => [
+                    styles.optionRow,
+                    selected && styles.optionRowSelected,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      selected && styles.optionTextSelected,
+                    ]}
+                  >
+                    {t(`profile.editPage.languages.${code}`)}
+                  </Text>
+                  {selected ? (
+                    <Ionicons name="checkmark" size={20} color={PRIMARY} />
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -193,17 +279,15 @@ function EditableField({
   onChangeText,
   autoCapitalize,
   maxLength,
-  last = false,
 }: {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
   autoCapitalize: "none" | "sentences" | "words" | "characters";
   maxLength: number;
-  last?: boolean;
 }) {
   return (
-    <View style={[styles.field, !last && styles.fieldBorder]}>
+    <View style={[styles.field, styles.fieldBorder]}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <TextInput
         value={value}
@@ -217,20 +301,34 @@ function EditableField({
   );
 }
 
-function ReadOnlyField({
+function LanguageSelectField({
   label,
-  value,
-  last = false,
+  valueLabel,
+  hasValue,
+  onPress,
 }: {
   label: string;
-  value: string;
-  last?: boolean;
+  valueLabel: string;
+  hasValue: boolean;
+  onPress: () => void;
 }) {
   return (
-    <View style={[styles.field, !last && styles.fieldBorder]}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => [styles.field, pressed && styles.pressed]}
+    >
       <Text style={styles.fieldLabel}>{label}</Text>
-      <Text style={styles.fieldValue}>{value}</Text>
-    </View>
+      <View style={styles.selectRow}>
+        <Text
+          style={[styles.fieldValue, !hasValue && styles.fieldPlaceholder]}
+        >
+          {valueLabel}
+        </Text>
+        <Ionicons name="chevron-down" size={18} color={MUTED} />
+      </View>
+    </Pressable>
   );
 }
 
@@ -319,12 +417,22 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: TITLE_COLOR,
   },
+  fieldPlaceholder: {
+    color: MUTED,
+    fontWeight: "500",
+  },
   fieldInput: {
     minHeight: 28,
     padding: 0,
     fontSize: 17,
     fontWeight: "600",
     color: TITLE_COLOR,
+  },
+  selectRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
   },
   validationText: {
     marginTop: 12,
@@ -356,6 +464,45 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(23, 23, 42, 0.45)",
+    justifyContent: "flex-end",
+  },
+  modalCard: {
+    backgroundColor: CARD_BG,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 28,
+    gap: 6,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: TITLE_COLOR,
+    marginBottom: 8,
+  },
+  optionRow: {
+    minHeight: 52,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  optionRowSelected: {
+    backgroundColor: "#F3EEFF",
+  },
+  optionText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: TITLE_COLOR,
+  },
+  optionTextSelected: {
+    color: PRIMARY,
   },
   pressed: {
     opacity: 0.85,

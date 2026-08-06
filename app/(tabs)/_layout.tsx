@@ -1,55 +1,55 @@
+import { useAppTheme } from "@/hooks/useAppTheme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as NavigationBar from "expo-navigation-bar";
-import { Tabs, useRouter } from "expo-router";
+import { Tabs, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
-import { Platform, Pressable, StyleSheet, useColorScheme, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const TAB_ACTIVE = "#8A6BE8";
-const TAB_INACTIVE = "#B9BDD5";
-const SCREEN_BG_LIGHT = "#F7F8FC";
-const SCREEN_BG_DARK = "#17182D";
 const TAB_BAR_CONTENT_HEIGHT = 64;
 const CREATE_BUTTON_SIZE = 58;
 
 export default function TabLayout() {
   const router = useRouter();
+  const segments = useSegments();
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { isDark, colors } = useAppTheme();
   const bottomInset = Math.max(insets.bottom, 0);
+  const hideTabBar = segments.some((segment) => segment === "add-post");
 
   useEffect(() => {
-    if (Platform.OS !== "android") return;
+    if (Platform.OS !== "android") {
+      return;
+    }
 
-    void NavigationBar.setBackgroundColorAsync("#FFFFFF");
-    void NavigationBar.setButtonStyleAsync("dark");
-  }, []);
+    void NavigationBar.setBackgroundColorAsync(colors.tabBar);
+    void NavigationBar.setButtonStyleAsync(isDark ? "light" : "dark");
+  }, [colors.tabBar, isDark]);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-
-        tabBarActiveTintColor: TAB_ACTIVE,
-        tabBarInactiveTintColor: TAB_INACTIVE,
-
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.tabInactive,
         sceneStyle: {
-          backgroundColor: colorScheme === "dark" ? SCREEN_BG_DARK : SCREEN_BG_LIGHT,
+          backgroundColor: colors.background,
         },
-
-        tabBarStyle: [
-          styles.tabBar,
-          {
-            height: TAB_BAR_CONTENT_HEIGHT + bottomInset,
-            paddingBottom: bottomInset,
-          },
-        ],
+        tabBarStyle: hideTabBar
+          ? { display: "none" }
+          : [
+              styles.tabBar,
+              {
+                height: TAB_BAR_CONTENT_HEIGHT + bottomInset,
+                paddingBottom: bottomInset,
+                backgroundColor: colors.tabBar,
+                borderTopColor: colors.border,
+              },
+            ],
         tabBarLabelStyle: styles.tabBarLabel,
-
         tabBarItemStyle: {
           paddingTop: 6,
         },
-
         tabBarHideOnKeyboard: true,
       }}
     >
@@ -79,7 +79,15 @@ export default function TabLayout() {
           title: "",
           tabBarLabel: () => null,
           tabBarIcon: () => (
-            <View style={styles.createButton}>
+            <View
+              style={[
+                styles.createButton,
+                {
+                  backgroundColor: colors.primary,
+                  shadowColor: colors.primary,
+                },
+              ]}
+            >
               <Ionicons name="add" size={34} color="#FFFFFF" />
             </View>
           ),
@@ -111,6 +119,13 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="community"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
@@ -125,31 +140,26 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 0,
+    borderTopWidth: StyleSheet.hairlineWidth,
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     paddingTop: 6,
-    // Subtle upward shadow (Toss-like)
     shadowColor: "#1A1A2E",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 12,
   },
-
   tabBarLabel: {
     fontSize: 11,
     fontWeight: "500",
     marginTop: 2,
   },
-
   createButtonContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-
   createButton: {
     position: "absolute",
     top: -30,
@@ -158,12 +168,9 @@ const styles = StyleSheet.create({
     borderRadius: CREATE_BUTTON_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: TAB_ACTIVE,
-    shadowColor: TAB_ACTIVE,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 8,
-    boxShadow: "0px 4px 12px rgba(138, 107, 232, 0.35)",
   },
 });

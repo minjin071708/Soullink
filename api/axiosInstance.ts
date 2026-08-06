@@ -41,7 +41,21 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   async (config: RetriableConfig) => {
-    config.headers["Accept-Language"] = resolveAcceptLanguage();
+    if (!config.headers["Accept-Language"]) {
+      config.headers["Accept-Language"] = resolveAcceptLanguage();
+    }
+
+    // Let the runtime set multipart boundary for FormData uploads.
+    if (
+      typeof FormData !== "undefined" &&
+      config.data instanceof FormData
+    ) {
+      if (typeof config.headers.set === "function") {
+        config.headers.set("Content-Type", null);
+      } else {
+        delete (config.headers as Record<string, unknown>)["Content-Type"];
+      }
+    }
 
     if (config.skipAuthRefresh) {
       return config;

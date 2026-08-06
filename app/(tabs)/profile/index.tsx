@@ -1,11 +1,25 @@
 import { useLogout } from "@/hooks/auth/useLogout";
+import {
+  useDeleteMemberProfileImage,
+  useUploadMemberProfileImage,
+} from "@/hooks/useMemberProfileImage";
+import { memberMeQueryKey } from "@/hooks/useMemberMe";
+import { useUpdateMemberMe } from "@/hooks/useUpdateMemberMe";
+import i18n from "@/i18n";
 import { useAuthStore } from "@/store/authStore";
+import { useAppStore, type Language } from "@/store/use-language-store";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, type Href } from "expo-router";
+import { router } from "expo-router";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
+  Alert,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -21,7 +35,16 @@ const PRIMARY = "#8A6BE8";
 const ICON_BG = "#F0EAFF";
 const LOGOUT = "#E0567A";
 const LOGOUT_BG = "#FDE8EE";
-const LANGUAGE_HREF = "/(onboarding)/language" as Href;
+const DEFAULT_AVATAR = require("@/assets/mascotImages/happy.png");
+const MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_PROFILE_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+]);
+
+const LANGUAGE_OPTIONS: Language[] = ["ko", "mn", "en"];
 
 type MenuIcon = keyof typeof Ionicons.glyphMap;
 
@@ -37,21 +60,183 @@ type MenuItem = {
   onPress?: () => void;
 };
 
+function normalizeLanguageCode(value: string | null | undefined): Language {
+  const code = (value ?? "").trim().toLowerCase();
+  if (code === "en" || code === "mn" || code === "ko") {
+    return code;
+  }
+  return "mn";
+}
+
 export default function Profile() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const member = useAuthStore((state) => state.member);
+  const setMember = useAuthStore((state) => state.setMember);
+  const storedLanguage = useAppStore((state) => state.language);
+  const setLanguage = useAppStore((state) => state.setLanguage);
   const { mutate: logout, isPending } = useLogout();
+  const updateMember = useUpdateMemberMe();
+  const uploadProfileImage = useUploadMemberProfileImage();
+  const deleteProfileImage = useDeleteMemberProfileImage();
+  const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
+
+  const isPhotoBusy =
+    uploadProfileImage.isPending || deleteProfileImage.isPending;
+
+  const hasCustomPhoto = Boolean(member?.profileImageUrl);
+  const avatarSource = hasCustomPhoto
+    ? { uri: member!.profileImageUrl! }
+    : DEFAULT_AVATAR;
+
+  const selectedLanguage = useMemo(
+    () =>
+      normalizeLanguageCode(
+        member?.preferredLanguageCode || storedLanguage || i18n.language
+      ),
+    [member?.preferredLanguageCode, storedLanguage]
+  );
 
   const displayName =
     member?.nickname?.trim() ||
     member?.memberId?.trim() ||
     t("home.friend");
 
+  const showPhotoError = (messageKey = "profile.photo.uploadFailed") => {
+    Alert.alert(t("profile.photo.title"), t(messageKey));
+  };
+
+  const pickAndUploadPhoto = async () => {
+    if (isPhotoBusy) {
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+
+    if (result.canceled || !result.assets[0]) {
+      return;
+    }
+
+    const asset = result.assets[0];
+    const mimeType = (asset.mimeType ?? "image/jpeg").toLowerCase();
+    const extension = mimeType.includes("png")
+      ? "png"
+      : mimeType.includes("webp")
+        ? "webp"
+        : "jpg";
+
+    if (!ALLOWED_PROFILE_IMAGE_TYPES.has(mimeType)) {
+      showPhotoError("profile.photo.invalidType");
+      return;
+    }
+
+    if (
+      typeof asset.fileSize === "number" &&
+      asset.fileSize > MAX_PROFILE_IMAGE_BYTES
+    ) {
+      showPhotoError("profile.photo.tooLarge");
+      return;
+    }
+
+    uploadProfileImage.mutate(
+      {
+        uri: asset.uri,
+        name: asset.fileName ?? `profile-${Date.now()}.${extension}`,
+        type: mimeType === "image/jpg" ? "image/jpeg" : mimeType,
+      },
+      { onError: () => showPhotoError() }
+    );
+  };
+
+  const removePhoto = () => {
+    if (isPhotoBusy || !hasCustomPhoto) {
+      return;
+    }
+
+    deleteProfileImage.mutate(undefined, { onError: () => showPhotoError() });
+  };
+
+  const handleAvatarPress = () => {
+    if (isPhotoBusy) {
+      return;
+    }
+
+    const buttons: {
+      text: string;
+      style?: "cancel" | "destructive" | "default";
+      onPress?: () => void;
+    }[] = [
+      {
+        text: t("profile.photo.change"),
+        onPress: () => {
+          void pickAndUploadPhoto();
+        },
+      },
+    ];
+
+    if (hasCustomPhoto) {
+      buttons.push({
+        text: t("profile.photo.remove"),
+        style: "destructive",
+        onPress: removePhoto,
+      });
+    }
+
+    buttons.push({
+      text: t("profile.photo.cancel"),
+      style: "cancel",
+    });
+
+    Alert.alert(t("profile.photo.title"), undefined, buttons);
+  };
+
+  const handleSelectLanguage = (code: Language) => {
+    if (updateMember.isPending) {
+      return;
+    }
+
+    if (code === selectedLanguage) {
+      setLanguagePickerOpen(false);
+      return;
+    }
+
+    const nickname =
+      member?.nickname?.trim() ||
+      member?.memberId?.trim() ||
+      displayName;
+
+    updateMember.mutate(
+      {
+        nickname,
+        preferredLanguageCode: code,
+      },
+      {
+        onSuccess: async (updated) => {
+          const patched = {
+            ...updated,
+            preferredLanguageCode: code,
+          };
+          queryClient.setQueryData(memberMeQueryKey, patched);
+          setMember(patched);
+          setLanguage(code);
+          await i18n.changeLanguage(code);
+          setLanguagePickerOpen(false);
+        },
+      }
+    );
+  };
+
   const menuItems: MenuItem[] = [
     {
       key: "edit",
       labelKey: "profile.editProfile",
       icon: "person-outline",
+      onPress: () => router.push("/profile/edit"),
     },
     {
       key: "settings",
@@ -67,7 +252,7 @@ export default function Profile() {
       key: "language",
       labelKey: "profile.language",
       icon: "globe-outline",
-      onPress: () => router.push(LANGUAGE_HREF),
+      onPress: () => setLanguagePickerOpen(true),
     },
     {
       key: "biometric",
@@ -91,13 +276,34 @@ export default function Profile() {
           style={styles.profileCard}
         >
           <View style={styles.profileRow}>
-            <View style={styles.avatarRing}>
-              <Image
-                source={require("@/assets/mascotImages/happy.png")}
-                style={styles.avatar}
-                contentFit="cover"
-              />
-            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("profile.photo.title")}
+              disabled={isPhotoBusy}
+              onPress={handleAvatarPress}
+              style={({ pressed }) => [
+                styles.avatarPressable,
+                pressed && styles.pressed,
+                isPhotoBusy && styles.disabled,
+              ]}
+            >
+              <View style={styles.avatarRing}>
+                <Image
+                  source={avatarSource}
+                  style={styles.avatar}
+                  contentFit="cover"
+                />
+                {isPhotoBusy ? (
+                  <View style={styles.avatarOverlay}>
+                    <ActivityIndicator color="#FFFFFF" />
+                  </View>
+                ) : (
+                  <View style={styles.cameraBadge}>
+                    <Ionicons name="camera" size={12} color="#FFFFFF" />
+                  </View>
+                )}
+              </View>
+            </Pressable>
 
             <View style={styles.profileText}>
               <Text style={styles.userName} numberOfLines={1}>
@@ -121,26 +327,33 @@ export default function Profile() {
         </LinearGradient>
 
         <View style={styles.menuCard}>
-          {menuItems.map((item, index) => (
-            <Pressable
-              key={item.key}
-              accessibilityRole="button"
-              accessibilityLabel={t(item.labelKey)}
-              onPress={item.onPress}
-              style={({ pressed }) => [
-                styles.menuRow,
-                index < menuItems.length - 1 && styles.menuRowBorder,
-                pressed && styles.pressed,
-              ]}
-            >
-              <View style={styles.menuLeft}>
-                <View style={styles.menuIconBox}>
-                  <Ionicons name={item.icon} size={20} color={PRIMARY} />
+          {menuItems.map((item) => (
+            <View key={item.key}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t(item.labelKey)}
+                onPress={item.onPress}
+                style={({ pressed }) => [
+                  styles.menuRow,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <View style={styles.menuLeft}>
+                  <View style={styles.menuIconBox}>
+                    <Ionicons name={item.icon} size={20} color={PRIMARY} />
+                  </View>
+                  <View style={styles.menuTextWrap}>
+                    <Text style={styles.menuLabel}>{t(item.labelKey)}</Text>
+                    {item.key === "language" ? (
+                      <Text style={styles.menuValue}>
+                        {t(`profile.editPage.languages.${selectedLanguage}`)}
+                      </Text>
+                    ) : null}
+                  </View>
                 </View>
-                <Text style={styles.menuLabel}>{t(item.labelKey)}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#C5C8D6" />
-            </Pressable>
+                <Ionicons name="chevron-forward" size={18} color="#C5C8D6" />
+              </Pressable>
+            </View>
           ))}
         </View>
 
@@ -164,6 +377,75 @@ export default function Profile() {
           <Ionicons name="chevron-forward" size={18} color={LOGOUT} />
         </Pressable>
       </ScrollView>
+
+      <Modal
+        visible={languagePickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!updateMember.isPending) {
+            setLanguagePickerOpen(false);
+          }
+        }}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => {
+            if (!updateMember.isPending) {
+              setLanguagePickerOpen(false);
+            }
+          }}
+        >
+          <Pressable style={styles.modalCard} onPress={() => undefined}>
+            <Text style={styles.modalTitle}>
+              {t("profile.editPage.selectLanguage")}
+            </Text>
+
+            {LANGUAGE_OPTIONS.map((code) => {
+              const selected = selectedLanguage === code;
+              return (
+                <Pressable
+                  key={code}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  disabled={updateMember.isPending}
+                  onPress={() => handleSelectLanguage(code)}
+                  style={({ pressed }) => [
+                    styles.optionRow,
+                    selected && styles.optionRowSelected,
+                    pressed && styles.pressed,
+                    updateMember.isPending && styles.disabled,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      selected && styles.optionTextSelected,
+                    ]}
+                  >
+                    {t(`profile.editPage.languages.${code}`)}
+                  </Text>
+                  {selected ? (
+                    <Ionicons name="checkmark" size={20} color={PRIMARY} />
+                  ) : null}
+                </Pressable>
+              );
+            })}
+
+            {updateMember.isPending ? (
+              <View style={styles.modalLoading}>
+                <ActivityIndicator color={PRIMARY} />
+              </View>
+            ) : null}
+
+            {updateMember.isError ? (
+              <Text style={styles.modalError}>
+                {t("profile.editPage.updateFailed")}
+              </Text>
+            ) : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -200,6 +482,9 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingRight: 36,
   },
+  avatarPressable: {
+    borderRadius: 36,
+  },
   avatarRing: {
     width: 72,
     height: 72,
@@ -214,6 +499,23 @@ const styles = StyleSheet.create({
   avatar: {
     width: 68,
     height: 68,
+  },
+  avatarOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(42, 42, 106, 0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cameraBadge: {
+    position: "absolute",
+    right: 2,
+    bottom: 2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: PRIMARY,
+    alignItems: "center",
+    justifyContent: "center",
   },
   profileText: {
     flex: 1,
@@ -262,17 +564,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
-  },
-  menuRowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#ECECF3",
+    marginHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f5f2f2",
   },
   menuLeft: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     flex: 1,
+  },
+  menuTextWrap: {
+    flex: 1,
+    justifyContent: "center",
   },
   menuIconBox: {
     width: 40,
@@ -286,6 +590,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: TITLE_COLOR,
+  },
+  menuValue: {
+    marginTop: 2,
+    fontSize: 13,
+    lineHeight: 16,
+    color: MUTED,
   },
   logoutCard: {
     minHeight: 64,
@@ -308,6 +618,55 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: LOGOUT,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(23, 23, 42, 0.45)",
+    justifyContent: "flex-end",
+  },
+  modalCard: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 28,
+    gap: 6,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: TITLE_COLOR,
+    marginBottom: 8,
+  },
+  optionRow: {
+    minHeight: 52,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  optionRowSelected: {
+    backgroundColor: "#F3EEFF",
+  },
+  optionText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: TITLE_COLOR,
+  },
+  optionTextSelected: {
+    color: PRIMARY,
+  },
+  modalLoading: {
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  modalError: {
+    marginTop: 4,
+    textAlign: "center",
+    fontSize: 13,
+    color: "#D35A5A",
   },
   pressed: {
     opacity: 0.85,
