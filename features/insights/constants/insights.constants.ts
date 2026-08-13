@@ -27,7 +27,7 @@ export const EMOTION_CHART_COLORS: Record<InsightEmotionKey, string> = {
 };
 
 export const PERIOD_OPTIONS = [
-  { key: "day" as const, label: "Өдөр" },
-  { key: "week" as const, label: "7 хоног" },
-  { key: "month" as const, label: "Сар" },
+  { key: "day" as const },
+  { key: "week" as const },
+  { key: "month" as const },
 ];

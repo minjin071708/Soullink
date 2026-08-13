@@ -3,6 +3,7 @@ import {
   PERIOD_OPTIONS,
 } from "@/features/insights/constants/insights.constants";
 import type { InsightPeriod } from "@/features/insights/types/insights.types";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type PeriodSegmentProps = {
@@ -11,6 +12,8 @@ type PeriodSegmentProps = {
 };
 
 export function PeriodSegment({ value, onChange }: PeriodSegmentProps) {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.track}>
       {PERIOD_OPTIONS.map((option) => {
@@ -25,7 +28,7 @@ export function PeriodSegment({ value, onChange }: PeriodSegmentProps) {
             style={[styles.item, selected && styles.itemSelected]}
           >
             <Text style={[styles.label, selected && styles.labelSelected]}>
-              {option.label}
+              {t(`insights.periods.${option.key}`)}
             </Text>
           </Pressable>
         );

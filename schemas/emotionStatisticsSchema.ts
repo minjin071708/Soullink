@@ -1,23 +1,28 @@
+import { EMOTION_CODES } from "@/types/emotionType";
 import { z } from "zod";
+
+export const emotionCodeSchema = z.enum(EMOTION_CODES);
 
 export const weeklyStatisticsPeriodSchema = z.object({
   startDate: z.string(),
   endDate: z.string(),
 });
 
-export const dominantEmotionSchema = z.object({
-  code: z.string(),
+export const weeklyDominantEmotionSchema = z.object({
+  code: emotionCodeSchema,
   name: z.string(),
 });
 
-export const dailyEmotionScoreSchema = z.object({
+/**
+ * Diary бичээгүй өдөр `emotionCode` field өөрөө байхгүй.
+ */
+export const weeklyDailyScoreSchema = z.object({
   date: z.string(),
-  score: z.number().nullable(),
-  emotionCode: z.string().nullable(),
+  emotionCode: emotionCodeSchema.optional(),
 });
 
 export const emotionDistributionSchema = z.object({
-  emotionCode: z.string(),
+  emotionCode: emotionCodeSchema,
   emotionName: z.string(),
   count: z.number().int().nonnegative(),
   ratio: z.number(),
@@ -32,10 +37,8 @@ export const emotionTopTagSchema = z.object({
 export const weeklyEmotionStatisticsDataSchema = z.object({
   period: weeklyStatisticsPeriodSchema,
   recordedDays: z.number().int().nonnegative(),
-  averageScore: z.number().nullable(),
-  scoreChange: z.number().nullable(),
-  dominantEmotion: dominantEmotionSchema.nullable(),
-  dailyScores: z.array(dailyEmotionScoreSchema),
+  dominantEmotion: weeklyDominantEmotionSchema.nullable(),
+  dailyScores: z.array(weeklyDailyScoreSchema),
   emotionDistribution: z.array(emotionDistributionSchema),
   topTags: z.array(emotionTopTagSchema),
 });
@@ -53,24 +56,28 @@ export const monthlyScoreDaySchema = z.object({
   score: z.number(),
 });
 
+/** Backend may omit averageScore when that week has no diary scores. */
 export const weeklyAverageSchema = z.object({
   weekStartDate: z.string(),
   weekEndDate: z.string(),
-  averageScore: z.number().nullable(),
+  averageScore: z.number().nullable().optional(),
 });
 
+/**
+ * Monthly STAT response — optional score fields may be omitted when insufficient data.
+ */
 export const monthlyEmotionStatisticsDataSchema = z.object({
   period: weeklyStatisticsPeriodSchema,
   recordedDays: z.number().int().nonnegative(),
   recordRate: z.number(),
-  averageScore: z.number().nullable(),
-  scoreChange: z.number().nullable(),
-  bestDay: monthlyScoreDaySchema.nullable(),
-  lowestDay: monthlyScoreDaySchema.nullable(),
-  weeklyAverages: z.array(weeklyAverageSchema),
-  emotionDistribution: z.array(emotionDistributionSchema),
-  topTags: z.array(emotionTopTagSchema),
-  sleepCorrelation: z.number().nullable(),
+  averageScore: z.number().nullable().optional(),
+  scoreChange: z.number().nullable().optional(),
+  bestDay: monthlyScoreDaySchema.nullable().optional(),
+  lowestDay: monthlyScoreDaySchema.nullable().optional(),
+  weeklyAverages: z.array(weeklyAverageSchema).default([]),
+  emotionDistribution: z.array(emotionDistributionSchema).default([]),
+  topTags: z.array(emotionTopTagSchema).default([]),
+  sleepCorrelation: z.number().nullable().optional(),
 });
 
 export const monthlyEmotionStatisticsResponseSchema = z.object({

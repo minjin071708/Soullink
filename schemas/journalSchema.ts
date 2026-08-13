@@ -113,11 +113,15 @@ export const emotionDiaryDataSchema = z
     emotionScore: z.number().nullable().optional(),
     title: z.string().nullable().optional(),
     content: z.string().nullable().optional(),
+    /** EMO-003 list returns preview instead of full content */
+    contentPreview: z.string().nullable().optional(),
     sleepHours: z.number().nullable().optional(),
     weatherCode: z.string().nullable().optional(),
     weatherName: z.string().nullable().optional(),
     memo: z.string().nullable().optional(),
     tags: z.array(emotionDiaryTagSchema).nullable().optional(),
+    /** EMO-003 list may return tag names only */
+    tagNames: z.array(z.string()).nullable().optional(),
     analysisStatus: analysisStatusSchema.optional().default("NONE"),
     aiAnalysis: diaryAiAnalysisSchema.nullable().optional(),
     version: z.number().int().optional(),

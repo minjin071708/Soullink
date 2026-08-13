@@ -3,6 +3,46 @@
     "continue": "Continue",
     "chooseLanguage": "Choose your language"
   },
+  "auth": {
+    "emailSignIn": "Continue with email",
+    "signup": {
+      "title": "Create your account",
+      "subtitle": "Start your journal journey today",
+      "google": "Continue with Google",
+      "apple": "Continue with Apple",
+      "or": "or",
+      "signIn": "Already have an account? Sign in"
+    },
+    "emailSignup": {
+      "title": "Create account",
+      "subtitle": "Start your personal emotion journal",
+      "id": "ID",
+      "idPlaceholder": "4-50 chars, letters and numbers",
+      "password": "Password",
+      "passwordPlaceholder": "At least 8 chars with letters and numbers",
+      "passwordConfirm": "Confirm password",
+      "passwordConfirmPlaceholder": "Re-enter your password",
+      "nickname": "Nickname",
+      "nicknamePlaceholder": "Name used in app",
+      "email": "Email",
+      "required": "Required",
+      "sendVerificationCode": "Send code",
+      "resendVerificationCode": "Resend",
+      "resendVerificationCodeCountdown": "Resend {{seconds}}s",
+      "verificationCode": "Verification code",
+      "verificationCodePlaceholder": "Enter the 6-digit code",
+      "verify": "Verify",
+      "verificationComplete": "Email verification is complete.",
+      "agreementTitle": "Agreements",
+      "allAgree": "Agree to all",
+      "serviceAgree": "[Required] Terms of Service",
+      "privacyAgree": "[Required] Privacy Policy",
+      "marketingAgree": "[Optional] Marketing messages",
+      "submit": "Sign up",
+      "hasAccount": "Already have an account?",
+      "login": "Log in"
+    }
+  },
   "onboarding": {
     "understand": {
       "title": "UNDERSTAND YOUR ANXIETY",
@@ -51,6 +91,9 @@
     "weeklyJournal": {
       "today": "Today",
       "noEntry": "No journal for this day yet",
+      "loading": "Loading this week's journals…",
+      "error": "Could not load journals",
+      "retry": "Try again",
       "tags": {
         "focused": "Focused",
         "grateful": "Grateful",
@@ -223,6 +266,9 @@
     "addPost": "Add post",
     "addPostTitle": "Add Post",
     "empty": "No stories yet.",
+    "loading": "Loading posts…",
+    "error": "Could not load posts",
+    "retry": "Try again",
     "filters": {
       "all": "All",
       "counsel": "Counsel",
@@ -250,6 +296,75 @@
       "anonymousTitle": "Anonymous post",
       "anonymousSubtitle": "Your identity will be hidden.",
       "submit": "Post to Community"
+    }
+  },
+  "insights": {
+    "title": "AI Insight",
+    "back": "Back",
+    "periods": {
+      "day": "Day",
+      "week": "7 days",
+      "month": "Month"
+    },
+    "day": {
+      "unavailable": "Daily statistics API is not connected",
+      "hint": "Week → STAT-001, Month → STAT-002. There is no Day statistics API yet."
+    },
+    "loading": "Loading report…",
+    "error": "Could not load report",
+    "retry": "Try again",
+    "retrying": "Loading…",
+    "detailReport": "Detailed report",
+    "aiObservation": "AI observation",
+    "previousReports": "Previous reports",
+    "observation": {
+      "recurring": "Recurring feeling",
+      "commonTag": "Common tag"
+    },
+    "chart": {
+      "days": "{{count}} days"
+    },
+    "dateRange": {
+      "sameMonth": "{{month}}/{{startDay}}–{{endDay}}",
+      "crossMonth": "{{startMonth}}/{{startDay}} – {{endMonth}}/{{endDay}}"
+    },
+    "weekly": {
+      "periodLabel": "7-day report",
+      "headlineDominant": "This week you felt more {{emotion}}",
+      "headlineEmpty": "No entries this week yet",
+      "headlineFallback": "This week's emotion overview",
+      "recordedDays": "Days written",
+      "withinWeek": "Within 7 days",
+      "journals": "Entries",
+      "totalEntries": "total entries",
+      "journalCaption": "entries",
+      "daysCount": "{{count}} days"
+    },
+    "monthly": {
+      "periodLabel": "Monthly report",
+      "periodLabelMonth": "Month {{month}} report",
+      "headlineDominant": "This month you felt more {{emotion}}",
+      "headlineEmpty": "No entries this month yet",
+      "headlineAverage": "This month's average score is {{score}}",
+      "headlineFallback": "This month's emotion overview",
+      "recordRate": "Record rate",
+      "daysCount": "{{count}} days",
+      "averageScore": "Average score",
+      "scoreChange": "{{value}} vs last month",
+      "scoreMissing": "No score yet",
+      "journalCaption": "entries",
+      "bestDay": "Best day",
+      "lowestDay": "Lowest day",
+      "recordRateLabel": "{{rate}}% recorded"
+    },
+    "mock": {
+      "aiObservation": "Anxiety rose on work-related days, but weekends felt more steady.",
+      "previous": {
+        "weekTitle": "Jul 6–12",
+        "weekMood": "Calm",
+        "monthTitle": "June report",
+        "monthMood": "Improved"
+      }
     }
   }
 }

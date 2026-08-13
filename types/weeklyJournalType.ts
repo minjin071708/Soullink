@@ -12,10 +12,14 @@ export type WeekDayItem = {
 export type WeeklyJournalPreview = {
   date: string;
   moodId?: MoodId;
+  /** Backend emotionName when available */
+  emotionName?: string;
   timeLabel?: string;
   temperature?: string;
   sleep?: string;
+  /** Display tag name (not an i18n key) */
   tag?: string;
+  /** Diary content preview text (not an i18n key) */
   preview?: string;
   isToday?: boolean;
 };

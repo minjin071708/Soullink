@@ -3,6 +3,7 @@ import {
   AiObservationSection,
   PreviousReportsSection,
 } from "@/features/insights/components/InsightSections";
+import { MonthlyInsightCard } from "@/features/insights/components/MonthlyInsightCard";
 import { PeriodSegment } from "@/features/insights/components/PeriodSegment";
 import { WeeklyInsightCard } from "@/features/insights/components/WeeklyInsightCard";
 import { INSIGHT_COLORS } from "@/features/insights/constants/insights.constants";
@@ -18,6 +19,7 @@ import { formatEmotionDate } from "@/utils/emotionDate";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Pressable,
@@ -28,44 +30,33 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-function mapTopTagsToObservations(topTags: EmotionTopTag[]) {
-  return topTags.slice(0, 2).map((tag, index) => ({
-    id: String(tag.tagId),
-    title: index === 0 ? "Давтагдсан мэдрэмж" : "Түгээмэл tag",
-    subtitle: `${tag.tagName} · ${tag.count}`,
-    icon: (index === 0 ? "recurring" : "helpful") as "recurring" | "helpful",
-    accent: index === 0 ? INSIGHT_COLORS.happy : INSIGHT_COLORS.sad,
-  }));
-}
-
 export function InsightsScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [period, setPeriod] = useState<InsightPeriod>("week");
   const baseDate = useMemo(() => formatEmotionDate(), []);
 
+  const isDay = period === "day";
   const isMonth = period === "month";
-  // "day" has no dedicated stats endpoint yet — reuse weekly.
-  const isWeeklyScope = !isMonth;
+  const isWeek = period === "week";
 
-  const weeklyQuery = useWeeklyEmotionStatistics(
-    { baseDate },
-    isWeeklyScope
-  );
+  const weeklyQuery = useWeeklyEmotionStatistics({ baseDate }, isWeek);
   const monthlyQuery = useMonthlyEmotionStatistics({ baseDate }, isMonth);
-
   const activeQuery = isMonth ? monthlyQuery : weeklyQuery;
 
-  const cardData = useMemo(() => {
-    if (isMonth) {
-      return monthlyQuery.data
-        ? mapMonthlyEmotionStatisticsToCard(monthlyQuery.data)
-        : null;
+  const weeklyCardData = useMemo(() => {
+    if (!isWeek || !weeklyQuery.data) {
+      return null;
     }
+    return mapWeeklyEmotionStatisticsToCard(weeklyQuery.data, t);
+  }, [isWeek, weeklyQuery.data, t]);
 
-    return weeklyQuery.data
-      ? mapWeeklyEmotionStatisticsToCard(weeklyQuery.data)
-      : null;
-  }, [isMonth, monthlyQuery.data, weeklyQuery.data]);
+  const monthlyCardData = useMemo(() => {
+    if (!isMonth || !monthlyQuery.data) {
+      return null;
+    }
+    return mapMonthlyEmotionStatisticsToCard(monthlyQuery.data, t);
+  }, [isMonth, monthlyQuery.data, t]);
 
   const observationItems = useMemo(() => {
     const topTags = isMonth
@@ -73,18 +64,48 @@ export function InsightsScreen() {
       : weeklyQuery.data?.topTags;
 
     if (!topTags?.length) {
-      return MOCK_WEEKLY_INSIGHT.observations;
+      return [];
     }
 
-    return mapTopTagsToObservations(topTags);
-  }, [isMonth, monthlyQuery.data?.topTags, weeklyQuery.data?.topTags]);
+    return topTags.slice(0, 2).map((tag: EmotionTopTag, index) => ({
+      id: String(tag.tagId),
+      title:
+        index === 0
+          ? t("insights.observation.recurring")
+          : t("insights.observation.commonTag"),
+      subtitle: `${tag.tagName} · ${tag.count}`,
+      icon: (index === 0 ? "recurring" : "helpful") as "recurring" | "helpful",
+      accent: index === 0 ? INSIGHT_COLORS.happy : INSIGHT_COLORS.sad,
+    }));
+  }, [
+    isMonth,
+    monthlyQuery.data?.topTags,
+    t,
+    weeklyQuery.data?.topTags,
+  ]);
+
+  const previousReports = useMemo(
+    () =>
+      MOCK_WEEKLY_INSIGHT.previousReports.map((report, index) => ({
+        ...report,
+        title:
+          index === 0
+            ? t("insights.mock.previous.weekTitle")
+            : t("insights.mock.previous.monthTitle"),
+        moodLabel:
+          index === 0
+            ? t("insights.mock.previous.weekMood")
+            : t("insights.mock.previous.monthMood"),
+      })),
+    [t]
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Буцах"
+          accessibilityLabel={t("insights.back")}
           onPress={() => {
             if (router.canGoBack()) {
               router.back();
@@ -94,7 +115,7 @@ export function InsightsScreen() {
         >
           <Ionicons name="chevron-back" size={22} color={INSIGHT_COLORS.title} />
         </Pressable>
-        <Text style={styles.headerTitle}>AI Insight</Text>
+        <Text style={styles.headerTitle}>{t("insights.title")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -105,14 +126,21 @@ export function InsightsScreen() {
         <PeriodSegment value={period} onChange={setPeriod} />
 
         <View style={styles.cardWrap}>
-          {activeQuery.isLoading ? (
+          {isDay ? (
+            <View style={styles.stateBox}>
+              <Text style={styles.stateText}>
+                {t("insights.day.unavailable")}
+              </Text>
+              <Text style={styles.stateHint}>{t("insights.day.hint")}</Text>
+            </View>
+          ) : activeQuery.isLoading ? (
             <View style={styles.stateBox}>
               <ActivityIndicator color={INSIGHT_COLORS.accent} />
-              <Text style={styles.stateText}>Тайлан ачаалж байна...</Text>
+              <Text style={styles.stateText}>{t("insights.loading")}</Text>
             </View>
           ) : activeQuery.isError ? (
             <View style={styles.stateBox}>
-              <Text style={styles.stateText}>Тайлан ачаалж чадсангүй</Text>
+              <Text style={styles.stateText}>{t("insights.error")}</Text>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => {
@@ -124,33 +152,64 @@ export function InsightsScreen() {
                 ]}
               >
                 <Text style={styles.retryText}>
-                  {activeQuery.isFetching ? "Ачаалж байна..." : "Дахин оролдох"}
+                  {activeQuery.isFetching
+                    ? t("insights.retrying")
+                    : t("insights.retry")}
                 </Text>
               </Pressable>
             </View>
-          ) : cardData ? (
-            <WeeklyInsightCard data={cardData} />
+          ) : isMonth && monthlyCardData ? (
+            <MonthlyInsightCard
+              data={monthlyCardData}
+              stats={
+                monthlyQuery.data
+                  ? {
+                      recordedDays: monthlyQuery.data.recordedDays,
+                      recordRate: monthlyQuery.data.recordRate,
+                      averageScore: monthlyQuery.data.averageScore,
+                      scoreChange: monthlyQuery.data.scoreChange,
+                      bestDay: monthlyQuery.data.bestDay,
+                      lowestDay: monthlyQuery.data.lowestDay,
+                    }
+                  : null
+              }
+            />
+          ) : isWeek && weeklyCardData ? (
+            <WeeklyInsightCard
+              data={weeklyCardData}
+              stats={
+                weeklyQuery.data
+                  ? { recordedDays: weeklyQuery.data.recordedDays }
+                  : null
+              }
+            />
           ) : null}
         </View>
 
-        <AiObservationSection
-          observation={MOCK_WEEKLY_INSIGHT.aiObservation}
-          items={observationItems}
-        />
+        {!isDay ? (
+          <>
+            <AiObservationSection
+              observation={t("insights.mock.aiObservation")}
+              items={observationItems}
+            />
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Дэлгэрэнгүй тайлан"
-          style={({ pressed }) => [
-            styles.detailButton,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Ionicons name="stats-chart" size={18} color="#FFFFFF" />
-          <Text style={styles.detailButtonText}>Дэлгэрэнгүй тайлан</Text>
-        </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("insights.detailReport")}
+              style={({ pressed }) => [
+                styles.detailButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Ionicons name="stats-chart" size={18} color="#FFFFFF" />
+              <Text style={styles.detailButtonText}>
+                {t("insights.detailReport")}
+              </Text>
+            </Pressable>
 
-        <PreviousReportsSection reports={MOCK_WEEKLY_INSIGHT.previousReports} />
+            <PreviousReportsSection reports={previousReports} />
+          </>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -208,6 +267,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: INSIGHT_COLORS.muted,
     textAlign: "center",
+  },
+  stateHint: {
+    fontSize: 12,
+    color: INSIGHT_COLORS.muted,
+    textAlign: "center",
+    lineHeight: 18,
   },
   retryButton: {
     paddingHorizontal: 16,

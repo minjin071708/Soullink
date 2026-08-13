@@ -64,7 +64,7 @@ export function GreetingSection({
         <StatusBar
           style={isNight ? "light" : "dark"}
           translucent
-          backgroundColor="rgba(255, 255, 255, 0.5)"
+          backgroundColor="transparent"
         />
       ) : null}
 

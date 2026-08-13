@@ -9,6 +9,7 @@ import type {
   MonthlyEmotionStatisticsData,
   WeeklyEmotionStatisticsData,
 } from "@/types/emotionStatisticsType";
+import type { TFunction } from "i18next";
 
 export type InsightCardViewModel = Pick<
   WeeklyInsightMock,
@@ -37,7 +38,8 @@ function toEmotionKey(code: string): InsightEmotionKey {
 
 export function formatStatisticsDateRangeLabel(
   startDate: string,
-  endDate: string
+  endDate: string,
+  t: TFunction
 ): string {
   const start = new Date(`${startDate}T00:00:00`);
   const end = new Date(`${endDate}T00:00:00`);
@@ -52,10 +54,19 @@ export function formatStatisticsDateRangeLabel(
   const endDay = end.getDate();
 
   if (startMonth === endMonth) {
-    return `${startMonth}-р сарын ${startDay}–${endDay}`;
+    return t("insights.dateRange.sameMonth", {
+      month: startMonth,
+      startDay,
+      endDay,
+    });
   }
 
-  return `${startMonth}/${startDay} – ${endMonth}/${endDay}`;
+  return t("insights.dateRange.crossMonth", {
+    startMonth,
+    startDay,
+    endMonth,
+    endDay,
+  });
 }
 
 function mapEmotionShares(
@@ -88,40 +99,53 @@ function findTopEmotion(
   );
 }
 
-function buildWeeklyHeadline(data: WeeklyEmotionStatisticsData): string {
+function buildWeeklyHeadline(
+  data: WeeklyEmotionStatisticsData,
+  t: TFunction
+): string {
   if (data.dominantEmotion?.name) {
-    return `Энэ долоо хоногт чи илүү ${data.dominantEmotion.name.toLowerCase()} байлаа`;
+    return t("insights.weekly.headlineDominant", {
+      emotion: data.dominantEmotion.name.toLowerCase(),
+    });
   }
 
   if (data.recordedDays === 0) {
-    return "Энэ долоо хоногт тэмдэглэл хараахан байхгүй";
+    return t("insights.weekly.headlineEmpty");
   }
 
-  return "Энэ долоо хоногийн сэтгэл хөдлөлийн тойм";
+  return t("insights.weekly.headlineFallback");
 }
 
-function buildMonthlyHeadline(data: MonthlyEmotionStatisticsData): string {
+function buildMonthlyHeadline(
+  data: MonthlyEmotionStatisticsData,
+  t: TFunction
+): string {
   const top = findTopEmotion(data.emotionDistribution);
   if (top) {
-    return `Энэ сар чи илүү ${top.emotionName.toLowerCase()} байлаа`;
+    return t("insights.monthly.headlineDominant", {
+      emotion: top.emotionName.toLowerCase(),
+    });
   }
 
   if (data.recordedDays === 0) {
-    return "Энэ сар тэмдэглэл хараахан байхгүй";
+    return t("insights.monthly.headlineEmpty");
   }
 
   if (data.averageScore != null) {
-    return `Энэ сарын дундаж оноо ${data.averageScore.toFixed(1)}`;
+    return t("insights.monthly.headlineAverage", {
+      score: data.averageScore.toFixed(1),
+    });
   }
 
-  return "Энэ сарын сэтгэл хөдлөлийн тойм";
+  return t("insights.monthly.headlineFallback");
 }
 
 /**
  * Maps weekly emotion-statistics API data into the Insights card view model.
  */
 export function mapWeeklyEmotionStatisticsToCard(
-  data: WeeklyEmotionStatisticsData
+  data: WeeklyEmotionStatisticsData,
+  t: TFunction
 ): InsightCardViewModel {
   const emotionShares = mapEmotionShares(data.emotionDistribution);
   const dominantShare = data.dominantEmotion
@@ -137,20 +161,21 @@ export function mapWeeklyEmotionStatisticsToCard(
     : EMOTION_CHART_COLORS.NEUTRAL;
 
   return {
-    periodLabel: "7 хоногийн тайлан",
+    periodLabel: t("insights.weekly.periodLabel"),
     dateRangeLabel: formatStatisticsDateRangeLabel(
       data.period.startDate,
-      data.period.endDate
+      data.period.endDate,
+      t
     ),
-    headline: buildWeeklyHeadline(data),
+    headline: buildWeeklyHeadline(data, t),
     totalDays: data.recordedDays,
     journalCount: sumDistributionCounts(data.emotionDistribution),
     dominantEmotion: {
       label: data.dominantEmotion?.name ?? "—",
       daysLabel:
         dominantShare != null
-          ? `${dominantShare.count} өдөр`
-          : `${data.recordedDays} өдөр`,
+          ? t("insights.weekly.daysCount", { count: dominantShare.count })
+          : t("insights.weekly.daysCount", { count: data.recordedDays }),
       color: dominantColor,
     },
     emotionShares,
@@ -161,7 +186,8 @@ export function mapWeeklyEmotionStatisticsToCard(
  * Maps monthly emotion-statistics API data into the Insights card view model.
  */
 export function mapMonthlyEmotionStatisticsToCard(
-  data: MonthlyEmotionStatisticsData
+  data: MonthlyEmotionStatisticsData,
+  t: TFunction
 ): InsightCardViewModel {
   const emotionShares = mapEmotionShares(data.emotionDistribution);
   const topEmotion = findTopEmotion(data.emotionDistribution);
@@ -171,24 +197,29 @@ export function mapMonthlyEmotionStatisticsToCard(
 
   const start = new Date(`${data.period.startDate}T00:00:00`);
   const monthLabel = Number.isNaN(start.getTime())
-    ? "Сарын тайлан"
-    : `${start.getMonth() + 1}-р сарын тайлан`;
+    ? t("insights.monthly.periodLabel")
+    : t("insights.monthly.periodLabelMonth", {
+        month: start.getMonth() + 1,
+      });
 
   return {
     periodLabel: monthLabel,
     dateRangeLabel: formatStatisticsDateRangeLabel(
       data.period.startDate,
-      data.period.endDate
+      data.period.endDate,
+      t
     ),
-    headline: buildMonthlyHeadline(data),
+    headline: buildMonthlyHeadline(data, t),
     totalDays: data.recordedDays,
     journalCount: sumDistributionCounts(data.emotionDistribution),
     dominantEmotion: {
       label: topEmotion?.emotionName ?? "—",
       daysLabel:
         topEmotion != null
-          ? `${topEmotion.count} өдөр`
-          : `${Math.round(data.recordRate)}% бичилт`,
+          ? t("insights.weekly.daysCount", { count: topEmotion.count })
+          : t("insights.monthly.recordRateLabel", {
+              rate: Math.round(data.recordRate),
+            }),
       color: topColor,
     },
     emotionShares,

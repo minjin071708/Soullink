@@ -1,5 +1,6 @@
-import { loginResponseSchema } from "@/schemas/authSchema";
-import type { LoginRequestType, LoginResponseType } from "@/types/authType";
+import { emailSignupResponseSchema, loginResponseSchema, sendEmailVerificationCodeResponseSchema, verifyEmailCodeResponseSchema } from "@/schemas/authSchema";
+import type { LoginRequestType, LoginResponseType, SendEmailVerificationCodeRequest, SendEmailVerificationCodeResponse } from "@/types/authType";
+import { EmailSignupRequest, EmailSignupResponse, VerifyEmailCodeRequest, VerifyEmailCodeResponse } from "@/types/authType";
 import type { AxiosRequestConfig } from "axios";
 import axiosInstance from "./axiosInstance";
 import { normalizeTokenPayload } from "./normalizeAuthPayload";
@@ -30,4 +31,25 @@ export const loginApi = async (
 export const logoutApi = async (): Promise<void> => {
   const config: AuthRequestConfig = { skipAuthRefresh: true };
   await axiosInstance.post("api/v1/auth/logout", undefined, config);
+};
+
+export const emailSignupApi = async (data: EmailSignupRequest): Promise<EmailSignupResponse> => {
+  const response = await axiosInstance.post("api/v1/auth/signup", data);
+  return emailSignupResponseSchema.parse(response.data);
+};
+
+export const sendEmailVerificationCodeApi = async (
+  data: SendEmailVerificationCodeRequest
+): Promise<SendEmailVerificationCodeResponse> => {
+  const response = await axiosInstance.post(
+    "api/v1/auth/email-verifications/send",
+    data
+  );
+
+  return sendEmailVerificationCodeResponseSchema.parse(response.data);
+};
+
+export const verifyEmailCodeApi = async (data: VerifyEmailCodeRequest): Promise<VerifyEmailCodeResponse> => {
+  const response = await axiosInstance.post("/api/v1/auth/email-verifications/verify", data);
+  return verifyEmailCodeResponseSchema.parse(response.data);
 };

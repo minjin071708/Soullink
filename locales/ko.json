@@ -3,6 +3,46 @@
     "continue": "계속하기",
     "chooseLanguage": "언어를 선택하세요"
   },
+  "auth": {
+    "emailSignIn": "이메일로 계속하기",
+    "signup": {
+      "title": "계정 만들기",
+      "subtitle": "오늘부터 저널을 시작해 보세요",
+      "google": "Google로 계속하기",
+      "apple": "Apple로 계속하기",
+      "or": "또는",
+      "signIn": "이미 계정이 있나요? 로그인"
+    },
+    "emailSignup": {
+      "title": "계정 만들기",
+      "subtitle": "나만의 감정 기록을 시작해 보세요",
+      "id": "아이디",
+      "idPlaceholder": "영문, 숫자 포함 4~50자",
+      "password": "비밀번호",
+      "passwordPlaceholder": "영문, 숫자 조합 8자 이상",
+      "passwordConfirm": "비밀번호 확인",
+      "passwordConfirmPlaceholder": "비밀번호를 다시 입력해 주세요",
+      "nickname": "닉네임",
+      "nicknamePlaceholder": "앱에서 사용할 이름",
+      "email": "이메일",
+      "required": "필수",
+      "sendVerificationCode": "인증번호 받기",
+      "resendVerificationCode": "재전송",
+      "resendVerificationCodeCountdown": "재전송 {{seconds}}s",
+      "verificationCode": "인증번호",
+      "verificationCodePlaceholder": "인증번호 6자리",
+      "verify": "확인",
+      "verificationComplete": "이메일 인증이 완료되었습니다.",
+      "agreementTitle": "약관 동의",
+      "allAgree": "전체 동의",
+      "serviceAgree": "[필수] 서비스 이용약관 동의",
+      "privacyAgree": "[필수] 개인정보 처리방침 동의",
+      "marketingAgree": "[선택] 마케팅 정보 수신 동의",
+      "submit": "가입하기",
+      "hasAccount": "이미 계정이 있으신가요?",
+      "login": "로그인"
+    }
+  },
   "onboarding": {
     "understand": {
       "title": "불안의 원인을 이해해요",
@@ -51,6 +91,9 @@
     "weeklyJournal": {
       "today": "오늘",
       "noEntry": "이 날의 일기가 아직 없어요",
+      "loading": "이번 주 일기를 불러오는 중…",
+      "error": "일기를 불러오지 못했어요",
+      "retry": "다시 시도",
       "tags": {
         "focused": "집중",
         "grateful": "감사",
@@ -223,6 +266,9 @@
     "addPost": "게시물 추가",
     "addPostTitle": "Add Post",
     "empty": "아직 이야기가 없어요.",
+    "loading": "게시물을 불러오는 중…",
+    "error": "게시물을 불러오지 못했어요",
+    "retry": "다시 시도",
     "filters": {
       "all": "All",
       "counsel": "Counsel",
@@ -250,6 +296,75 @@
       "anonymousTitle": "Anonymous post",
       "anonymousSubtitle": "신원은 숨겨집니다.",
       "submit": "Post to Community"
+    }
+  },
+  "insights": {
+    "title": "AI 인사이트",
+    "back": "뒤로",
+    "periods": {
+      "day": "하루",
+      "week": "7일",
+      "month": "한 달"
+    },
+    "day": {
+      "unavailable": "일간 통계 API가 아직 연결되지 않았어요",
+      "hint": "Week → STAT-001, Month → STAT-002. Day용 statistics API는 아직 없어요."
+    },
+    "loading": "리포트를 불러오는 중…",
+    "error": "리포트를 불러오지 못했어요",
+    "retry": "다시 시도",
+    "retrying": "불러오는 중…",
+    "detailReport": "자세한 리포트",
+    "aiObservation": "AI 관찰",
+    "previousReports": "이전 리포트",
+    "observation": {
+      "recurring": "반복된 감정",
+      "commonTag": "자주 쓴 태그"
+    },
+    "chart": {
+      "days": "{{count}}일"
+    },
+    "dateRange": {
+      "sameMonth": "{{month}}월 {{startDay}}–{{endDay}}일",
+      "crossMonth": "{{startMonth}}/{{startDay}} – {{endMonth}}/{{endDay}}"
+    },
+    "weekly": {
+      "periodLabel": "7일 리포트",
+      "headlineDominant": "이번 주에는 더 {{emotion}}한 느낌이었어요",
+      "headlineEmpty": "이번 주 기록이 아직 없어요",
+      "headlineFallback": "이번 주 감정 요약",
+      "recordedDays": "기록한 날",
+      "withinWeek": "7일 중",
+      "journals": "기록",
+      "totalEntries": "전체 기록",
+      "journalCaption": "기록",
+      "daysCount": "{{count}}일"
+    },
+    "monthly": {
+      "periodLabel": "월간 리포트",
+      "periodLabelMonth": "{{month}}월 리포트",
+      "headlineDominant": "이번 달에는 더 {{emotion}}한 느낌이었어요",
+      "headlineEmpty": "이번 달 기록이 아직 없어요",
+      "headlineAverage": "이번 달 평균 점수는 {{score}}이에요",
+      "headlineFallback": "이번 달 감정 요약",
+      "recordRate": "기록률",
+      "daysCount": "{{count}}일",
+      "averageScore": "평균 점수",
+      "scoreChange": "지난달 대비 {{value}}",
+      "scoreMissing": "점수 없음",
+      "journalCaption": "기록",
+      "bestDay": "가장 좋은 날",
+      "lowestDay": "가장 낮은 날",
+      "recordRateLabel": "{{rate}}% 기록"
+    },
+    "mock": {
+      "aiObservation": "일과 관련된 날에는 불안이 늘었지만, 주말에는 마음이 더 안정됐어요.",
+      "previous": {
+        "weekTitle": "7월 6–12일",
+        "weekMood": "평온",
+        "monthTitle": "6월 리포트",
+        "monthMood": "호전"
+      }
     }
   }
 }

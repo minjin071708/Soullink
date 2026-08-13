@@ -1,3 +1,4 @@
+
 import {
   Toast,
   ToastDescription,
@@ -15,6 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -24,11 +26,13 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const APPLE_INK = "#1d1d1f";
 const MUTED = "#6E6E73";
-const SCREEN_GRADIENT = ["#f3edff", "#fff6f5"] as const;
+const SCREEN_GRADIENT = ["#fffefa", "#fff6f5"] as const;
+const LOGO_DEFAULT = require("@/assets/images/logo_default.png");
+const SIGNUP_HREF = "/(auth)/signup" as const;
 
 const COPY: Record<
   Language,
@@ -38,6 +42,10 @@ const COPY: Record<
     email: string;
     password: string;
     submit: string;
+    findPassword: string;
+    or: string;
+    noAccount: string;
+    signUp: string;
     emailPlaceholder: string;
     passwordPlaceholder: string;
   }
@@ -48,6 +56,10 @@ const COPY: Record<
     email: "Email",
     password: "Password",
     submit: "Sign in",
+    findPassword: "Forgot password?",
+    or: "or",
+    noAccount: "Don't have an account?",
+    signUp: "Sign up",
     emailPlaceholder: "you@example.com",
     passwordPlaceholder: "••••••••",
   },
@@ -57,6 +69,10 @@ const COPY: Record<
     email: "Имэйл",
     password: "Нууц үг",
     submit: "Нэвтрэх",
+    findPassword: "Нууц үг мартсан уу?",
+    or: "эсвэл",
+    noAccount: "Бүртгэлгүй юу?",
+    signUp: "Бүртгүүлэх",
     emailPlaceholder: "you@example.com",
     passwordPlaceholder: "••••••••",
   },
@@ -66,6 +82,10 @@ const COPY: Record<
     email: "이메일",
     password: "비밀번호",
     submit: "로그인",
+    findPassword: "비밀번호 변경",
+    or: "또는",
+    noAccount: "계정 없으신가요?",
+    signUp: "회원가입",
     emailPlaceholder: "you@example.com",
     passwordPlaceholder: "••••••••",
   },
@@ -74,6 +94,7 @@ const COPY: Record<
 export default function EmailLoginScreen() {
   const router = useRouter();
   const toast = useToast();
+  const insets = useSafeAreaInsets();
   const language = useAppStore((state) => state.language) ?? "mn";
   const copy = COPY[language];
 
@@ -142,12 +163,17 @@ export default function EmailLoginScreen() {
         <KeyboardAvoidingView
           style={styles.flex}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
+          keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 8 : 0}
         >
           <ScrollView
             style={styles.flex}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: Math.max(insets.bottom, 16) + 20 },
+            ]}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+            automaticallyAdjustKeyboardInsets
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.container}>
@@ -160,52 +186,100 @@ export default function EmailLoginScreen() {
                   pressed && styles.pressed,
                 ]}
               >
-                <Ionicons name="chevron-back" size={24} color={APPLE_INK} />
+                <Ionicons name="chevron-back" size={28} color={APPLE_INK} />
               </Pressable>
+              <View style={{ flex: 1, justifyContent: "space-between" }}>
+              <View>
+              <Image
+                source={LOGO_DEFAULT}
+                style={styles.logo}
+                resizeMode="contain"
+                accessibilityLabel="SoulLink"
+              />
+</View>
+
+<View>
+              <View style={styles.form}>
 
               <View style={styles.header}>
                 <Text style={styles.title}>{copy.title}</Text>
                 <Text style={styles.subtitle}>{copy.subtitle}</Text>
               </View>
 
-              <View style={styles.form}>
                 <Text style={styles.label}>{copy.email}</Text>
-                <TextInput
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder={copy.emailPlaceholder}
-                  placeholderTextColor="#A1A1A6"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={styles.input}
-                />
+                <View>
+               
+                  <TextInput
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder={copy.emailPlaceholder}
+                    placeholderTextColor="#A1A1A6"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    style={styles.input}
+                  />
+                </View>
 
                 <Text style={[styles.label, styles.labelSpaced]}>
                   {copy.password}
                 </Text>
-                <View style={styles.passwordRow}>
-                  <TextInput
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder={copy.passwordPlaceholder}
-                    placeholderTextColor="#A1A1A6"
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    style={[styles.input, styles.passwordInput]}
-                  />
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => setShowPassword((prev) => !prev)}
-                    style={styles.eyeButton}
-                    hitSlop={8}
-                  >
-                    <Ionicons
-                      name={showPassword ? "eye-off-outline" : "eye-outline"}
-                      size={20}
-                      color={MUTED}
+                <View style={styles.passwordBlock}>
+                  <View style={styles.passwordRow}>
+                    <TextInput
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder={copy.passwordPlaceholder}
+                      placeholderTextColor="#A1A1A6"
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      style={[styles.input, styles.passwordInput]}
                     />
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => setShowPassword((prev) => !prev)}
+                      style={styles.eyeButton}
+                      hitSlop={8}
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                        size={20}
+                        color={MUTED}
+                      />
+                    </Pressable>
+                  </View>
+
+                  <Pressable
+                    accessibilityRole="link"
+                    accessibilityLabel={copy.findPassword}
+                    hitSlop={10}
+                    onPress={() => {
+                      toast.show({
+                        placement: "top",
+                        duration: 2500,
+                        render: ({ id }) => (
+                          <Toast
+                            nativeID={`find-password-${id}`}
+                            action="error"
+                            variant="solid"
+                            className="px-14 py-6 shadow-soft-1 flex-row bg-white"
+                          >
+                            <VStack space="xs">
+                              <ToastTitle size="md">Coming soon</ToastTitle>
+                              <ToastDescription size="md">
+                                {copy.findPassword}
+                              </ToastDescription>
+                            </VStack>
+                          </Toast>
+                        ),
+                      });
+                    }}
+                    style={styles.findPassword}
+                  >
+                    <Text style={styles.findPasswordText}>
+                      {copy.findPassword}
+                    </Text>
                   </Pressable>
                 </View>
               </View>
@@ -226,6 +300,26 @@ export default function EmailLoginScreen() {
                   {isPending ? "..." : copy.submit}
                 </Text>
               </Pressable>
+
+              <View style={styles.orRow}>
+                <View style={styles.orLine} />
+                <Text style={styles.orText}>{copy.or}</Text>
+                <View style={styles.orLine} />
+              </View>
+
+              <View style={styles.signUpRow}>
+                <Text style={styles.noAccountText}>{copy.noAccount}</Text>
+                <Pressable
+                  accessibilityRole="link"
+                  accessibilityLabel={copy.signUp}
+                  onPress={() => router.push(SIGNUP_HREF)}
+                  hitSlop={8}
+                >
+                  <Text style={styles.signUpLink}>{copy.signUp}</Text>
+                </Pressable>
+              </View>
+            </View>
+            </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -250,6 +344,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    position: "relative",
     paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 20,
@@ -257,14 +352,18 @@ const styles = StyleSheet.create({
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.7)",
+
   },
   header: {
     marginTop: 18,
     marginBottom: 28,
+  },
+  logo: {
+    width: 260,
+    height: 150,
+    alignSelf: "center",
+    marginTop: 10,
+    zIndex: 1,
   },
   title: {
     fontSize: 34,
@@ -281,6 +380,8 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 0,
+    position: "relative",
+    zIndex: 1,
   },
   label: {
     marginBottom: 8,
@@ -301,9 +402,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(29,29,31,0.08)",
   },
+
   passwordRow: {
     position: "relative",
     justifyContent: "center",
+  },
+  passwordBlock: {
+    gap: 6,
   },
   passwordInput: {
     paddingRight: 48,
@@ -316,22 +421,72 @@ const styles = StyleSheet.create({
   },
   spacer: {
     flex: 1,
-    minHeight: 24,
+    minHeight: 72,
   },
   submitButton: {
     minHeight: 56,
+    width: "100%",
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: APPLE_INK,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.14,
+    shadowRadius: 18,
+    elevation: 6,
   },
   submitDisabled: {
     opacity: 0.55,
   },
   submitLabel: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  orRow: {
+    marginTop: 18,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  orLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "rgba(29,29,31,0.18)",
+  },
+  orText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: MUTED,
+  },
+  signUpRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 4,
+  },
+  noAccountText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: MUTED,
+  },
+  signUpLink: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#7772F8",
+  },
+  findPassword: {
+    alignSelf: "flex-end",
+  },
+  findPasswordText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: APPLE_INK,
+    opacity: 0.8,
+
   },
   pressed: {
     opacity: 0.86,

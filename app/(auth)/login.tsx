@@ -1,10 +1,12 @@
 import { useSocialAuthActions } from "@/hooks/auth/useSocialAuthActions";
 import { useAppStore, type Language } from "@/store/use-language-store";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { router, type Href } from "expo-router";
 import {
   ActivityIndicator,
+  Image,
+  ImageBackground,
   Platform,
   Pressable,
   StyleSheet,
@@ -15,7 +17,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const APPLE_INK = "#1d1d1f";
 const MUTED = "#6E6E73";
-const SCREEN_GRADIENT = ["#f3edff", "#fff6f5"] as const;
+const LOGIN_BACKGROUND = require("@/assets/images/loginBackground.png");
+const LOGIN_LOGO_WHITE = require("@/assets/images/logo_default.png");
 const EMAIL_LOGIN_HREF = "/(auth)/email-login" as Href;
 const SIGNUP_HREF = "/(auth)/signup" as Href;
 
@@ -28,6 +31,7 @@ const COPY: Record<
     apple: string;
     or: string;
     regularLogin: string;
+    noAccount: string;
     createAccount: string;
   }
 > = {
@@ -38,6 +42,7 @@ const COPY: Record<
     apple: "Continue with Apple",
     or: "or",
     regularLogin: "Sign in with email",
+    noAccount: "Don't have an account?",
     createAccount: "Create account",
   },
   mn: {
@@ -47,6 +52,7 @@ const COPY: Record<
     apple: "Apple-р үргэлжлүүлэх",
     or: "эсвэл",
     regularLogin: "Имэйлээр нэвтрэх",
+    noAccount: "Бүртгэл байхгүй юу?",
     createAccount: "Бүртгэл үүсгэх",
   },
   ko: {
@@ -56,6 +62,7 @@ const COPY: Record<
     apple: "Apple로 계속하기",
     or: "또는",
     regularLogin: "일반 로그인",
+    noAccount: "계정이 없으신가요?",
     createAccount: "계정 만들기",
   },
 };
@@ -66,102 +73,133 @@ export default function LoginScreen() {
   const { isPending, startSocialAuth } = useSocialAuthActions();
 
   return (
-    <LinearGradient
-      colors={[...SCREEN_GRADIENT]}
-      locations={[0, 1]}
-      start={{ x: 0.1, y: 0 }}
-      end={{ x: 0.9, y: 1 }}
-      style={styles.gradient}
+    <ImageBackground
+      source={LOGIN_BACKGROUND}
+      style={styles.background}
+      imageStyle={styles.backgroundImage}
+      resizeMode="cover"
     >
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <View style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.title}>{copy.title}</Text>
-            <Text style={styles.subtitle}>{copy.subtitle}</Text>
+            <Image
+              source={LOGIN_LOGO_WHITE}
+              style={styles.logo}
+              resizeMode="contain"
+              accessibilityLabel="SoulLink"
+            />
           </View>
 
           <View style={styles.spacer} />
+        </View>
+      </SafeAreaView>
 
-          <View style={styles.actions}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={copy.google}
-              disabled={isPending}
-              onPress={() => startSocialAuth("GOOGLE")}
-              style={({ pressed }) => [
-                styles.socialButton,
-                pressed && styles.pressed,
-                isPending && styles.disabled,
-              ]}
-            >
-              {isPending ? (
-                <ActivityIndicator color={APPLE_INK} />
-              ) : (
-                <>
-                  <Ionicons name="logo-google" size={20} color={APPLE_INK} />
-                  <Text style={styles.socialLabel}>{copy.google}</Text>
-                </>
-              )}
-            </Pressable>
-
-            {Platform.OS === "ios" ? (
+      <View style={styles.sheetWrap}>
+        <BlurView
+          intensity={Platform.OS === "ios" ? 42 : 70}
+          tint="light"
+          style={styles.glassSheet}
+        >
+          <View style={styles.glassTint} />
+          <SafeAreaView edges={["bottom"]} style={styles.sheetSafe}>
+            <View style={styles.actions}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={copy.apple}
+                accessibilityLabel={copy.google}
                 disabled={isPending}
-                onPress={() => startSocialAuth("APPLE")}
+                onPress={() => startSocialAuth("GOOGLE")}
                 style={({ pressed }) => [
                   styles.socialButton,
-                  styles.appleButton,
                   pressed && styles.pressed,
                   isPending && styles.disabled,
                 ]}
               >
                 {isPending ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={APPLE_INK} />
                 ) : (
                   <>
-                    <Ionicons name="logo-apple" size={22} color="#FFFFFF" />
-                    <Text style={[styles.socialLabel, styles.appleLabel]}>
-                      {copy.apple}
-                    </Text>
+                    <Ionicons name="logo-google" size={20} color={APPLE_INK} />
+                    <Text style={styles.socialLabel}>{copy.google}</Text>
                   </>
                 )}
               </Pressable>
-            ) : null}
 
-            <View style={styles.orRow}>
-              <View style={styles.orLine} />
-              <Text style={styles.orText}>{copy.or}</Text>
-              <View style={styles.orLine} />
+              {Platform.OS === "ios" ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={copy.apple}
+                  disabled={isPending}
+                  onPress={() => startSocialAuth("APPLE")}
+                  style={({ pressed }) => [
+                    styles.socialButton,
+                    styles.appleButton,
+                    pressed && styles.pressed,
+                    isPending && styles.disabled,
+                  ]}
+                >
+                  {isPending ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="logo-apple" size={22} color="#FFFFFF" />
+                      <Text style={[styles.socialLabel, styles.appleLabel]}>
+                        {copy.apple}
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              ) : null}
+
+              <View style={styles.orRow}>
+                <View style={styles.orLine} />
+                <Text style={styles.orText}>{copy.or}</Text>
+                <View style={styles.orLine} />
+              </View>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={copy.regularLogin}
+                disabled={isPending}
+                onPress={() => router.push(EMAIL_LOGIN_HREF)}
+                style={({ pressed }) => [
+                  styles.emailButton,
+                  pressed && styles.pressed,
+                  isPending && styles.disabled,
+                ]}
+              >
+                    <Text style={styles.socialLabel}>{copy.regularLogin}</Text>
+              </Pressable>
+
+       
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel={`${copy.noAccount} ${copy.createAccount}`}
+                onPress={() => router.push(SIGNUP_HREF)}
+                hitSlop={8}
+              >
+                <Text style={styles.regularLogin}>
+                  {copy.noAccount}{" "}
+                  <Text style={styles.createAccountLink}>{" "}{copy.createAccount}</Text>
+                </Text>
+              </Pressable>
             </View>
-
-            <Pressable
-              accessibilityRole="link"
-              accessibilityLabel={copy.regularLogin}
-              onPress={() => router.push(EMAIL_LOGIN_HREF)}
-              hitSlop={8}
-            >
-              <Text style={styles.regularLogin}>{copy.regularLogin}</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="link"
-              accessibilityLabel={copy.createAccount}
-              onPress={() => router.push(SIGNUP_HREF)}
-              hitSlop={8}
-            >
-              <Text style={styles.regularLogin}>{copy.createAccount}</Text>
-            </Pressable>
-          </View>
-        </View>
-      </SafeAreaView>
-    </LinearGradient>
+          </SafeAreaView>
+        </BlurView>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  gradient: {
+  background: {
     flex: 1,
+    backgroundColor: "#f2ece8",
+  },
+  backgroundImage: {
+    width: "100%",
+    height: "80%",
+    resizeMode: "cover",
   },
   safeArea: {
     flex: 1,
@@ -171,30 +209,62 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 28,
-    paddingBottom: 20,
   },
   header: {
     marginTop: 24,
+    alignItems: "center",
+    gap: 12,
   },
   title: {
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 32,
+    lineHeight: 36,
     fontWeight: "700",
     letterSpacing: -0.5,
     color: APPLE_INK,
+    textAlign: "center",
   },
-  subtitle: {
-    marginTop: 10,
-    fontSize: 15,
-    lineHeight: 22,
-    color: MUTED,
+  logo: {
+    width: 260,
+    height: 120,
   },
   spacer: {
     flex: 1,
   },
+  sheetWrap: {
+    overflow: "hidden",
+    borderTopLeftRadius: 44,
+    borderTopRightRadius: 44,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#2A2A4A",
+        shadowOffset: { width: 0, height: -8 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 16,
+      },
+    }),
+  },
+  glassSheet: {
+    overflow: "hidden",
+    borderTopLeftRadius: 44,
+    borderTopRightRadius: 44,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255,255,255,0.72)",
+  },
+  glassTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255, 252, 248, 0.42)",
+  },
+  sheetSafe: {
+    backgroundColor: "transparent",
+  },
   actions: {
     gap: 14,
-    paddingBottom: 8,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 12,
   },
   socialButton: {
     minHeight: 56,
@@ -209,6 +279,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 3,
+  },
+  emailButton: {
+    minHeight: 56,
+    borderRadius: 999,
+    backgroundColor: "rgba(255, 255, 255, 0.53)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.53)",
+ 
   },
   appleButton: {
     backgroundColor: APPLE_INK,
@@ -230,7 +312,7 @@ const styles = StyleSheet.create({
   orLine: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "rgba(29,29,31,0.22)",
+    backgroundColor: "rgba(29,29,31,0.18)",
   },
   orText: {
     fontSize: 13,
@@ -242,6 +324,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: MUTED,
+    paddingVertical: 20,
+  },
+  createAccountLink: {
+    fontWeight: "600",
+    color: APPLE_INK,
     textDecorationLine: "underline",
   },
   pressed: {

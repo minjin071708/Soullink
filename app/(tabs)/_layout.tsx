@@ -22,9 +22,10 @@ export default function TabLayout() {
       return;
     }
 
-    void NavigationBar.setBackgroundColorAsync(colors.tabBar);
+    // Edge-to-edge apps cannot set navigation bar background color.
+    // Only button style (light/dark icons) is supported.
     void NavigationBar.setButtonStyleAsync(isDark ? "light" : "dark");
-  }, [colors.tabBar, isDark]);
+  }, [isDark]);
 
   return (
     <Tabs

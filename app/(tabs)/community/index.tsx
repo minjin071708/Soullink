@@ -1,14 +1,12 @@
-import {
-  MOCK_SIMILAR_STORIES,
-  type SimilarStoryMock,
-} from "@/components/home/similarStoriesMock";
+import { CommunityPostCard } from "@/components/community/CommunityPostCard";
+import { useCommunityPosts } from "@/hooks/community/useCommunityPosts";
 import type { CommunityCategory, CommunitySort } from "@/types/community";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Image } from "expo-image";
 import { router, type Href } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
   FlatList,
   Modal,
   Pressable,
@@ -21,102 +19,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const TEXT = "#2A2A6A";
 const MUTED = "#7A7596";
 const PRIMARY = "#8A6BE8";
-const BADGE_BG = "#F5F0FF";
 const SCREEN_BG = "#F7F5FB";
 
 type FilterKey = "ALL" | CommunityCategory;
 type SortKey = CommunitySort;
-
-function formatRelativeTime(
-  iso: string,
-  formatDays: (count: number) => string,
-  formatMonths: (count: number) => string
-) {
-  const created = new Date(iso).getTime();
-  const now = Date.now();
-  const days = Math.max(0, Math.floor((now - created) / (1000 * 60 * 60 * 24)));
-
-  if (days < 30) {
-    return formatDays(Math.max(days, 1));
-  }
-
-  return formatMonths(Math.max(1, Math.floor(days / 30)));
-}
-
-function CommunityPostCard({ story }: { story: SimilarStoryMock }) {
-  const { t } = useTranslation();
-  const cover = story.imageSources[0];
-
-  return (
-    <View style={styles.card}>
-      <View style={styles.authorRow}>
-        <Image
-          source={story.authorAvatarSource}
-          style={styles.avatar}
-          contentFit="cover"
-        />
-        <View style={styles.authorCopy}>
-          <Text style={styles.authorName}>{story.authorName}</Text>
-          <Text style={styles.authorTime}>
-            {formatRelativeTime(
-              story.createdAt,
-              (count) => t("home.similarStories.daysAgo", { count }),
-              (count) => t("home.similarStories.monthsAgo", { count })
-            )}
-          </Text>
-        </View>
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{story.categoryName}</Text>
-        </View>
-      </View>
-
-      <View style={styles.imageWrap}>
-        <Image source={cover} style={styles.coverImage} contentFit="cover" />
-        <View style={styles.matchBadge}>
-          <Ionicons name="sparkles" size={12} color="#E6A23B" />
-          <Text style={styles.matchBadgeText}>
-            AI Match {story.matchScore}%
-          </Text>
-        </View>
-      </View>
-
-      <Text style={styles.title}>{story.title}</Text>
-      <Text style={styles.preview} numberOfLines={3}>
-        {story.contentPreview}
-      </Text>
-
-      <View style={styles.tagsRow}>
-        {story.tags.map((tag) => (
-          <View key={`${story.postId}-${tag}`} style={styles.tagChip}>
-            <Text style={styles.tagText}>#{tag}</Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.actionsRow}>
-        <View style={styles.actionGroup}>
-          <Ionicons
-            name={story.isLiked ? "heart" : "heart-outline"}
-            size={18}
-            color={story.isLiked ? "#E56B8A" : MUTED}
-          />
-          <Text style={styles.actionCount}>{story.likesCount}</Text>
-        </View>
-        <View style={styles.actionGroup}>
-          <Ionicons name="chatbubble-outline" size={17} color={MUTED} />
-          <Text style={styles.actionCount}>{story.commentsCount}</Text>
-        </View>
-        <View style={styles.actionSpacer} />
-        <Ionicons
-          name={story.isBookmarked ? "bookmark" : "bookmark-outline"}
-          size={18}
-          color={MUTED}
-        />
-        <Ionicons name="share-outline" size={18} color={MUTED} />
-      </View>
-    </View>
-  );
-}
 
 export default function CommunityScreen() {
   const { t } = useTranslation();
@@ -124,25 +30,23 @@ export default function CommunityScreen() {
   const [sort, setSort] = useState<SortKey>("LATEST");
   const [sortOpen, setSortOpen] = useState(false);
 
+  const listParams = useMemo(
+    () => ({
+      ...(filter === "ALL" ? {} : { categoryCode: filter }),
+      sort,
+      page: 0,
+      size: 20,
+    }),
+    [filter, sort]
+  );
+
+  const postsQuery = useCommunityPosts(listParams);
+
   const filters: { key: FilterKey; label: string }[] = [
     { key: "ALL", label: t("community.filters.all") },
     { key: "COUNSEL", label: t("community.filters.counsel") },
     { key: "KNOWLEDGE", label: t("community.filters.knowledge") },
   ];
-
-  const posts = useMemo(() => {
-    const filtered =
-      filter === "ALL"
-        ? MOCK_SIMILAR_STORIES
-        : MOCK_SIMILAR_STORIES.filter((post) => post.categoryCode === filter);
-
-    return [...filtered].sort((a, b) => {
-      if (sort === "POPULAR") {
-        return b.likesCount - a.likesCount;
-      }
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-  }, [filter, sort]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -204,16 +108,47 @@ export default function CommunityScreen() {
         </Pressable>
       </View>
 
-      <FlatList
-        data={posts}
-        keyExtractor={(item) => String(item.postId)}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => <CommunityPostCard story={item} />}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>{t("community.empty")}</Text>
-        }
-      />
+      {postsQuery.isLoading ? (
+        <View style={styles.stateBox}>
+          <ActivityIndicator color={PRIMARY} />
+          <Text style={styles.stateText}>{t("community.loading")}</Text>
+        </View>
+      ) : postsQuery.isError ? (
+        <View style={styles.stateBox}>
+          <Text style={styles.stateText}>{t("community.error")}</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              void postsQuery.refetch();
+            }}
+            style={({ pressed }) => [
+              styles.retryButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.retryText}>
+              {postsQuery.isFetching
+                ? t("community.loading")
+                : t("community.retry")}
+            </Text>
+          </Pressable>
+        </View>
+      ) : (
+        <FlatList
+          data={postsQuery.data ?? []}
+          keyExtractor={(item) => String(item.postId)}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshing={postsQuery.isRefetching}
+          onRefresh={() => {
+            void postsQuery.refetch();
+          }}
+          renderItem={({ item }) => <CommunityPostCard post={item} />}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>{t("community.empty")}</Text>
+          }
+        />
+      )}
 
       <Modal
         transparent
@@ -221,7 +156,10 @@ export default function CommunityScreen() {
         animationType="fade"
         onRequestClose={() => setSortOpen(false)}
       >
-        <Pressable style={styles.modalBackdrop} onPress={() => setSortOpen(false)}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setSortOpen(false)}
+        >
           <View style={styles.sortSheet}>
             {(["LATEST", "POPULAR"] as SortKey[]).map((option) => (
               <Pressable
@@ -343,133 +281,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 28,
     gap: 14,
+    flexGrow: 1,
   },
   emptyText: {
     color: MUTED,
     textAlign: "center",
     marginTop: 40,
   },
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 22,
-    padding: 16,
-    shadowColor: "#1A1238",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  authorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 12,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: BADGE_BG,
-  },
-  authorCopy: {
+  stateBox: {
     flex: 1,
-    gap: 2,
-  },
-  authorName: {
-    color: TEXT,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  authorTime: {
-    color: MUTED,
-    fontSize: 12,
-  },
-  categoryBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-    backgroundColor: BADGE_BG,
-  },
-  categoryText: {
-    color: PRIMARY,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  imageWrap: {
-    borderRadius: 16,
-    overflow: "hidden",
-    marginBottom: 12,
-    backgroundColor: "#EEEAF8",
-  },
-  coverImage: {
-    width: "100%",
-    height: 180,
-  },
-  matchBadge: {
-    position: "absolute",
-    left: 10,
-    bottom: 10,
-    flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.92)",
+    justifyContent: "center",
+    gap: 12,
+    paddingHorizontal: 24,
   },
-  matchBadgeText: {
-    color: TEXT,
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  title: {
-    color: TEXT,
-    fontSize: 17,
-    lineHeight: 23,
-    fontWeight: "800",
-    marginBottom: 6,
-  },
-  preview: {
+  stateText: {
     color: MUTED,
     fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 10,
+    fontWeight: "600",
+    textAlign: "center",
   },
-  tagsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 14,
-  },
-  tagChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+  retryButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(138,107,232,0.28)",
+    backgroundColor: "#ECEAF3",
   },
-  tagText: {
+  retryText: {
     color: PRIMARY,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  actionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  actionGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  actionCount: {
-    color: MUTED,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  actionSpacer: {
-    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
   },
   modalBackdrop: {
     flex: 1,

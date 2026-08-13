@@ -1,34 +1,70 @@
+import type { EmotionCode } from "@/types/emotionType";
 import type { z } from "zod";
 import {
   monthlyEmotionStatisticsDataSchema,
   monthlyEmotionStatisticsResponseSchema,
-  weeklyEmotionStatisticsDataSchema,
-  weeklyEmotionStatisticsResponseSchema,
 } from "../schemas/emotionStatisticsSchema";
 
-export type WeeklyEmotionStatisticsResponse = z.infer<
-  typeof weeklyEmotionStatisticsResponseSchema
->;
+export type WeeklyEmotionPeriod = {
+  startDate: string;
+  endDate: string;
+};
 
-export type WeeklyEmotionStatisticsData = z.infer<
-  typeof weeklyEmotionStatisticsDataSchema
->;
+export type WeeklyDominantEmotion = {
+  code: EmotionCode;
+  name: string;
+};
 
-export type WeeklyStatisticsPeriod =
-  WeeklyEmotionStatisticsData["period"];
+export type WeeklyDailyScore = {
+  date: string;
+  /** Diary бичээгүй өдөр response-д field өөрөө байхгүй. */
+  emotionCode?: EmotionCode;
+};
 
-export type DominantEmotion = NonNullable<
-  WeeklyEmotionStatisticsData["dominantEmotion"]
->;
+export type WeeklyEmotionDistribution = {
+  emotionCode: EmotionCode;
+  emotionName: string;
+  count: number;
+  ratio: number;
+};
 
-export type DailyEmotionScore =
-  WeeklyEmotionStatisticsData["dailyScores"][number];
+export type WeeklyTopTag = {
+  tagId: number;
+  tagName: string;
+  count: number;
+};
 
-export type EmotionDistribution =
-  WeeklyEmotionStatisticsData["emotionDistribution"][number];
+export type WeeklyEmotionStatisticsData = {
+  period: WeeklyEmotionPeriod;
+  recordedDays: number;
+  dominantEmotion: WeeklyDominantEmotion | null;
+  dailyScores: WeeklyDailyScore[];
+  emotionDistribution: WeeklyEmotionDistribution[];
+  topTags: WeeklyTopTag[];
+};
 
-export type EmotionTopTag =
-  WeeklyEmotionStatisticsData["topTags"][number];
+export type WeeklyEmotionStatisticsResponse = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: WeeklyEmotionStatisticsData;
+  requestId: string;
+};
+
+/** @deprecated Prefer WeeklyEmotionPeriod — kept for existing imports */
+export type WeeklyStatisticsPeriod = WeeklyEmotionPeriod;
+
+/** @deprecated Prefer WeeklyDominantEmotion */
+export type DominantEmotion = WeeklyDominantEmotion;
+
+/** @deprecated Prefer WeeklyDailyScore */
+export type DailyEmotionScore = WeeklyDailyScore;
+
+/** Shared distribution item (weekly + monthly) */
+export type EmotionDistribution = WeeklyEmotionDistribution;
+
+/** Shared top tag (weekly + monthly) */
+export type EmotionTopTag = WeeklyTopTag;
 
 export type GetWeeklyEmotionStatisticsRequest = {
   /** yyyy-MM-dd — backend resolves the week that contains this date */

@@ -95,8 +95,8 @@ export default function RootLayout() {
           */}
           <StatusBar
             style={isDark ? "light" : "dark"}
-            translucent
-            backgroundColor="transparent"
+            translucent={false}
+            // backgroundColor={colors.background}
           />
         </ThemeProvider>
       </GluestackUIProvider>

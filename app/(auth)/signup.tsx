@@ -1,10 +1,12 @@
 import { useSocialAuthActions } from "@/hooks/auth/useSocialAuthActions";
-import { useAppStore, type Language } from "@/store/use-language-store";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { router, type Href } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Image,
+  ImageBackground,
   Platform,
   Pressable,
   StyleSheet,
@@ -15,72 +17,51 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const APPLE_INK = "#1d1d1f";
 const MUTED = "#6E6E73";
-const SCREEN_GRADIENT = ["#f3edff", "#fff6f5"] as const;
+const SIGNUP_BACKGROUND = require("@/assets/images/signupbg.png");
+const SIGNUP_LOGO = require("@/assets/images/logo_default.png");
 const LOGIN_HREF = "/(auth)/login" as Href;
-
-const COPY: Record<
-  Language,
-  {
-    title: string;
-    subtitle: string;
-    google: string;
-    apple: string;
-    or: string;
-    signIn: string;
-  }
-> = {
-  en: {
-    title: "Create your account",
-    subtitle: "Start your journal journey today",
-    google: "Continue with Google",
-    apple: "Continue with Apple",
-    or: "or",
-    signIn: "Already have an account? Sign in",
-  },
-  mn: {
-    title: "Бүртгэл үүсгэх",
-    subtitle: "Өнөөдөр журналын аялалаа эхлүүлээрэй",
-    google: "Google-р үргэлжлүүлэх",
-    apple: "Apple-р үргэлжлүүлэх",
-    or: "эсвэл",
-    signIn: "Бүртгэлтэй юу? Нэвтрэх",
-  },
-  ko: {
-    title: "계정 만들기",
-    subtitle: "오늘부터 저널을 시작해 보세요",
-    google: "Google로 계속하기",
-    apple: "Apple로 계속하기",
-    or: "또는",
-    signIn: "이미 계정이 있나요? 로그인",
-  },
-};
+const EMAIL_SIGNUP_HREF = "/(auth)/email-signup" as Href;
 
 export default function SignupScreen() {
-  const language = useAppStore((state) => state.language) ?? "mn";
-  const copy = COPY[language];
+  const { t } = useTranslation();
   const { isPending, startSocialAuth } = useSocialAuthActions();
 
   return (
-    <LinearGradient
-      colors={[...SCREEN_GRADIENT]}
-      locations={[0, 1]}
-      start={{ x: 0.1, y: 0 }}
-      end={{ x: 0.9, y: 1 }}
-      style={styles.gradient}
+    <ImageBackground
+      source={SIGNUP_BACKGROUND}
+      style={styles.background}
+      imageStyle={styles.backgroundImage}
+      resizeMode="cover"
     >
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.title}>{copy.title}</Text>
-            <Text style={styles.subtitle}>{copy.subtitle}</Text>
+            <Text style={styles.title}>{t("auth.signup.title")}</Text>
+            <Image
+              source={SIGNUP_LOGO}
+              style={styles.logo}
+              resizeMode="contain"
+              accessibilityLabel="SoulLink"
+            />
+            <Text style={styles.subtitle}>{t("auth.signup.subtitle")}</Text>
           </View>
 
           <View style={styles.spacer} />
+        </View>
+      </SafeAreaView>
 
+      <View style={styles.sheetWrap}>
+        <BlurView
+          intensity={Platform.OS === "ios" ? 42 : 70}
+          tint="light"
+          style={styles.glassSheet}
+        >
+          <View style={styles.glassTint} />
+          <SafeAreaView edges={["bottom"]} style={styles.sheetSafe}>
           <View style={styles.actions}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={copy.google}
+              accessibilityLabel={t("auth.signup.google")}
               disabled={isPending}
               onPress={() => startSocialAuth("GOOGLE")}
               style={({ pressed }) => [
@@ -94,7 +75,7 @@ export default function SignupScreen() {
               ) : (
                 <>
                   <Ionicons name="logo-google" size={20} color={APPLE_INK} />
-                  <Text style={styles.socialLabel}>{copy.google}</Text>
+                  <Text style={styles.socialLabel}>{t("auth.signup.google")}</Text>
                 </>
               )}
             </Pressable>
@@ -102,7 +83,7 @@ export default function SignupScreen() {
             {Platform.OS === "ios" ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={copy.apple}
+                accessibilityLabel={t("auth.signup.apple")}
                 disabled={isPending}
                 onPress={() => startSocialAuth("APPLE")}
                 style={({ pressed }) => [
@@ -118,7 +99,7 @@ export default function SignupScreen() {
                   <>
                     <Ionicons name="logo-apple" size={22} color="#FFFFFF" />
                     <Text style={[styles.socialLabel, styles.appleLabel]}>
-                      {copy.apple}
+                      {t("auth.signup.apple")}
                     </Text>
                   </>
                 )}
@@ -127,28 +108,47 @@ export default function SignupScreen() {
 
             <View style={styles.orRow}>
               <View style={styles.orLine} />
-              <Text style={styles.orText}>{copy.or}</Text>
+              <Text style={styles.orText}>{t("auth.signup.or")}</Text>
               <View style={styles.orLine} />
             </View>
 
             <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("auth.emailSignIn")}
+            onPress={() => router.push(EMAIL_SIGNUP_HREF)}
+            style={styles.emailSignInLink}
+            >
+              <Ionicons name="mail" size={20} color={APPLE_INK} />
+              <Text style={styles.emailSignInLinkText}>{t("auth.emailSignIn")}</Text>
+
+            </Pressable>
+
+            <Pressable
               accessibilityRole="link"
-              accessibilityLabel={copy.signIn}
+              accessibilityLabel={t("auth.signup.signIn")}
               onPress={() => router.push(LOGIN_HREF)}
               hitSlop={8}
             >
-              <Text style={styles.signInLink}>{copy.signIn}</Text>
+            
+              <Text style={styles.signInLink}>{t("auth.signup.signIn")}</Text>
             </Pressable>
           </View>
-        </View>
-      </SafeAreaView>
-    </LinearGradient>
+          </SafeAreaView>
+        </BlurView>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  gradient: {
+  background: {
     flex: 1,
+    backgroundColor: "#f2ece8",
+  },
+  backgroundImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   safeArea: {
     flex: 1,
@@ -158,30 +158,68 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 28,
-    paddingBottom: 20,
   },
   header: {
     marginTop: 24,
+    alignItems: "center",
+    gap: 10,
   },
   title: {
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 26,
+    lineHeight: 36,
     fontWeight: "700",
     letterSpacing: -0.5,
     color: APPLE_INK,
+    textAlign: "center",
+  },
+  logo: {
+    width: 200,
+    height: 60,
   },
   subtitle: {
-    marginTop: 10,
     fontSize: 15,
     lineHeight: 22,
-    color: MUTED,
+    color: APPLE_INK,
+    textAlign: "center",
   },
   spacer: {
     flex: 1,
   },
+  sheetWrap: {
+    overflow: "hidden",
+    borderTopLeftRadius: 44,
+    borderTopRightRadius: 44,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#2A2A4A",
+        shadowOffset: { width: 0, height: -8 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 16,
+      },
+    }),
+  },
+  glassSheet: {
+    overflow: "hidden",
+    borderTopLeftRadius: 44,
+    borderTopRightRadius: 44,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255,255,255,0.72)",
+  },
+  glassTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255, 252, 248, 0.42)",
+  },
+  sheetSafe: {
+    backgroundColor: "transparent",
+  },
   actions: {
     gap: 14,
-    paddingBottom: 8,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 12,
   },
   socialButton: {
     minHeight: 56,
@@ -196,6 +234,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 3,
+  },
+  emailSignInLink: {
+    minHeight: 56,
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    shadowColor: "#0A2540",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  emailSignInLinkText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: APPLE_INK,
   },
   appleButton: {
     backgroundColor: APPLE_INK,
@@ -217,7 +274,7 @@ const styles = StyleSheet.create({
   orLine: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "rgba(29,29,31,0.22)",
+    backgroundColor: "rgba(29,29,31,0.18)",
   },
   orText: {
     fontSize: 13,

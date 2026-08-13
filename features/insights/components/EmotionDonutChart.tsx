@@ -1,6 +1,7 @@
 import { INSIGHT_COLORS } from "@/features/insights/constants/insights.constants";
 import type { InsightEmotionShare } from "@/features/insights/types/insights.types";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 import { PieChart } from "react-native-gifted-charts/dist/PieChart";
 
@@ -13,6 +14,7 @@ export function EmotionDonutChart({
   shares,
   totalDays,
 }: EmotionDonutChartProps) {
+  const { t } = useTranslation();
   const chartData = useMemo(() => {
     const active = shares.filter((item) => item.count > 0);
 
@@ -54,7 +56,9 @@ export function EmotionDonutChart({
           innerCircleColor={INSIGHT_COLORS.card}
           centerLabelComponent={() => (
             <View style={styles.centerLabel}>
-              <Text style={styles.centerValue}>{totalDays} өдөр</Text>
+              <Text style={styles.centerValue}>
+                {t("insights.chart.days", { count: totalDays })}
+              </Text>
             </View>
           )}
         />

@@ -3,6 +3,46 @@
     "continue": "Үргэлжлүүлэх",
     "chooseLanguage": "Хэлээ сонгоно уу"
   },
+  "auth": {
+    "emailSignIn": "И-мэйлээр үргэлжлүүлэх",
+    "signup": {
+      "title": "Бүртгэл үүсгэх",
+      "subtitle": "Өнөөдөр журналын аялалаа эхлүүлээрэй",
+      "google": "Google-р үргэлжлүүлэх",
+      "apple": "Apple-р үргэлжлүүлэх",
+      "or": "эсвэл",
+      "signIn": "Бүртгэлтэй юу? Нэвтрэх"
+    },
+    "emailSignup": {
+      "title": "Бүртгэл үүсгэх",
+      "subtitle": "Өөрийн сэтгэл хөдлөлийн тэмдэглэлээ эхлүүлээрэй",
+      "id": "ID",
+      "idPlaceholder": "4-50 тэмдэгт, латин үсэг болон тоо",
+      "password": "Нууц үг",
+      "passwordPlaceholder": "8+ тэмдэгт, үсэг болон тоо",
+      "passwordConfirm": "Нууц үг давтах",
+      "passwordConfirmPlaceholder": "Нууц үгээ дахин оруулна уу",
+      "nickname": "Хоч нэр",
+      "nicknamePlaceholder": "Апп дээр харагдах нэр",
+      "email": "И-мэйл",
+      "required": "Заавал",
+      "sendVerificationCode": "Код авах",
+      "resendVerificationCode": "Дахин илгээх",
+      "resendVerificationCodeCountdown": "Дахин илгээх {{seconds}}s",
+      "verificationCode": "Баталгаажуулах код",
+      "verificationCodePlaceholder": "6 оронтой код",
+      "verify": "Шалгах",
+      "verificationComplete": "И-мэйл баталгаажлаа.",
+      "agreementTitle": "Нөхцөл зөвшөөрөл",
+      "allAgree": "Бүгдийг зөвшөөрөх",
+      "serviceAgree": "[Заавал] Үйлчилгээний нөхцөл",
+      "privacyAgree": "[Заавал] Нууцлалын бодлого",
+      "marketingAgree": "[Сонголттой] Маркетингийн мэдээлэл",
+      "submit": "Бүртгүүлэх",
+      "hasAccount": "Бүртгэлтэй юу?",
+      "login": "Нэвтрэх"
+    }
+  },
   "onboarding": {
     "understand": {
       "title": "ТҮГШҮҮРЭЭ ИЛҮҮ САЙН ОЙЛГОЁО",
@@ -51,6 +91,9 @@
     "weeklyJournal": {
       "today": "Өнөөдөр",
       "noEntry": "Энэ өдрийн тэмдэглэл байхгүй",
+      "loading": "Долоо хоногийн тэмдэглэл ачаалж байна…",
+      "error": "Тэмдэглэл ачаалж чадсангүй",
+      "retry": "Дахин оролдох",
       "tags": {
         "focused": "Төвлөрсөн",
         "grateful": "Талархсан",
@@ -223,6 +266,9 @@
     "addPost": "Пост нэмэх",
     "addPostTitle": "Пост нэмэх",
     "empty": "Одоогоор түүх байхгүй.",
+    "loading": "Пост ачаалж байна…",
+    "error": "Пост ачаалж чадсангүй",
+    "retry": "Дахин оролдох",
     "filters": {
       "all": "Бүгд",
       "counsel": "Counsel",
@@ -250,6 +296,75 @@
       "anonymousTitle": "Нэргүй пост",
       "anonymousSubtitle": "Таны нэр нууцлагдана.",
       "submit": "Community-д нийтлэх"
+    }
+  },
+  "insights": {
+    "title": "AI Insight",
+    "back": "Буцах",
+    "periods": {
+      "day": "Өдөр",
+      "week": "7 хоног",
+      "month": "Сар"
+    },
+    "day": {
+      "unavailable": "Өдрийн статистик API холбогдоогүй",
+      "hint": "Week → STAT-001, Month → STAT-002. Day-д statistics API байхгүй."
+    },
+    "loading": "Тайлан ачаалж байна...",
+    "error": "Тайлан ачаалж чадсангүй",
+    "retry": "Дахин оролдох",
+    "retrying": "Ачаалж байна...",
+    "detailReport": "Дэлгэрэнгүй тайлан",
+    "aiObservation": "AI-ийн ажиглалт",
+    "previousReports": "Өмнөх тайлангууд",
+    "observation": {
+      "recurring": "Давтагдсан мэдрэмж",
+      "commonTag": "Түгээмэл tag"
+    },
+    "chart": {
+      "days": "{{count}} өдөр"
+    },
+    "dateRange": {
+      "sameMonth": "{{month}}-р сарын {{startDay}}–{{endDay}}",
+      "crossMonth": "{{startMonth}}/{{startDay}} – {{endMonth}}/{{endDay}}"
+    },
+    "weekly": {
+      "periodLabel": "7 хоногийн тайлан",
+      "headlineDominant": "Энэ долоо хоногт чи илүү {{emotion}} байлаа",
+      "headlineEmpty": "Энэ долоо хоногт тэмдэглэл хараахан байхгүй",
+      "headlineFallback": "Энэ долоо хоногийн сэтгэл хөдлөлийн тойм",
+      "recordedDays": "Бичсэн өдөр",
+      "withinWeek": "7 хоногийн дотор",
+      "journals": "Тэмдэглэл",
+      "totalEntries": "нийт бичилт",
+      "journalCaption": "тэмдэглэл",
+      "daysCount": "{{count}} өдөр"
+    },
+    "monthly": {
+      "periodLabel": "Сарын тайлан",
+      "periodLabelMonth": "{{month}}-р сарын тайлан",
+      "headlineDominant": "Энэ сар чи илүү {{emotion}} байлаа",
+      "headlineEmpty": "Энэ сар тэмдэглэл хараахан байхгүй",
+      "headlineAverage": "Энэ сарын дундаж оноо {{score}}",
+      "headlineFallback": "Энэ сарын сэтгэл хөдлөлийн тойм",
+      "recordRate": "Бичилтийн хувь",
+      "daysCount": "{{count}} өдөр",
+      "averageScore": "Дундаж оноо",
+      "scoreChange": "{{value}} өмнөх сараас",
+      "scoreMissing": "оноо байхгүй",
+      "journalCaption": "тэмдэглэл",
+      "bestDay": "Хамгийн сайн өдөр",
+      "lowestDay": "Хамгийн доод өдөр",
+      "recordRateLabel": "{{rate}}% бичилт"
+    },
+    "mock": {
+      "aiObservation": "Ажилтай холбоотой өдрүүдэд түгшүүр нэмэгдсэн ч амралтын өдрүүдэд сэтгэл санаа тогтворжжээ.",
+      "previous": {
+        "weekTitle": "7-р сарын 6–12",
+        "weekMood": "Тайван",
+        "monthTitle": "6-р сарын тайлан",
+        "monthMood": "Сайжирсан"
+      }
     }
   }
 }

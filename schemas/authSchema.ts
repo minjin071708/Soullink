@@ -132,3 +132,109 @@ export const socialSignupResponseSchema = z.object({
 
 /** @deprecated use authTokensSchema */
 export const loginTokensSchema = authTokensSchema;
+
+export const emailSignupRequestSchema = z
+  .object({
+    memberId: z
+      .string()
+      .trim()
+      .min(4)
+      .max(50)
+      .regex(/^[A-Za-z0-9._-]+$/),
+
+    email: z.string().trim().email().max(254),
+
+    emailVerificationToken: z.string().min(1),
+
+    password: z
+      .string()
+      .min(8)
+      .max(64)
+      .regex(/[A-Za-z]/)
+      .regex(/[0-9]/),
+
+    passwordConfirm: z.string().min(8).max(64),
+
+    nickname: z.string().trim().min(1).max(30),
+    serviceTermsAgree: z
+    .boolean()
+    .refine((value) => value === true, {
+      message: "서비스 이용약관에 동의해 주세요.",
+    }),
+  
+  privacyAgree: z
+    .boolean()
+    .refine((value) => value === true, {
+      message: "개인정보 처리방침에 동의해 주세요.",
+    }),
+  
+  marketingAgree: z.boolean(),
+  })
+  .refine((data) => data.password === data.passwordConfirm, {
+    path: ["passwordConfirm"],
+    message: "비밀번호가 일치하지 않습니다.",
+  });
+
+  export const emailSignupResponseSchema = z.object({
+    success: z.literal(true),
+    code: z.string(),
+    message: z.string(),
+  
+    data: z.object({
+      memberNo: z.number().int().positive(),
+      memberId: z.string(),
+      nickname: z.string(),
+      email: z.string().email(),
+      memberStatus: z.literal("ACTIVE"),
+      appleAppAccountToken: z.string().uuid(),
+      createdAt: z.string(),
+    }),
+  
+    requestId: z.string().uuid(),
+  });
+
+  // send email verification code
+
+  export const sendEmailVerificationCodeRequestSchema = z.object({
+    email: z.string().trim().email().max(254),
+  });
+
+  export const sendEmailVerificationCodeResponseSchema = z.object({
+    success: z.literal(true),
+    code: z.literal("EMAIL_VERIFICATION_SENT"),
+    message: z.string(),
+  
+    data: z.object({
+      verificationId: z.string().uuid(),
+      maskedEmail: z.string(),
+      expiresInSeconds: z.number().int().positive(),
+      resendAvailableInSeconds: z.number().int().positive(),
+    }),
+  
+    requestId: z.string(),
+  });
+
+  // verify email code
+
+  export const verifyEmailCodeRequestSchema = z.object({
+    verificationId: z.string().uuid(),
+  
+    email: z.string().trim().email().max(254),
+  
+    code: z.string().regex(/^\d{6}$/),
+  });
+
+  export const verifyEmailCodeResponseSchema = z.object({
+    success: z.literal(true),
+    code: z.string(),
+    message: z.string(),
+  
+    data: z.object({
+      verified: z.literal(true),
+      emailVerificationToken: z.string().min(1),
+      tokenExpiresInSeconds: z.number().int().positive(),
+    }),
+  
+    requestId: z.string(),
+  });
+  

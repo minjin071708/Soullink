@@ -1,7 +1,7 @@
 import { EmotionDonutChart } from "@/features/insights/components/EmotionDonutChart";
 import { INSIGHT_COLORS } from "@/features/insights/constants/insights.constants";
 import type { WeeklyInsightMock } from "@/features/insights/types/insights.types";
-import type { WeeklyEmotionStatisticsData } from "@/types/emotionStatisticsType";
+import type { MonthlyEmotionStatisticsData } from "@/types/emotionStatisticsType";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
@@ -9,7 +9,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 const INSIGHT_MASCOT = require("@/assets/mascotImages/insightMascot.png");
 
-type WeeklyInsightCardProps = {
+type MonthlyInsightCardProps = {
   data: Pick<
     WeeklyInsightMock,
     | "periodLabel"
@@ -20,10 +20,18 @@ type WeeklyInsightCardProps = {
     | "dominantEmotion"
     | "emotionShares"
   >;
-  stats?: Pick<WeeklyEmotionStatisticsData, "recordedDays"> | null;
+  stats?: Pick<
+    MonthlyEmotionStatisticsData,
+    | "recordedDays"
+    | "recordRate"
+    | "averageScore"
+    | "scoreChange"
+    | "bestDay"
+    | "lowestDay"
+  > | null;
 };
 
-export function WeeklyInsightCard({ data, stats }: WeeklyInsightCardProps) {
+export function MonthlyInsightCard({ data, stats }: MonthlyInsightCardProps) {
   const { t } = useTranslation();
 
   return (
@@ -51,21 +59,35 @@ export function WeeklyInsightCard({ data, stats }: WeeklyInsightCardProps) {
         <View style={styles.metricRow}>
           <View style={styles.metricBox}>
             <Text style={styles.metricTitle}>
-              {t("insights.weekly.recordedDays")}
+              {t("insights.monthly.recordRate")}
             </Text>
-            <Text style={styles.metricValue}>{stats.recordedDays}</Text>
+            <Text style={styles.metricValue}>
+              {Math.round(stats.recordRate)}%
+            </Text>
             <Text style={styles.metricHint}>
-              {t("insights.weekly.withinWeek")}
+              {t("insights.monthly.daysCount", {
+                count: stats.recordedDays,
+              })}
             </Text>
           </View>
           <View style={styles.metricBox}>
             <Text style={styles.metricTitle}>
-              {t("insights.weekly.journals")}
+              {t("insights.monthly.averageScore")}
             </Text>
-            <Text style={styles.metricValue}>{data.journalCount}</Text>
-            <Text style={styles.metricHint}>
-              {t("insights.weekly.totalEntries")}
+            <Text style={styles.metricValue}>
+              {stats.averageScore != null ? stats.averageScore.toFixed(1) : "—"}
             </Text>
+            {stats.scoreChange != null ? (
+              <Text style={styles.metricHint}>
+                {t("insights.monthly.scoreChange", {
+                  value: `${stats.scoreChange > 0 ? "+" : ""}${stats.scoreChange.toFixed(1)}`,
+                })}
+              </Text>
+            ) : (
+              <Text style={styles.metricHint}>
+                {t("insights.monthly.scoreMissing")}
+              </Text>
+            )}
           </View>
         </View>
       ) : null}
@@ -104,14 +126,54 @@ export function WeeklyInsightCard({ data, stats }: WeeklyInsightCardProps) {
           <View style={styles.summaryCopy}>
             <Text style={styles.summaryValue}>{data.journalCount}</Text>
             <Text style={styles.summaryCaption}>
-              {t("insights.weekly.journalCaption")}
+              {t("insights.monthly.journalCaption")}
             </Text>
           </View>
         </View>
       </View>
+
+      {stats?.bestDay || stats?.lowestDay ? (
+        <View style={styles.dayRow}>
+          {stats.bestDay ? (
+            <View style={styles.dayBox}>
+              <Ionicons
+                name="sunny-outline"
+                size={16}
+                color={INSIGHT_COLORS.happy}
+              />
+              <View style={styles.dayCopy}>
+                <Text style={styles.dayTitle}>
+                  {t("insights.monthly.bestDay")}
+                </Text>
+                <Text style={styles.dayValue}>
+                  {stats.bestDay.date} · {stats.bestDay.score}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+          {stats.lowestDay ? (
+            <View style={styles.dayBox}>
+              <Ionicons
+                name="rainy-outline"
+                size={16}
+                color={INSIGHT_COLORS.sad}
+              />
+              <View style={styles.dayCopy}>
+                <Text style={styles.dayTitle}>
+                  {t("insights.monthly.lowestDay")}
+                </Text>
+                <Text style={styles.dayValue}>
+                  {stats.lowestDay.date} · {stats.lowestDay.score}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   card: {
     backgroundColor: INSIGHT_COLORS.card,
@@ -232,5 +294,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: INSIGHT_COLORS.muted,
+  },
+  dayRow: {
+    marginTop: 12,
+    gap: 8,
+  },
+  dayBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: INSIGHT_COLORS.border,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: "#FCFBFD",
+  },
+  dayCopy: {
+    flex: 1,
+  },
+  dayTitle: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: INSIGHT_COLORS.muted,
+  },
+  dayValue: {
+    marginTop: 2,
+    fontSize: 13,
+    fontWeight: "700",
+    color: INSIGHT_COLORS.title,
   },
 });

@@ -108,3 +108,97 @@ export type CreateWeeklyAnalysisResponseType = z.infer<
 export type WeeklyAnalysisData = z.infer<
   typeof createWeeklyAnalysisResponseSchema
 >["data"];
+
+export const analysisPeriodSchema = z.object({
+  startDate: z.string(),
+  endDate: z.string(),
+});
+
+export const mainEmotionSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+});
+
+export const analysisKeyPatternSchema = z.object({
+  patternCode: z.string(),
+  title: z.string(),
+  description: z.string(),
+  confidence: z.number().nullable(),
+});
+
+export const analysisTriggerSchema = z.object({
+  tagCode: z.string(),
+  tagName: z.string(),
+  count: z.number().int(),
+});
+
+export const analysisRecommendationSchema = z.object({
+  recommendationId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  priority: z.number().int().min(1).max(5),
+});
+
+export const analysisSafetySchema = z.object({
+  riskLevel: safetyRiskLevelSchema,
+  showHelpGuide: z.boolean(),
+});
+
+export const dailyAnalysisDataSchema = z.object({
+  analysisId: z.number().int(),
+  analysisType: analysisTypeSchema,
+  analysisStatus: analysisStatusSchema,
+  period: analysisPeriodSchema,
+  summary: z.string(),
+  mainEmotion: mainEmotionSchema.nullable(),
+  averageScore: z.number().nullable(),
+  scoreTrend: scoreTrendSchema.nullable(),
+  keyPatterns: z.array(analysisKeyPatternSchema),
+  triggers: z.array(analysisTriggerSchema),
+  recommendations: z.array(analysisRecommendationSchema).max(5),
+  safety: analysisSafetySchema,
+  generatedAt: z.string(),
+  modelName: z.string(),
+  diaryId: z.number().int(),
+  dailyReflection: z.string(),
+  recentContextDays: z.number().int().min(0).max(7),
+});
+
+export const createDailyAnalysisResponseSchema = z.object({
+  success: z.boolean(),
+  code: z.string(),
+  message: z.string(),
+  data: dailyAnalysisDataSchema,
+  requestId: z.string(),
+});
+
+export type CreateDailyAnalysisResponseType = z.infer<
+  typeof createDailyAnalysisResponseSchema
+>;
+
+export type DailyAnalysisData = z.infer<
+  typeof createDailyAnalysisResponseSchema
+>["data"];
+
+export const analysisJobStatusSchema = z.enum([
+  "STARTED",
+  "PROCESSING",
+  "COMPLETED",
+  "FAILED",
+]);
+
+export const createWeeklyAnalysisJobResponseSchema = z.object({
+  success: z.boolean(),
+  code: z.string(),
+  message: z.string(),
+  data: z.object({
+    jobExecutionId: z.number().int(),
+    jobStatus: analysisJobStatusSchema,
+    baseDate: z.string().optional(),
+  }),
+  requestId: z.string(),
+});
+
+export type CreateWeeklyAnalysisJobResponse = z.infer<
+  typeof createWeeklyAnalysisJobResponseSchema
+>;

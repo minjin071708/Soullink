@@ -1,7 +1,10 @@
 import { useAuthBootstrap } from "@/hooks/auth/useAuthBootstrap";
 import { useAppStore } from "@/store/use-language-store";
+import { Image } from "expo-image";
 import { Redirect } from "expo-router";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+
+const BOOT_IMAGE = require("@/assets/images/loginBackground.png");
 
 export default function IndexScreen() {
   const { status, hasCompletedBootstrap } = useAuthBootstrap();
@@ -9,10 +12,16 @@ export default function IndexScreen() {
   const hasCompletedOnboarding = useAppStore((s) => s.hasCompletedOnboarding);
   const hasHydrated = useAppStore((s) => s.hasHydrated);
 
+  // Cold start + biometric bootstrap wait
   if (!hasHydrated || !hasCompletedBootstrap || status === "bootstrapping") {
     return (
       <View style={styles.boot}>
-        <ActivityIndicator size="large" color="#8A6BE8" />
+        <Image
+          source={BOOT_IMAGE}
+          style={styles.bootImage}
+          contentFit="cover"
+          accessibilityLabel="SoulLink"
+        />
       </View>
     );
   }
@@ -42,5 +51,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#f3edff",
+  },
+  bootImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
 });

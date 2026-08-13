@@ -4,6 +4,7 @@ import type {
   PreviousReport,
 } from "@/features/insights/types/insights.types";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type AiObservationSectionProps = {
@@ -15,10 +16,12 @@ export function AiObservationSection({
   observation,
   items,
 }: AiObservationSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.section}>
       <View style={styles.titleRow}>
-        <Text style={styles.title}>AI-ийн ажиглалт</Text>
+        <Text style={styles.title}>{t("insights.aiObservation")}</Text>
         <Ionicons name="sparkles" size={16} color={INSIGHT_COLORS.sad} />
       </View>
       <Text style={styles.body}>{observation}</Text>
@@ -64,9 +67,11 @@ export function PreviousReportsSection({
   reports,
   onPressReport,
 }: PreviousReportsSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.section}>
-      <Text style={styles.title}>Өмнөх тайлангууд</Text>
+      <Text style={styles.title}>{t("insights.previousReports")}</Text>
       <View style={styles.reportList}>
         {reports.map((report) => (
           <Pressable

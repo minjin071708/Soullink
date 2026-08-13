@@ -1,15 +1,21 @@
 import {
   authTokensSchema,
+  deviceTypeSchema,
+  emailSignupRequestSchema,
+  emailSignupResponseSchema,
   loginResponseSchema,
   memberMeResponseSchema,
   memberSchema,
+  sendEmailVerificationCodeRequestSchema,
+  sendEmailVerificationCodeResponseSchema,
   socialLoginRequestSchema,
   socialLoginResponseSchema,
   socialProviderSchema,
   socialSignupRequestSchema,
   socialSignupResponseSchema,
   updateMemberRequestSchema,
-  deviceTypeSchema,
+  verifyEmailCodeRequestSchema,
+  verifyEmailCodeResponseSchema,
 } from "@/schemas/authSchema";
 import { z } from "zod";
 
@@ -47,3 +53,15 @@ export type LoginRequestType = {
 export type RefreshRequestType = {
   refreshToken: string;
 };
+
+export type SendEmailVerificationCodeRequest = z.infer<typeof sendEmailVerificationCodeRequestSchema>;
+export type SendEmailVerificationCodeResponse = z.infer<typeof sendEmailVerificationCodeResponseSchema>;
+export type SendEmailVerificationCodeData = SendEmailVerificationCodeResponse["data"];
+
+export type VerifyEmailCodeRequest = z.infer<typeof verifyEmailCodeRequestSchema>;
+export type VerifyEmailCodeResponse = z.infer<typeof verifyEmailCodeResponseSchema>;
+export type VerifyEmailCodeData = VerifyEmailCodeResponse["data"];
+
+export type EmailSignupRequest = z.infer<typeof emailSignupRequestSchema>;
+export type EmailSignupResponse = z.infer<typeof emailSignupResponseSchema>;
+export type EmailSignupData = EmailSignupResponse["data"];

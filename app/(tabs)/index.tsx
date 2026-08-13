@@ -1,29 +1,40 @@
+import { CommunityPostCard } from "@/components/community/CommunityPostCard";
 import { GreetingSection } from "@/components/home/GreetingSection";
-import { SimilarStoriesSection } from "@/components/home/SimilarStoriesSection";
-import { WeeklyInsightCard } from "@/components/home/WeeklyInsightCard";
 import { WeeklyMoodJourneyCard } from "@/components/home/WeeklyMoodJourneyCard";
 import { MOODS } from "@/constants/moods";
+import { useCommunityPosts } from "@/hooks/community/useCommunityPosts";
 import { useDayNightPeriod } from "@/hooks/use-day-night-period";
 import { useAuthStore } from "@/store/authStore";
+import type { CommunityPost } from "@/types/community";
 import type { MoodId } from "@/types/moodType";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, type Href } from "expo-router";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
+  type ListRenderItemInfo,
+  type ViewToken,
 } from "react-native";
 
 const DAY_SCREEN_BG = "#F3E5D9";
-const NIGHT_SCREEN_BG = "#D0c0c7";
+const NIGHT_SCREEN_BG = "#f5ece9";
 const CONTENT_TEXT = "#2A2A6A";
+const MUTED = "#7A7596";
+const PRIMARY = "#8A6BE8";
+const BADGE_BG = "#F5F0FF";
 const GLASS_CARD_PADDING = 18;
 const CONTENT_HORIZONTAL_PADDING = 20;
+const HOME_COMMUNITY_POST_LIMIT = 5;
+const CARD_GAP = 16;
+const SIDE_INSET = 24;
 
 type GreetingKey = "Good Morning" | "Good Afternoon" | "Good Evening";
 
@@ -44,11 +55,43 @@ function getGreetingKey(date: Date = new Date()): {
   return { key: "Good Evening", emoji: "🌙" };
 }
 
+function PageDots({
+  count,
+  activeIndex,
+}: {
+  count: number;
+  activeIndex: number;
+}) {
+  if (count <= 1) {
+    return null;
+  }
+
+  return (
+    <View style={styles.pageDots}>
+      {Array.from({ length: count }, (_, index) => (
+        <View
+          key={index}
+          style={[
+            styles.pageDot,
+            index === activeIndex ? styles.pageDotActive : null,
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
+
 export default function HomeScreen() {
   const { t } = useTranslation();
   const member = useAuthStore((state) => state.member);
   const period = useDayNightPeriod();
+  const { width: windowWidth } = useWindowDimensions();
   const [selectedMood, setSelectedMood] = useState<MoodId | null>(null);
+  const [activePostIndex, setActivePostIndex] = useState(0);
+  const [postsSwipeEnabled, setPostsSwipeEnabled] = useState(true);
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 60,
+  }).current;
 
   const displayName =
     member?.nickname?.trim() ||
@@ -58,6 +101,28 @@ export default function HomeScreen() {
   const greeting = getGreetingKey();
   const screenBackground =
     period === "night" ? NIGHT_SCREEN_BG : DAY_SCREEN_BG;
+
+  const cardWidth = Math.min(windowWidth - SIDE_INSET * 2, 340);
+  const itemWidth = cardWidth + CARD_GAP;
+
+  const communityPostsQuery = useCommunityPosts({
+    sort: "LATEST",
+    page: 0,
+    size: HOME_COMMUNITY_POST_LIMIT,
+  });
+  const communityPosts = useMemo(
+    () => (communityPostsQuery.data ?? []).slice(0, HOME_COMMUNITY_POST_LIMIT),
+    [communityPostsQuery.data]
+  );
+
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const first = viewableItems[0];
+      if (first?.index != null) {
+        setActivePostIndex(first.index);
+      }
+    }
+  ).current;
 
   const handleMoodPress = (mood: MoodId) => {
     setSelectedMood(mood);
@@ -69,6 +134,20 @@ export default function HomeScreen() {
       });
     }, 140);
   };
+
+  const renderCommunityPost = ({
+    item,
+  }: ListRenderItemInfo<CommunityPost>) => (
+    <View style={{ width: itemWidth, alignItems: "center" }}>
+      <CommunityPostCard
+        post={item}
+        width={cardWidth}
+        onImageGestureActiveChange={(active) => {
+          setPostsSwipeEnabled(!active);
+        }}
+      />
+    </View>
+  );
 
   return (
     <View style={[styles.screen, { backgroundColor: screenBackground }]}>
@@ -82,13 +161,9 @@ export default function HomeScreen() {
           greetingIcon={greeting.emoji}
         />
 
-        <View style={[styles.content, { backgroundColor: screenBackground }]}>
+        <View style={styles.content}>
           <View style={styles.glassCard}>
-           
-
-            <Text style={styles.glassTitle}>
-              {t("home.howAreYouFeeling")}
-            </Text>
+            <Text style={styles.glassTitle}>{t("home.howAreYouFeeling")}</Text>
             <Text style={styles.glassSubtitle}>
               {t("home.chooseYourFeeling")}
             </Text>
@@ -141,8 +216,66 @@ export default function HomeScreen() {
           <WeeklyMoodJourneyCard />
         </View>
 
-        <WeeklyInsightCard />
-        <SimilarStoriesSection />
+        {communityPosts.length > 0 ? (
+          <View style={styles.communitySection}>
+            <View style={styles.communityHeader}>
+              <View style={styles.communityHeaderTitleRow}>
+                <Ionicons name="sparkles" size={16} color={PRIMARY} />
+                <Text style={styles.communityHeaderTitle}>
+                  {t("home.similarStories.title")}
+                </Text>
+              </View>
+              <Text style={styles.communityHeaderSubtitle}>
+                {t("home.similarStories.subtitle")}
+              </Text>
+            </View>
+
+            <FlatList
+              data={communityPosts}
+              keyExtractor={(item) => String(item.postId)}
+              horizontal
+              nestedScrollEnabled
+              scrollEnabled={postsSwipeEnabled}
+              showsHorizontalScrollIndicator={false}
+              decelerationRate="fast"
+              snapToInterval={itemWidth}
+              snapToAlignment="start"
+              disableIntervalMomentum
+              contentContainerStyle={{
+                paddingHorizontal:
+                  (windowWidth - cardWidth) / 2 - CARD_GAP / 2,
+              }}
+              getItemLayout={(_, index) => ({
+                length: itemWidth,
+                offset: itemWidth * index,
+                index,
+              })}
+              onViewableItemsChanged={onViewableItemsChanged}
+              viewabilityConfig={viewabilityConfig}
+              renderItem={renderCommunityPost}
+            />
+
+            <PageDots
+              count={communityPosts.length}
+              activeIndex={activePostIndex}
+            />
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("home.similarStories.seeAll")}
+              onPress={() => router.push("/community" as Href)}
+              style={({ pressed }) => [
+                styles.seeAllButton,
+                pressed && styles.moodPressed,
+              ]}
+            >
+              <Text style={styles.seeAllButtonText}>
+                {t("home.similarStories.seeAll")}
+              </Text>
+              <Ionicons name="arrow-forward" size={14} color={PRIMARY} />
+            </Pressable>
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -232,5 +365,65 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: "600",
     textAlign: "left",
+  },
+  communitySection: {
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  communityHeader: {
+    alignItems: "center",
+    paddingHorizontal: CONTENT_HORIZONTAL_PADDING,
+    marginBottom: 16,
+    gap: 6,
+  },
+  communityHeaderTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  communityHeaderTitle: {
+    color: CONTENT_TEXT,
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "800",
+  },
+  communityHeaderSubtitle: {
+    color: MUTED,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+    paddingHorizontal: 12,
+  },
+  pageDots: {
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 12,
+    alignSelf: "center",
+  },
+  pageDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "rgba(138,107,232,0.25)",
+  },
+  pageDotActive: {
+    backgroundColor: PRIMARY,
+  },
+  seeAllButton: {
+    alignSelf: "center",
+    marginTop: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: BADGE_BG,
+  },
+  seeAllButtonText: {
+    color: PRIMARY,
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "600",
   },
 });
