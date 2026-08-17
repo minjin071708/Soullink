@@ -13,6 +13,8 @@ export type CreateJournalRequestType = {
   mood: MoodId;
   content: string;
   inputMode: JournalInputMode;
+  /** Optional EMO-007 cause tag IDs */
+  tagIds?: number[];
 };
 
 export type UpdateEmotionDiaryRequestType = z.infer<

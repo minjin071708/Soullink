@@ -28,6 +28,13 @@ export default function JournalLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="success"
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
     </Stack>
   );
 }

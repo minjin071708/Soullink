@@ -1,3 +1,4 @@
+import { CauseTagsSection } from "@/components/journal/CauseTagsSection";
 import { VoiceJournalPanel } from "@/components/journal/VoiceJournalPanel";
 import { MoodPicker } from "@/components/mood/MoodPicker";
 import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
@@ -8,8 +9,8 @@ import {
   useToast,
 } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
-import { useCreateJournal } from "@/hooks/useCreateJournal";
 import { useDayNightPeriod } from "@/hooks/use-day-night-period";
+import { useCreateJournal } from "@/hooks/useCreateJournal";
 import { useJournalResult } from "@/hooks/useJournalResult";
 import { useUpdateEmotionDiary } from "@/hooks/useUpdateEmotionDiary";
 import type { JournalInputMode } from "@/types/journalType";
@@ -17,6 +18,7 @@ import type { MoodId } from "@/types/moodType";
 import { getMoodItem, isMoodId, parseMoodParam } from "@/utils/mood";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { AxiosError } from "axios";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
@@ -85,6 +87,7 @@ export default function JournalWriteScreen() {
   const [contentSource, setContentSource] =
     useState<JournalInputMode>("text");
   const [journalText, setJournalText] = useState("");
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [hasHydratedEdit, setHasHydratedEdit] = useState(!isEditMode);
 
   const mood = selectedMood;
@@ -123,6 +126,11 @@ export default function JournalWriteScreen() {
     }
 
     setJournalText(editQuery.data.content?.trim() || "");
+    setSelectedTagIds(
+      (editQuery.data.tags ?? [])
+        .map((tag) => tag.tagId)
+        .filter((tagId): tagId is number => Number.isInteger(tagId) && tagId > 0)
+    );
     setHasHydratedEdit(true);
   }, [editQuery.data, hasHydratedEdit, isEditMode, router]);
 
@@ -206,6 +214,7 @@ export default function JournalWriteScreen() {
           payload: {
             content: journalText.trim(),
             emotionCode: mood,
+            tagIds: selectedTagIds,
           },
         },
         {
@@ -232,11 +241,12 @@ export default function JournalWriteScreen() {
         mood,
         content: journalText.trim(),
         inputMode: contentSource,
+        tagIds: selectedTagIds,
       },
       {
         onSuccess: (response) => {
           router.replace({
-            pathname: "/journal/result",
+            pathname: "/journal/success",
             params: { diaryId: String(response.data.diaryId) },
           });
         },
@@ -420,27 +430,33 @@ export default function JournalWriteScreen() {
             </View>
 
             {inputMode === "text" ? (
-              <TextInput
-                value={journalText}
-                onChangeText={(next) => {
-                  setJournalText(next);
-                  if (contentSource === "voice" && next.trim().length === 0) {
-                    setContentSource("text");
-                  }
-                }}
-                placeholder={t("journal.write.textPlaceholder")}
-                placeholderTextColor={mutedColor}
-                multiline
-                textAlignVertical="top"
-                style={[
-                  styles.textInput,
-                  {
-                    color: textColor,
-                    backgroundColor: inputBackground,
-                    borderColor,
-                  },
-                ]}
-              />
+              <>
+                <TextInput
+                  value={journalText}
+                  onChangeText={(next) => {
+                    setJournalText(next);
+                    if (contentSource === "voice" && next.trim().length === 0) {
+                      setContentSource("text");
+                    }
+                  }}
+                  placeholder={t("journal.write.textPlaceholder")}
+                  placeholderTextColor={mutedColor}
+                  multiline
+                  textAlignVertical="top"
+                  style={[
+                    styles.textInput,
+                    {
+                      color: textColor,
+                      backgroundColor: inputBackground,
+                      borderColor,
+                    },
+                  ]}
+                />
+                <CauseTagsSection
+                  selectedTagIds={selectedTagIds}
+                  onChange={setSelectedTagIds}
+                />
+              </>
             ) : (
               <VoiceJournalPanel
                 textColor={textColor}
@@ -490,12 +506,17 @@ export default function JournalWriteScreen() {
 
             <Button
               variant="default"
-              className="mt-6"
+              className="mt-6 min-h-12"
+              size="lg"
               disabled={!canSubmit}
               onPress={handleSubmit}
             >
-              {isPending ? <ButtonSpinner /> : null}
-              <ButtonText>
+              {isPending ? (
+                <ButtonSpinner />
+              ) : (
+                <AntDesign name="send" size={20} color="#FFFFFF" />
+              )}
+              <ButtonText className="text-lg font-bold">
                 {isEditMode
                   ? t("journal.write.saveChanges")
                   : t("journal.write.submit")}

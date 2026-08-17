@@ -251,7 +251,14 @@
       "invalidMoodTitle": "Mood not found",
       "invalidMoodBody": "Choose a mood before writing your journal entry.",
       "chooseMood": "Choose mood",
-      "changeMood": "Change mood"
+      "changeMood": "Change mood",
+      "tags": {
+        "title": "What caused it?",
+        "subtitle": "Choose the reasons that apply",
+        "multiHint": "You can select more than one",
+        "error": "Could not load tags",
+        "retry": "Try again"
+      }
     },
     "result": {
       "title": "Journal result",
@@ -265,7 +272,29 @@
       "successBody": "Diary {{diaryId}} was created successfully.",
       "analysisTodo": "AI analysis will appear here once the result API is connected.",
       "goHome": "Back to Home"
+    },
+    "success": {
+      "successBadge": "Journal saved",
+      "successTitle": "You made time for yourself and took one step forward",
+      "successDescription": "Today’s feelings are safely saved. We’ll let you know when the analysis is ready.",
+      "viewAnalysis": "View analysis",
+      "backToHome": "Back to home"
     }
+  },
+  "emotionTags": {
+    "WORK": "Work",
+    "FAMILY": "Family",
+    "RELATIONSHIP": "Relationship",
+    "FRIENDS": "Friends",
+    "HEALTH": "Health",
+    "MONEY": "Money",
+    "SLEEP": "Sleep",
+    "STUDY": "Study",
+    "FUTURE": "Future",
+    "SELF_ESTEEM": "Self-esteem",
+    "LONELINESS": "Loneliness",
+    "DAILY_LIFE": "Daily life",
+    "OTHER": "Other"
   },
   "community": {
     "title": "Community",

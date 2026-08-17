@@ -20,6 +20,7 @@ export const createEmotionDiaryRequestSchema = z.object({
   emotionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   content: z.string().trim().min(1),
   emotionCode: emotionCodeSchema,
+  tagIds: z.array(z.number().int().positive()).optional(),
   autoCreateDailyAnalysis: z.boolean().optional(),
 });
 
@@ -27,6 +28,7 @@ export const createJournalRequestSchema = z.object({
   mood: z.enum(MOOD_IDS),
   content: z.string().trim().min(1),
   inputMode: journalInputModeSchema,
+  tagIds: z.array(z.number().int().positive()).optional(),
 });
 
 /** PATCH /api/v1/emotion-diaries/{diaryId} */
@@ -38,6 +40,7 @@ export const updateEmotionDiaryRequestSchema = z
     memo: z.string().nullable().optional(),
     sleepHours: z.number().nullable().optional(),
     weatherCode: z.string().nullable().optional(),
+    tagIds: z.array(z.number().int().positive()).optional(),
   })
   .refine(
     (value) =>
@@ -46,7 +49,8 @@ export const updateEmotionDiaryRequestSchema = z
       value.title !== undefined ||
       value.memo !== undefined ||
       value.sleepHours !== undefined ||
-      value.weatherCode !== undefined,
+      value.weatherCode !== undefined ||
+      value.tagIds !== undefined,
     { message: "At least one field is required for update." }
   );
 

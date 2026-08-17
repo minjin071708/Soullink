@@ -251,7 +251,14 @@
       "invalidMoodTitle": "기분을 찾을 수 없습니다",
       "invalidMoodBody": "일기를 작성하기 전에 기분을 선택해 주세요.",
       "chooseMood": "기분 선택",
-      "changeMood": "기분 변경"
+      "changeMood": "기분 변경",
+      "tags": {
+        "title": "무엇 때문에?",
+        "subtitle": "해당하는 이유를 선택해 주세요",
+        "multiHint": "여러 개 선택할 수 있어요",
+        "error": "태그를 불러오지 못했어요",
+        "retry": "다시 시도"
+      }
     },
     "result": {
       "title": "일기 결과",
@@ -265,7 +272,29 @@
       "successBody": "일기 {{diaryId}}가 성공적으로 생성되었습니다.",
       "analysisTodo": "결과 API가 연결되면 AI 분석이 여기에 표시됩니다.",
       "goHome": "홈으로 돌아가기"
+    },
+    "success": {
+      "successBadge": "일기가 저장되었어요",
+      "successTitle": "스스로에게 시간을 내고 한 걸음 나아갔어요",
+      "successDescription": "오늘의 감정은 안전하게 저장되었어요. 분석이 준비되면 알려드릴게요.",
+      "viewAnalysis": "분석 보기",
+      "backToHome": "홈으로 돌아가기"
     }
+  },
+  "emotionTags": {
+    "WORK": "회사",
+    "FAMILY": "가족",
+    "RELATIONSHIP": "관계",
+    "FRIENDS": "친구",
+    "HEALTH": "건강",
+    "MONEY": "돈",
+    "SLEEP": "수면",
+    "STUDY": "학업",
+    "FUTURE": "미래",
+    "SELF_ESTEEM": "자존감",
+    "LONELINESS": "외로움",
+    "DAILY_LIFE": "일상",
+    "OTHER": "기타"
   },
   "community": {
     "title": "Community",

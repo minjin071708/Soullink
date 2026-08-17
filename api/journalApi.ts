@@ -29,6 +29,7 @@ export const createJournalApi = async (
       emotionDate: formatEmotionDate(),
       content: payload.content,
       emotionCode: payload.mood,
+      ...(payload.tagIds?.length ? { tagIds: payload.tagIds } : {}),
       autoCreateDailyAnalysis: true,
     }
   );
