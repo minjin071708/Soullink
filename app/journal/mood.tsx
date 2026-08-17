@@ -1,5 +1,5 @@
 import { MOODS } from "@/constants/moods";
-import { useDayNightPeriod } from "@/hooks/use-day-night-period";
+import { useDayNightTheme } from "@/components/day-night/DayNightProvider";
 import type { MoodId } from "@/types/moodType";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
@@ -15,12 +15,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const DAY_BG = "#f7f8fc";
-const NIGHT_BG = "#3c3866";
-const DAY_TEXT = "#2A2A4A";
-const NIGHT_TEXT = "#FFFFFF";
-const DAY_MUTED = "#7D8097";
-const NIGHT_MUTED = "rgba(255,255,255,0.72)";
 const DAY_CARD = "rgba(255,255,255,0.88)";
 const NIGHT_CARD = "rgba(255,255,255,0.08)";
 const DAY_BORDER = "rgba(138,107,232,0.12)";
@@ -43,12 +37,11 @@ const MOOD_CARD_COLORS: Record<
 export default function JournalMoodScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const period = useDayNightPeriod();
+  const { colors: themeColors, isNight } = useDayNightTheme();
   const [selectedMood, setSelectedMood] = useState<MoodId | null>(null);
-  const isNight = period === "night";
-  const backgroundColor = isNight ? NIGHT_BG : DAY_BG;
-  const textColor = isNight ? NIGHT_TEXT : DAY_TEXT;
-  const mutedColor = isNight ? NIGHT_MUTED : DAY_MUTED;
+  const backgroundColor = themeColors.background;
+  const textColor = themeColors.text;
+  const mutedColor = isNight ? themeColors.mutedText : "#7D8097";
 
   const handleMoodSelect = (mood: MoodId) => {
     setSelectedMood(mood);

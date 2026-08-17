@@ -93,10 +93,15 @@ export const diaryAiAnalysisSchema = z.object({
   periodStartDate: z.string().optional().default(""),
   periodEndDate: z.string().optional().default(""),
   languageCode: z.string().optional().default(""),
+  /** EMO-002 nested AI analysis headline */
+  title: z.string().optional().default(""),
   summary: z.string().optional().default(""),
   mainEmotionCode: z.string().optional().default(""),
   mainEmotionName: z.string().optional().default(""),
   averageScore: z.number().nullable().optional(),
+  /**
+   * API may return IMPROVED/WORSENED (detail) or IMPROVING/DECLINING (legacy).
+   */
   scoreTrend: z.string().optional().default(""),
   dailyReflection: z.string().optional().default(""),
   recentContextDays: z.number().int().optional(),

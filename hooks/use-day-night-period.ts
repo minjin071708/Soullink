@@ -26,11 +26,11 @@ function getMsUntilNextPeriodChange(date: Date = new Date()): number {
 }
 
 /**
- * Tracks day/night from the device local clock.
- * Updates on mount, when the period boundary is crossed, and when the app
- * returns to the foreground.
+ * Internal controller for the app-wide day/night provider.
+ * Mount this once near the root layout; consumers should use
+ * `useDayNightTheme()` instead.
  */
-export function useDayNightPeriod(): DayNightPeriod {
+export function useDayNightPeriodController(): DayNightPeriod {
   const [period, setPeriod] = useState<DayNightPeriod>(() =>
     getDayNightPeriod()
   );

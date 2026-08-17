@@ -1,4 +1,5 @@
 import "@/ReactotronConfig";
+import { DayNightProvider } from "@/components/day-night/DayNightProvider";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -105,28 +106,30 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
       <QueryClientProvider client={queryClient}>
-        <GluestackUIProvider mode={mode}>
-          <ThemeProvider value={navigationTheme}>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.background },
-                animation: "fade",
-              }}
-            >
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(onboarding)" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(app)" />
-              <Stack.Screen name="journal" />
-            </Stack>
-            <StatusBar
-              style={isDark ? "light" : "dark"}
-              translucent={false}
-            />
-          </ThemeProvider>
-        </GluestackUIProvider>
+        <DayNightProvider>
+          <GluestackUIProvider mode={mode}>
+            <ThemeProvider value={navigationTheme}>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: colors.background },
+                  animation: "fade",
+                }}
+              >
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(onboarding)" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="(app)" />
+                <Stack.Screen name="journal" />
+              </Stack>
+              <StatusBar
+                style={isDark ? "light" : "dark"}
+                translucent={false}
+              />
+            </ThemeProvider>
+          </GluestackUIProvider>
+        </DayNightProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );

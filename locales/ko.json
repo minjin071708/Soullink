@@ -407,6 +407,30 @@
       "unavailable": "일간 통계 API가 아직 연결되지 않았어요",
       "hint": "Week → STAT-001, Month → STAT-002. Day용 statistics API는 아직 없어요."
     },
+    "daily": {
+      "title": "오늘의 AI 분석",
+      "loading": "오늘의 분석을 불러오는 중…",
+      "loadError": "오늘의 일기 분석을 불러오지 못했어요",
+      "createError": "오늘의 AI 분석을 생성하지 못했어요.",
+      "noDiary": "오늘 작성한 일기가 없어요",
+      "noDiaryHint": "먼저 오늘의 일기를 작성한 뒤 다시 확인해 주세요.",
+      "empty": "오늘의 분석이 아직 준비되지 않았어요",
+      "emptyHint": "잠시 후 다시 분석을 생성해 보세요.",
+      "failed": "오늘의 분석에 실패했어요",
+      "invalidated": "이 분석은 더 이상 유효하지 않아요",
+      "regenerate": "다시 분석하기",
+      "score": "점수",
+      "trendLabel": "트렌드",
+      "reflection": "AI Reflection",
+      "recommendations": "오늘의 추천",
+      "emotionFallback": "감정 분석",
+      "trend": {
+        "improved": "좋아지는 중",
+        "stable": "안정적",
+        "worsened": "나빠지는 중",
+        "insufficient": "데이터 부족"
+      }
+    },
     "loading": "리포트를 불러오는 중…",
     "error": "리포트를 불러오지 못했어요",
     "retry": "다시 시도",

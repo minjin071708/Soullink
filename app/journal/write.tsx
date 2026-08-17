@@ -1,4 +1,5 @@
 import { CauseTagsSection } from "@/components/journal/CauseTagsSection";
+import { useDayNightTheme } from "@/components/day-night/DayNightProvider";
 import { VoiceJournalPanel } from "@/components/journal/VoiceJournalPanel";
 import { MoodPicker } from "@/components/mood/MoodPicker";
 import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import {
   useToast,
 } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
-import { useDayNightPeriod } from "@/hooks/use-day-night-period";
 import { useCreateJournal } from "@/hooks/useCreateJournal";
 import { useJournalResult } from "@/hooks/useJournalResult";
 import { useUpdateEmotionDiary } from "@/hooks/useUpdateEmotionDiary";
@@ -37,12 +37,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const DAY_BG = "#f7f8fc";
-const NIGHT_BG = "#3c3866";
-const DAY_TEXT = "#2A2A6A";
-const NIGHT_TEXT = "#FFFFFF";
-const MUTED_DAY = "#6E6E8A";
-const MUTED_NIGHT = "rgba(255,255,255,0.72)";
 const PRIMARY = "#8A6BE8";
 const INPUT_BG_DAY = "#FFFFFF";
 const INPUT_BG_NIGHT = "rgba(255,255,255,0.08)";
@@ -68,7 +62,7 @@ export default function JournalWriteScreen() {
   const navigation = useNavigation();
   const { t } = useTranslation();
   const toast = useToast();
-  const period = useDayNightPeriod();
+  const { colors, isNight } = useDayNightTheme();
   const params = useLocalSearchParams<{
     mood?: string | string[];
     diaryId?: string | string[];
@@ -98,10 +92,9 @@ export default function JournalWriteScreen() {
   const { mutate: updateDiary, isPending: isUpdating } = useUpdateEmotionDiary();
   const isPending = isCreating || isUpdating;
 
-  const isNight = period === "night";
-  const backgroundColor = isNight ? NIGHT_BG : DAY_BG;
-  const textColor = isNight ? NIGHT_TEXT : DAY_TEXT;
-  const mutedColor = isNight ? MUTED_NIGHT : MUTED_DAY;
+  const backgroundColor = colors.background;
+  const textColor = colors.text;
+  const mutedColor = colors.mutedText;
   const inputBackground = isNight ? INPUT_BG_NIGHT : INPUT_BG_DAY;
   const borderColor = isNight ? BORDER_NIGHT : BORDER_DAY;
 

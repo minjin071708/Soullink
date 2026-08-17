@@ -1,12 +1,10 @@
 import { MOODS } from "@/constants/moods";
-import { useDayNightPeriod } from "@/hooks/use-day-night-period";
+import { useDayNightTheme } from "@/components/day-night/DayNightProvider";
 import type { MoodId } from "@/types/moodType";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const DAY_TEXT = "#2A2A6A";
-const NIGHT_TEXT = "#FFFFFF";
 const MOOD_CIRCLE_DAY = "#EDE7FF";
 const MOOD_CIRCLE_NIGHT = "rgba(255,255,255,0.14)";
 const MOOD_SELECTED_RING = "#8A6BE8";
@@ -25,9 +23,8 @@ export function MoodPicker({
   showTitle = true,
 }: MoodPickerProps) {
   const { t } = useTranslation();
-  const period = useDayNightPeriod();
-  const isNight = period === "night";
-  const textColor = isNight ? NIGHT_TEXT : DAY_TEXT;
+  const { colors, isNight } = useDayNightTheme();
+  const textColor = colors.text;
   const moodCircleColor = isNight ? MOOD_CIRCLE_NIGHT : MOOD_CIRCLE_DAY;
 
   return (

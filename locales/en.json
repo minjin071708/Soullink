@@ -407,6 +407,30 @@
       "unavailable": "Daily statistics API is not connected",
       "hint": "Week → STAT-001, Month → STAT-002. There is no Day statistics API yet."
     },
+    "daily": {
+      "title": "Today’s AI analysis",
+      "loading": "Loading today’s analysis…",
+      "loadError": "Could not load today’s diary analysis",
+      "createError": "Could not create today’s AI analysis.",
+      "noDiary": "No journal entry for today",
+      "noDiaryHint": "Write today’s journal first, then come back.",
+      "empty": "Today’s analysis isn’t ready yet",
+      "emptyHint": "Try generating the analysis again in a moment.",
+      "failed": "Today’s analysis failed",
+      "invalidated": "This analysis is no longer valid",
+      "regenerate": "Regenerate analysis",
+      "score": "Score",
+      "trendLabel": "Trend",
+      "reflection": "AI Reflection",
+      "recommendations": "Today’s recommendations",
+      "emotionFallback": "Emotion analysis",
+      "trend": {
+        "improved": "Improving",
+        "stable": "Stable",
+        "worsened": "Declining",
+        "insufficient": "Not enough data"
+      }
+    },
     "loading": "Loading report…",
     "error": "Could not load report",
     "retry": "Try again",

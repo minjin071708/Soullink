@@ -1,4 +1,4 @@
-import { useDayNightPeriod } from "@/hooks/use-day-night-period";
+import { useDayNightTheme } from "@/components/day-night/DayNightProvider";
 import { useIsFocused } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import {
@@ -11,8 +11,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const HERO_BACKGROUND_DAY = require("@/assets/images/daybg.png");
-const HERO_BACKGROUND_NIGHT = require("@/assets/images/nightbg.png");
 const HERO_MASCOT_DAY = require("@/assets/mascotImages/maskot3dwhite.png");
 const HERO_MASCOT_NIGHT = require("@/assets/mascotImages/nightmascot3dwhite.png");
 
@@ -38,10 +36,8 @@ export function GreetingSection({
   const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
-  const period = useDayNightPeriod();
-  const isNight = period === "night";
+  const { backgroundSource, isNight, statusBarStyle } = useDayNightTheme();
 
-  const heroBackground = isNight ? HERO_BACKGROUND_NIGHT : HERO_BACKGROUND_DAY;
   const heroMascot = isNight ? HERO_MASCOT_NIGHT : HERO_MASCOT_DAY;
   const greetingColor = isNight ? GREETING_COLOR_NIGHT : GREETING_COLOR_DAY;
 
@@ -53,7 +49,7 @@ export function GreetingSection({
 
   return (
     <ImageBackground
-      source={heroBackground}
+      source={backgroundSource}
       style={[styles.hero, { height: heroHeight }]}
       imageStyle={styles.heroImage}
       resizeMode="cover"
@@ -62,7 +58,7 @@ export function GreetingSection({
     >
       {isFocused ? (
         <StatusBar
-          style={isNight ? "light" : "dark"}
+          style={statusBarStyle}
           translucent
           backgroundColor="transparent"
         />

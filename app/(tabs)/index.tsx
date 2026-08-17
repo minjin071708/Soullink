@@ -1,10 +1,10 @@
 import { CommunityPostCard } from "@/components/community/CommunityPostCard";
+import { useDayNightTheme } from "@/components/day-night/DayNightProvider";
 import { GreetingSection } from "@/components/home/GreetingSection";
 import { WeeklyInsightCard } from "@/components/home/WeeklyInsightCard";
 import { WeeklyMoodJourneyCard } from "@/components/home/WeeklyMoodJourneyCard";
 import { MOODS } from "@/constants/moods";
 import { useCommunityPosts } from "@/hooks/community/useCommunityPosts";
-import { useDayNightPeriod } from "@/hooks/use-day-night-period";
 import { useAuthStore } from "@/store/authStore";
 import type { CommunityPost } from "@/types/community";
 import type { MoodId } from "@/types/moodType";
@@ -85,7 +85,7 @@ function PageDots({
 export default function HomeScreen() {
   const { t } = useTranslation();
   const member = useAuthStore((state) => state.member);
-  const period = useDayNightPeriod();
+  const { period } = useDayNightTheme();
   const { width: windowWidth } = useWindowDimensions();
   const [selectedMood, setSelectedMood] = useState<MoodId | null>(null);
   const [activePostIndex, setActivePostIndex] = useState(0);

@@ -1,3 +1,4 @@
+import { DailyInsightCard } from "@/features/insights/components/DailyInsightCard";
 import { MonthlyInsightCard } from "@/features/insights/components/MonthlyInsightCard";
 import { PeriodSegment } from "@/features/insights/components/PeriodSegment";
 import { WeeklyInsightCard } from "@/features/insights/components/WeeklyInsightCard";
@@ -79,12 +80,7 @@ export function InsightsScreen() {
 
         <View style={styles.cardWrap}>
           {isDay ? (
-            <View style={styles.stateBox}>
-              <Text style={styles.stateText}>
-                {t("insights.day.unavailable")}
-              </Text>
-              <Text style={styles.stateHint}>{t("insights.day.hint")}</Text>
-            </View>
+            <DailyInsightCard baseDate={baseDate} />
           ) : activeQuery.isLoading ? (
             <View style={styles.stateBox}>
               <ActivityIndicator color={INSIGHT_COLORS.accent} />
