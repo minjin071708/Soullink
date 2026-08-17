@@ -4,6 +4,8 @@ import {
   emailSignupRequestSchema,
   emailSignupResponseSchema,
   loginResponseSchema,
+  logoutRequestSchema,
+  logoutResponseSchema,
   memberMeResponseSchema,
   memberSchema,
   sendEmailVerificationCodeRequestSchema,
@@ -53,6 +55,9 @@ export type LoginRequestType = {
 export type RefreshRequestType = {
   refreshToken: string;
 };
+
+export type LogoutRequest = z.infer<typeof logoutRequestSchema>;
+export type LogoutResponse = z.infer<typeof logoutResponseSchema>;
 
 export type SendEmailVerificationCodeRequest = z.infer<typeof sendEmailVerificationCodeRequestSchema>;
 export type SendEmailVerificationCodeResponse = z.infer<typeof sendEmailVerificationCodeResponseSchema>;

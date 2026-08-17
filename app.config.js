@@ -19,13 +19,13 @@ const expo = {
       return (
         name !== "@react-native-google-signin/google-signin" &&
         name !== "expo-apple-authentication" &&
-        name !== "expo-av"
+        name !== "expo-audio"
       );
     }),
     "@react-native-google-signin/google-signin",
     "expo-apple-authentication",
     [
-      "expo-av",
+      "expo-audio",
       {
         microphonePermission:
           "Allow SoulLink to record voice journals for transcription.",

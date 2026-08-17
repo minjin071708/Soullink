@@ -3,8 +3,6 @@ import type { WeeklyAnalysisData } from "@/types/analysisType";
 import { isApiTimeoutError } from "@/utils/apiError";
 import { formatEmotionDate } from "@/utils/emotionDate";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,128 +14,95 @@ import {
   View,
 } from "react-native";
 
-const MASCOT = require("@/assets/mascotImages/daymascot3d.png");
-
-const TEXT = "#3D2A6B";
-const MUTED = "#8B7BA8";
+const TEXT = "#302060";
+const MUTED = "#706784";
 const PRIMARY = "#8A6BE8";
-const CARD_BORDER = "rgba(168, 140, 230, 0.28)";
+const FOOTER_ICON = "#9B8DAF";
 
-function splitSummary(summary: string): { headline: string; detail?: string } {
-  const trimmed = summary.trim();
-  const parts = trimmed.split(/\n+/).map((part) => part.trim()).filter(Boolean);
+type Props = { forceRegenerate?: boolean };
 
-  if (parts.length >= 2) {
-    return { headline: parts[0], detail: parts.slice(1).join(" ") };
-  }
-
-  const sentenceSplit = trimmed.match(/^(.+?[.!?。！？])\s+(.+)$/s);
-  if (sentenceSplit) {
-    return { headline: sentenceSplit[1], detail: sentenceSplit[2] };
-  }
-
-  return { headline: trimmed };
-}
-
-type WeeklyInsightCardProps = {
-  /** Only pass true for an explicit user “regenerate” action. */
-  forceRegenerate?: boolean;
-};
-
-export function WeeklyInsightCard({
-  forceRegenerate = false,
-}: WeeklyInsightCardProps) {
+export function WeeklyInsightCard({ forceRegenerate = false }: Props) {
   const { t } = useTranslation();
-  const router = useRouter();
   const requestedRef = useRef(false);
   const baseDate = useMemo(() => formatEmotionDate(), []);
   const [timedOut, setTimedOut] = useState(false);
-  const [genericError, setGenericError] = useState<string | null>(null);
-
-  const {
-    mutateAsync: createWeeklyAnalysis,
-    data,
-    isPending,
-    reset,
-  } = useCreateWeeklyAnalysis();
+  const [genericError, setGenericError] = useState(false);
+  const { mutateAsync, data, isPending, reset } = useCreateWeeklyAnalysis();
 
   const runAnalysis = useCallback(
-    async (options: { forceRegenerate: boolean }) => {
+    async (regenerate: boolean) => {
       setTimedOut(false);
-      setGenericError(null);
+      setGenericError(false);
 
       try {
-        await createWeeklyAnalysis({
-          baseDate,
-          forceRegenerate: options.forceRegenerate,
-        });
+        // POST /api/v1/ai-analyses/weekly
+        await mutateAsync({ baseDate, forceRegenerate: regenerate });
       } catch (error) {
         if (isApiTimeoutError(error)) {
-          // Client timeout ≠ backend FAILED. Do not auto-retry or flip forceRegenerate.
           setTimedOut(true);
           return;
         }
-
-        setGenericError(
-          error instanceof Error
-            ? error.message
-            : t("home.weeklyInsight.error")
-        );
+        setGenericError(true);
       }
     },
-    [baseDate, createWeeklyAnalysis, t]
+    [baseDate, mutateAsync]
   );
 
   useEffect(() => {
-    if (requestedRef.current) {
-      return;
-    }
+    if (requestedRef.current) return;
     requestedRef.current = true;
-    void runAnalysis({ forceRegenerate });
+    void runAnalysis(forceRegenerate);
   }, [forceRegenerate, runAnalysis]);
 
-  const recommendation = data?.recommendations?.[0];
-  const summaryParts = data ? splitSummary(data.summary) : null;
-  const status = data?.analysisStatus;
+  const status = data?.status;
+  const isCompleted = status === "READY" || status === "SUCCESS";
+  const summary = data?.summary?.trim() ?? "";
+  const title = data?.title?.trim() ?? "";
 
   const showLoading =
-    isPending ||
-    status === "REQUESTED" ||
-    status === "PROCESSING";
+    isPending || status === "REQUESTED" || status === "PROCESSING";
+  const showContent =
+    !isPending && !timedOut && !genericError && isCompleted && Boolean(summary);
+  const showFailed = !isPending && !timedOut && !genericError && status === "FAILED";
+  const showInvalidated =
+    !isPending && !timedOut && !genericError && status === "INVALIDATED";
+  const showTimeout = timedOut && !isPending;
+  const showGenericError = genericError && !isPending && !timedOut;
+  const showEmpty =
+    !showLoading &&
+    !showContent &&
+    !showFailed &&
+    !showInvalidated &&
+    !showTimeout &&
+    !showGenericError;
 
-  const showSuccessContent = !isPending && status === "SUCCESS";
-  const showFailed = !isPending && status === "FAILED";
-  const showInvalidated = !isPending && status === "INVALIDATED";
-  const showTimeout = timedOut && !isPending && !data;
-  const showGenericError =
-    Boolean(genericError) && !isPending && !data && !timedOut;
+  const retry = (regenerate: boolean) => {
+    reset();
+    void runAnalysis(regenerate);
+  };
 
   return (
     <View style={styles.wrapper}>
-      <LinearGradient
-        colors={["#FBF8FF", "#F3ECFF"]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.card}
-      >
+      <View style={styles.card}>
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
-            <View style={styles.sparkleIconWrap}>
+            <View style={styles.sparkleIcon}>
               <Ionicons name="sparkles" size={16} color={PRIMARY} />
             </View>
-            <Text style={styles.headerTitle} numberOfLines={1}>
+            <Text style={styles.headerTitle}>
               {t("home.weeklyInsight.title")}
             </Text>
           </View>
-
-          <View style={styles.aiBadge}>
-            <Text style={styles.aiBadgeText}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>
               {t("home.weeklyInsight.aiBadge")}
             </Text>
           </View>
         </View>
 
-        {showLoading && !showSuccessContent && !showTimeout && !showGenericError ? (
+        <View style={styles.headerDivider} />
+
+        {showLoading ? (
           <View style={styles.stateBox}>
             <ActivityIndicator color={PRIMARY} />
             <Text style={styles.stateText}>
@@ -150,187 +115,112 @@ export function WeeklyInsightCard({
           </View>
         ) : null}
 
-        {showTimeout ? (
+        {showContent && data ? (
+          <SuccessContent data={data} title={title} summary={summary} />
+        ) : null}
+
+        {showEmpty ? (
           <View style={styles.stateBox}>
-            <Text style={styles.stateText}>
-              {t("home.weeklyInsight.timeout")}
+            <Text style={styles.emptyTitle}>
+              {t("home.weeklyInsight.emptyTitle")}
             </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                reset();
-                void runAnalysis({ forceRegenerate: true });
-              }}
-              style={({ pressed }) => [
-                styles.retryButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text style={styles.retryText}>
-                {t("home.weeklyInsight.regenerate")}
-              </Text>
-            </Pressable>
+            <Text style={styles.stateText}>
+              {t("home.weeklyInsight.emptyDescription")}
+            </Text>
           </View>
+        ) : null}
+
+        {showTimeout ? (
+          <ErrorState
+            message={t("home.weeklyInsight.timeout")}
+            label={t("home.weeklyInsight.regenerate")}
+            onRetry={() => retry(true)}
+          />
         ) : null}
 
         {showGenericError ? (
-          <View style={styles.stateBox}>
-            <Text style={styles.stateText}>
-              {genericError ?? t("home.weeklyInsight.error")}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                reset();
-                void runAnalysis({ forceRegenerate: false });
-              }}
-              style={({ pressed }) => [
-                styles.retryButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text style={styles.retryText}>
-                {t("home.weeklyInsight.retry")}
-              </Text>
-            </Pressable>
-          </View>
+          <ErrorState
+            message={t("home.weeklyInsight.error")}
+            label={t("home.weeklyInsight.retry")}
+            onRetry={() => retry(false)}
+          />
         ) : null}
 
         {showFailed ? (
-          <View style={styles.stateBox}>
-            <Text style={styles.stateText}>
-              {t("home.weeklyInsight.failed")}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                reset();
-                void runAnalysis({ forceRegenerate: true });
-              }}
-              style={({ pressed }) => [
-                styles.retryButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text style={styles.retryText}>
-                {t("home.weeklyInsight.regenerate")}
-              </Text>
-            </Pressable>
-          </View>
+          <ErrorState
+            message={t("home.weeklyInsight.failed")}
+            label={t("home.weeklyInsight.regenerate")}
+            onRetry={() => retry(true)}
+          />
         ) : null}
 
         {showInvalidated ? (
-          <View style={styles.stateBox}>
-            <Text style={styles.stateText}>
-              {t("home.weeklyInsight.invalidated")}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                reset();
-                void runAnalysis({ forceRegenerate: true });
-              }}
-              style={({ pressed }) => [
-                styles.retryButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text style={styles.retryText}>
-                {t("home.weeklyInsight.regenerate")}
-              </Text>
-            </Pressable>
-          </View>
-        ) : null}
-
-        {showSuccessContent && data ? (
-          <WeeklyInsightContent
-            data={data}
-            headline={summaryParts?.headline ?? data.summary}
-            detail={summaryParts?.detail}
-            recommendationTitle={
-              recommendation?.title ?? t("home.weeklyInsight.tryToday")
-            }
-            recommendationDescription={recommendation?.description}
-            onViewInsights={() => router.push("/insights")}
+          <ErrorState
+            message={t("home.weeklyInsight.invalidated")}
+            label={t("home.weeklyInsight.regenerate")}
+            onRetry={() => retry(true)}
           />
         ) : null}
-      </LinearGradient>
+      </View>
     </View>
   );
 }
 
-type ContentProps = {
-  data: WeeklyAnalysisData;
-  headline: string;
-  detail?: string;
-  recommendationTitle: string;
-  recommendationDescription?: string;
-  onViewInsights: () => void;
-};
-
-function WeeklyInsightContent({
+function SuccessContent({
   data,
-  headline,
-  detail,
-  recommendationTitle,
-  recommendationDescription,
-  onViewInsights,
-}: ContentProps) {
+  title,
+  summary,
+}: {
+  data: WeeklyAnalysisData;
+  title: string;
+  summary: string;
+}) {
   const { t } = useTranslation();
+  const router = useRouter();
 
   return (
-    <>
-      <Text style={styles.summaryHeadline}>{headline}</Text>
-      {detail ? <Text style={styles.summaryDetail}>{detail}</Text> : null}
+    <View style={styles.content}>
+      {title ? <Text style={styles.mainTitle}>{title}</Text> : null}
+      <Text style={styles.summary}>{summary}</Text>
 
-      <View style={styles.recommendationWrap}>
-        <View style={styles.recommendationCard}>
-          <View style={styles.recommendationHeader}>
-            <Ionicons name="heart" size={16} color="#E56B8A" />
-            <Text style={styles.recommendationTitle} numberOfLines={2}>
-              {recommendationTitle}
-            </Text>
-          </View>
-          {recommendationDescription ? (
-            <Text style={styles.recommendationBody}>
-              {recommendationDescription}
-            </Text>
-          ) : null}
-        </View>
-
-        <Image
-          source={MASCOT}
-          style={styles.mascot}
-          contentFit="contain"
-          accessible={false}
-        />
-      </View>
-
-      <View style={styles.footerDivider} />
-
-      <View style={styles.footerRow}>
-        <Text style={styles.footerMeta}>
-          {t("home.weeklyInsight.basedOnDays", {
-            count: data.recordedDays,
-          })}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("home.weeklyInsight.seeMore")}
+        onPress={() => router.push("/insights")}
+        style={({ pressed }) => [
+          styles.seeMoreButton,
+          pressed && styles.pressed,
+        ]}
+      >
+        <Text style={styles.seeMoreText}>
+          {t("home.weeklyInsight.seeMore")}
         </Text>
+        <Ionicons name="chevron-forward" size={16} color={PRIMARY} />
+      </Pressable>
+    </View>
+  );
+}
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("home.weeklyInsight.viewInsights")}
-          onPress={onViewInsights}
-          style={({ pressed }) => [
-            styles.viewInsightsButton,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text style={styles.viewInsightsText}>
-            {t("home.weeklyInsight.viewInsights")}
-          </Text>
-          <Ionicons name="chevron-forward" size={14} color={TEXT} />
-        </Pressable>
-      </View>
-    </>
+function ErrorState({
+  message,
+  label,
+  onRetry,
+}: {
+  message: string;
+  label: string;
+  onRetry: () => void;
+}) {
+  return (
+    <View style={styles.stateBox}>
+      <Text style={styles.stateText}>{message}</Text>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onRetry}
+        style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}
+      >
+        <Text style={styles.retryText}>{label}</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -341,69 +231,131 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   card: {
-    borderRadius: 28,
+    backgroundColor: "#FFFCFD",
+    borderColor: "rgba(168, 140, 230, 0.35)",
     borderWidth: 1,
-    borderColor: CARD_BORDER,
+    borderRadius: 28,
     paddingHorizontal: 18,
     paddingTop: 16,
-    paddingBottom: 14,
-    overflow: "hidden",
-    shadowColor: "#B9A4E8",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 4,
+    paddingBottom: 18,
+    shadowColor: "#C8B6E8",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14,
+    shadowRadius: 14,
+    elevation: 3,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 10,
-    marginBottom: 14,
   },
   headerLeft: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    minWidth: 0,
   },
-  sparkleIconWrap: {
+  sparkleIcon: {
     width: 30,
     height: 30,
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(138, 107, 232, 0.14)",
+    backgroundColor: "#F0EAFE",
   },
   headerTitle: {
     flex: 1,
+    flexShrink: 1,
     color: TEXT,
     fontSize: 14,
     lineHeight: 18,
     fontWeight: "700",
   },
-  aiBadge: {
+  badge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
     backgroundColor: "rgba(138, 107, 232, 0.12)",
   },
-  aiBadgeText: {
+  badgeText: {
     color: PRIMARY,
     fontSize: 11,
     lineHeight: 14,
+    fontWeight: "700",
+  },
+  headerDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "rgba(138, 107, 232, 0.18)",
+    marginTop: 14,
+    marginBottom: 16,
+  },
+  content: {
+    gap: 12,
+  },
+  mainTitle: {
+    color: "#302060",
+    fontSize: 20,
+    lineHeight: 27,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  summary: {
+    color: "#706784",
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "500",
+  },
+  footerMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 6,
+  },
+  footerMetaText: {
+    flex: 1,
+    flexShrink: 1,
+    color: MUTED,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500",
+  },
+  seeMoreButton: {
+    marginTop: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: "rgba(138, 107, 232, 0.10)",
+  },
+  seeMoreText: {
+    color: PRIMARY,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: "700",
   },
   stateBox: {
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    paddingVertical: 28,
+    paddingVertical: 24,
+    paddingHorizontal: 12,
   },
   stateText: {
     color: MUTED,
     fontSize: 13,
-    lineHeight: 18,
+    lineHeight: 19,
+    textAlign: "center",
+  },
+  emptyTitle: {
+    color: TEXT,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "700",
     textAlign: "center",
   },
   retryButton: {
@@ -415,90 +367,6 @@ const styles = StyleSheet.create({
   retryText: {
     color: PRIMARY,
     fontSize: 13,
-    fontWeight: "700",
-  },
-  summaryHeadline: {
-    color: TEXT,
-    fontSize: 20,
-    lineHeight: 28,
-    fontWeight: "800",
-    letterSpacing: -0.3,
-    marginBottom: 8,
-  },
-  summaryDetail: {
-    color: TEXT,
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: "500",
-    opacity: 0.88,
-    marginBottom: 14,
-  },
-  recommendationWrap: {
-    position: "relative",
-    marginBottom: 14,
-    paddingRight: 56,
-  },
-  recommendationCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "rgba(168, 140, 230, 0.18)",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  recommendationHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  recommendationTitle: {
-    flex: 1,
-    color: TEXT,
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-  recommendationBody: {
-    color: TEXT,
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: "500",
-  },
-  mascot: {
-    position: "absolute",
-    right: -8,
-    bottom: -6,
-    width: 88,
-    height: 88,
-  },
-  footerDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: "rgba(138, 107, 232, 0.18)",
-    marginBottom: 12,
-  },
-  footerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  footerMeta: {
-    flex: 1,
-    color: MUTED,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "500",
-  },
-  viewInsightsButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  viewInsightsText: {
-    color: TEXT,
-    fontSize: 13,
-    lineHeight: 16,
     fontWeight: "700",
   },
   pressed: {

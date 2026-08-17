@@ -9,6 +9,8 @@ export default function CommunityLayout() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="add-post" />
+      <Stack.Screen name="post/[postId]" />
+      <Stack.Screen name="edit-post" />
     </Stack>
   );
 }

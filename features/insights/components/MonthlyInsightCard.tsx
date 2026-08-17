@@ -1,174 +1,191 @@
 import { EmotionDonutChart } from "@/features/insights/components/EmotionDonutChart";
-import { INSIGHT_COLORS } from "@/features/insights/constants/insights.constants";
-import type { WeeklyInsightMock } from "@/features/insights/types/insights.types";
-import type { MonthlyEmotionStatisticsData } from "@/types/emotionStatisticsType";
+import {
+  AiObservationSection,
+  PreviousReportsSection,
+} from "@/features/insights/components/InsightSections";
+import { EMOTION_CHART_COLORS, INSIGHT_COLORS } from "@/features/insights/constants/insights.constants";
+import type { WeeklyInsightCardModel } from "@/features/insights/types/insights.types";
+import type {
+  MonthlyStatisticsData,
+  WeeklyAverage,
+} from "@/types/emotionStatisticsType";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 const INSIGHT_MASCOT = require("@/assets/mascotImages/insightMascot.png");
 
 type MonthlyInsightCardProps = {
-  data: Pick<
-    WeeklyInsightMock,
-    | "periodLabel"
-    | "dateRangeLabel"
-    | "headline"
-    | "totalDays"
-    | "journalCount"
-    | "dominantEmotion"
-    | "emotionShares"
-  >;
+  data: WeeklyInsightCardModel;
   stats?: Pick<
-    MonthlyEmotionStatisticsData,
-    | "recordedDays"
-    | "recordRate"
-    | "averageScore"
-    | "scoreChange"
-    | "bestDay"
-    | "lowestDay"
+    MonthlyStatisticsData,
+    "recordedDays" | "recordedRate" | "weeklyAverages"
   > | null;
 };
+
+function weekEmotionColor(code: string | undefined): string {
+  if (!code) {
+    return EMOTION_CHART_COLORS.NEUTRAL;
+  }
+  const upper = code.trim().toUpperCase();
+  if (upper in EMOTION_CHART_COLORS) {
+    return EMOTION_CHART_COLORS[
+      upper as keyof typeof EMOTION_CHART_COLORS
+    ];
+  }
+  return EMOTION_CHART_COLORS.NEUTRAL;
+}
+
+function formatWeekLabel(week: WeeklyAverage): string {
+  const start = week.weekStartDate.slice(5).replace("-", "/");
+  const end = week.weekEndDate.slice(5).replace("-", "/");
+  return `${start}–${end}`;
+}
 
 export function MonthlyInsightCard({ data, stats }: MonthlyInsightCardProps) {
   const { t } = useTranslation();
 
   return (
-    <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <Image
-          source={INSIGHT_MASCOT}
-          style={styles.mascot}
-          contentFit="contain"
-          accessibilityLabel="AI Insight mascot"
-        />
+    <View>
+      <View style={styles.card}>
+        <View style={styles.headerRow}>
+          <Image
+            source={INSIGHT_MASCOT}
+            style={styles.mascot}
+            contentFit="contain"
+            accessibilityLabel="AI Insight mascot"
+          />
 
-        <View style={styles.headerCopy}>
-          <View style={styles.periodRow}>
-            <Ionicons name="calendar" size={14} color={INSIGHT_COLORS.accent} />
-            <Text style={styles.periodLabel}>{data.periodLabel}</Text>
+          <View style={styles.headerCopy}>
+            <View style={styles.periodRow}>
+              <Ionicons
+                name="calendar"
+                size={14}
+                color={INSIGHT_COLORS.accent}
+              />
+              <Text style={styles.periodLabel}>{data.periodLabel}</Text>
+            </View>
+            <Text style={styles.dateRange}>{data.dateRangeLabel}</Text>
           </View>
-          <Text style={styles.dateRange}>{data.dateRangeLabel}</Text>
         </View>
-      </View>
 
-      <Text style={styles.headline}>{data.headline}</Text>
+        <Text style={styles.headline}>{data.headline}</Text>
 
-      {stats ? (
-        <View style={styles.metricRow}>
-          <View style={styles.metricBox}>
-            <Text style={styles.metricTitle}>
-              {t("insights.monthly.recordRate")}
-            </Text>
-            <Text style={styles.metricValue}>
-              {Math.round(stats.recordRate)}%
-            </Text>
-            <Text style={styles.metricHint}>
-              {t("insights.monthly.daysCount", {
-                count: stats.recordedDays,
-              })}
-            </Text>
-          </View>
-          <View style={styles.metricBox}>
-            <Text style={styles.metricTitle}>
-              {t("insights.monthly.averageScore")}
-            </Text>
-            <Text style={styles.metricValue}>
-              {stats.averageScore != null ? stats.averageScore.toFixed(1) : "—"}
-            </Text>
-            {stats.scoreChange != null ? (
+        {stats ? (
+          <View style={styles.metricRow}>
+            <View style={styles.metricBox}>
+              <Text style={styles.metricTitle}>
+                {t("insights.monthly.recordedDays")}
+              </Text>
+              <Text style={styles.metricValue}>{stats.recordedDays}</Text>
               <Text style={styles.metricHint}>
-                {t("insights.monthly.scoreChange", {
-                  value: `${stats.scoreChange > 0 ? "+" : ""}${stats.scoreChange.toFixed(1)}`,
+                {t("insights.monthly.daysCount", {
+                  count: stats.recordedDays,
                 })}
               </Text>
-            ) : (
-              <Text style={styles.metricHint}>
-                {t("insights.monthly.scoreMissing")}
+            </View>
+            <View style={styles.metricBox}>
+              <Text style={styles.metricTitle}>
+                {t("insights.monthly.recordedRate")}
               </Text>
-            )}
+              <Text style={styles.metricValue}>
+                {Math.round(stats.recordedRate)}%
+              </Text>
+              <Text style={styles.metricHint}>
+                {t("insights.monthly.recordRateLabel", {
+                  rate: Math.round(stats.recordedRate),
+                })}
+              </Text>
+            </View>
           </View>
-        </View>
-      ) : null}
+        ) : null}
 
-      <View style={styles.chartSection}>
-        <EmotionDonutChart
-          shares={data.emotionShares}
-          totalDays={data.totalDays}
-        />
-      </View>
-
-      <View style={styles.summaryRow}>
-        <View style={styles.summaryBox}>
-          <Ionicons name="leaf" size={20} color={data.dominantEmotion.color} />
-          <View style={styles.summaryCopy}>
-            <Text
-              style={[
-                styles.summaryTitle,
-                { color: data.dominantEmotion.color },
-              ]}
-            >
-              {data.dominantEmotion.label}
-            </Text>
-            <Text style={styles.summaryValue}>
-              {data.dominantEmotion.daysLabel}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.summaryBox}>
-          <Ionicons
-            name="document-text-outline"
-            size={20}
-            color={INSIGHT_COLORS.sad}
+        <View style={styles.chartSection}>
+          <EmotionDonutChart
+            shares={data.emotionShares}
+            totalDays={data.totalDays}
           />
-          <View style={styles.summaryCopy}>
-            <Text style={styles.summaryValue}>{data.journalCount}</Text>
-            <Text style={styles.summaryCaption}>
-              {t("insights.monthly.journalCaption")}
-            </Text>
+        </View>
+
+        <View style={styles.summaryRow}>
+          <View style={styles.summaryBox}>
+            <Ionicons name="leaf" size={20} color={data.dominantEmotion.color} />
+            <View style={styles.summaryCopy}>
+              <Text
+                style={[
+                  styles.summaryTitle,
+                  { color: data.dominantEmotion.color },
+                ]}
+              >
+                {data.dominantEmotion.label}
+              </Text>
+              <Text style={styles.summaryValue}>
+                {data.dominantEmotion.daysLabel}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.summaryBox}>
+            <Ionicons
+              name="document-text-outline"
+              size={20}
+              color={INSIGHT_COLORS.sad}
+            />
+            <View style={styles.summaryCopy}>
+              <Text style={styles.summaryValue}>{data.journalCount}</Text>
+              <Text style={styles.summaryCaption}>
+                {t("insights.monthly.journalCaption")}
+              </Text>
+            </View>
           </View>
         </View>
+
+        {stats?.weeklyAverages?.length ? (
+          <View style={styles.weekSection}>
+            <Text style={styles.weekSectionTitle}>
+              {t("insights.monthly.weeklyAverages")}
+            </Text>
+            {stats.weeklyAverages.map((week) => {
+              const color = weekEmotionColor(week.dominantEmotionCode);
+              return (
+                <View
+                  key={`${week.weekStartDate}-${week.weekEndDate}`}
+                  style={styles.weekRow}
+                >
+                  <View style={[styles.weekDot, { backgroundColor: color }]} />
+                  <Text style={styles.weekLabel}>{formatWeekLabel(week)}</Text>
+                  <Text style={[styles.weekScore, { color }]}>
+                    {week.averageScore != null
+                      ? week.averageScore.toFixed(1)
+                      : "—"}
+                  </Text>
+                  <Text style={styles.weekEmotion}>
+                    {week.dominantEmotionCode?.trim() || "—"}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        ) : null}
       </View>
 
-      {stats?.bestDay || stats?.lowestDay ? (
-        <View style={styles.dayRow}>
-          {stats.bestDay ? (
-            <View style={styles.dayBox}>
-              <Ionicons
-                name="sunny-outline"
-                size={16}
-                color={INSIGHT_COLORS.happy}
-              />
-              <View style={styles.dayCopy}>
-                <Text style={styles.dayTitle}>
-                  {t("insights.monthly.bestDay")}
-                </Text>
-                <Text style={styles.dayValue}>
-                  {stats.bestDay.date} · {stats.bestDay.score}
-                </Text>
-              </View>
-            </View>
-          ) : null}
-          {stats.lowestDay ? (
-            <View style={styles.dayBox}>
-              <Ionicons
-                name="rainy-outline"
-                size={16}
-                color={INSIGHT_COLORS.sad}
-              />
-              <View style={styles.dayCopy}>
-                <Text style={styles.dayTitle}>
-                  {t("insights.monthly.lowestDay")}
-                </Text>
-                <Text style={styles.dayValue}>
-                  {stats.lowestDay.date} · {stats.lowestDay.score}
-                </Text>
-              </View>
-            </View>
-          ) : null}
-        </View>
+      <AiObservationSection
+        observation={data.aiObservation}
+        items={data.observations}
+      />
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("insights.detailReport")}
+        style={({ pressed }) => [styles.detailButton, pressed && styles.pressed]}
+      >
+        <Ionicons name="stats-chart" size={18} color="#FFFFFF" />
+        <Text style={styles.detailButtonText}>{t("insights.detailReport")}</Text>
+      </Pressable>
+
+      {data.previousReports.length > 0 ? (
+        <PreviousReportsSection reports={data.previousReports} />
       ) : null}
     </View>
   );
@@ -295,14 +312,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: INSIGHT_COLORS.muted,
   },
-  dayRow: {
-    marginTop: 12,
+  weekSection: {
+    marginTop: 14,
     gap: 8,
   },
-  dayBox: {
+  weekSectionTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: INSIGHT_COLORS.title,
+    marginBottom: 2,
+  },
+  weekRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
     borderWidth: 1,
     borderColor: INSIGHT_COLORS.border,
     borderRadius: 14,
@@ -310,18 +333,43 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: "#FCFBFD",
   },
-  dayCopy: {
-    flex: 1,
+  weekDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  dayTitle: {
+  weekLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+    color: INSIGHT_COLORS.title,
+  },
+  weekScore: {
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  weekEmotion: {
     fontSize: 12,
     fontWeight: "600",
     color: INSIGHT_COLORS.muted,
+    maxWidth: 72,
   },
-  dayValue: {
-    marginTop: 2,
-    fontSize: 13,
+  detailButton: {
+    marginTop: 20,
+    minHeight: 54,
+    borderRadius: 999,
+    backgroundColor: INSIGHT_COLORS.accent,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  detailButtonText: {
+    fontSize: 16,
     fontWeight: "700",
-    color: INSIGHT_COLORS.title,
+    color: "#FFFFFF",
+  },
+  pressed: {
+    opacity: 0.85,
   },
 });

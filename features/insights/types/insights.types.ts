@@ -31,10 +31,13 @@ export type PreviousReport = {
   icon: "cloud" | "sun";
 };
 
-export type WeeklyInsightMock = {
+/** View model for weekly/monthly insight cards (mapped from API). */
+export type WeeklyInsightCardModel = {
   periodLabel: string;
   dateRangeLabel: string;
   headline: string;
+  recordedDays: number;
+  totalRecordedDays: number;
   totalDays: number;
   journalCount: number;
   dominantEmotion: {
@@ -47,3 +50,6 @@ export type WeeklyInsightMock = {
   observations: InsightObservation[];
   previousReports: PreviousReport[];
 };
+
+/** @deprecated Prefer WeeklyInsightCardModel */
+export type WeeklyInsightMock = WeeklyInsightCardModel;

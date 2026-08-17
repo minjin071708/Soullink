@@ -1,12 +1,13 @@
 import {
-  monthlyEmotionStatisticsResponseSchema,
-  weeklyEmotionStatisticsResponseSchema,
+  monthlyStatisticsResponseSchema,
+  weeklyStatisticsRequestSchema,
+  weeklyStatisticsResponseSchema,
 } from "@/schemas/emotionStatisticsSchema";
 import type {
   GetMonthlyEmotionStatisticsParams,
-  GetWeeklyEmotionStatisticsRequest,
-  MonthlyEmotionStatisticsData,
-  WeeklyEmotionStatisticsData,
+  MonthlyStatisticsData,
+  WeeklyStatisticsData,
+  WeeklyStatisticsRequest,
 } from "@/types/emotionStatisticsType";
 import axiosInstance from "./axiosInstance";
 
@@ -15,18 +16,19 @@ import axiosInstance from "./axiosInstance";
  * Returns parsed `data` only (not the full envelope).
  */
 export const getWeeklyEmotionStatisticsApi = async (
-  params: GetWeeklyEmotionStatisticsRequest = {}
-): Promise<WeeklyEmotionStatisticsData> => {
+  params: WeeklyStatisticsRequest = {}
+): Promise<WeeklyStatisticsData> => {
+  const query = weeklyStatisticsRequestSchema.parse(params);
   const response = await axiosInstance.get(
     "api/v1/emotion-statistics/weekly",
     {
       params: {
-        ...(params.baseDate ? { baseDate: params.baseDate } : {}),
+        ...(query.baseDate ? { baseDate: query.baseDate } : {}),
       },
     }
   );
 
-  const parsed = weeklyEmotionStatisticsResponseSchema.parse(response.data);
+  const parsed = weeklyStatisticsResponseSchema.parse(response.data);
   return parsed.data;
 };
 
@@ -36,7 +38,7 @@ export const getWeeklyEmotionStatisticsApi = async (
  */
 export const getMonthlyEmotionStatisticsApi = async (
   params: GetMonthlyEmotionStatisticsParams = {}
-): Promise<MonthlyEmotionStatisticsData> => {
+): Promise<MonthlyStatisticsData> => {
   const response = await axiosInstance.get(
     "api/v1/emotion-statistics/monthly",
     {
@@ -46,6 +48,6 @@ export const getMonthlyEmotionStatisticsApi = async (
     }
   );
 
-  const parsed = monthlyEmotionStatisticsResponseSchema.parse(response.data);
+  const parsed = monthlyStatisticsResponseSchema.parse(response.data);
   return parsed.data;
 };

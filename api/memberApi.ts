@@ -30,15 +30,32 @@ export const updateMemberMeApi = async (
   payload: UpdateMemberRequestType
 ): Promise<MemberType> => {
   const body = updateMemberRequestSchema.parse(payload);
-  const languageCode = body.preferredLanguageCode.toUpperCase();
+  const request: {
+    nickname?: string;
+    email?: string;
+    marketingAgree?: boolean;
+    languageCode?: string;
+    preferredLanguageCode?: string;
+  } = {};
+
+  if (body.nickname !== undefined) {
+    request.nickname = body.nickname;
+  }
+  if (body.email !== undefined) {
+    request.email = body.email;
+  }
+  if (body.marketingAgree !== undefined) {
+    request.marketingAgree = body.marketingAgree;
+  }
+  if (body.preferredLanguageCode !== undefined) {
+    const languageCode = body.preferredLanguageCode.toUpperCase();
+    request.languageCode = languageCode;
+    request.preferredLanguageCode = languageCode;
+  }
 
   const response = await axiosInstance.patch<MemberMeResponseType>(
     "api/v1/members/me",
-    {
-      nickname: body.nickname,
-      languageCode,
-      preferredLanguageCode: languageCode,
-    }
+    request
   );
 
   const parsed = memberMeResponseSchema.parse(response.data);

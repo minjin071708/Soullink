@@ -2,25 +2,20 @@ import { EMOTION_CHART_COLORS } from "@/features/insights/constants/insights.con
 import type {
   InsightEmotionKey,
   InsightEmotionShare,
-  WeeklyInsightMock,
+  InsightObservation,
+  PreviousReport,
+  WeeklyInsightCardModel,
 } from "@/features/insights/types/insights.types";
 import type {
   EmotionDistribution,
-  MonthlyEmotionStatisticsData,
-  WeeklyEmotionStatisticsData,
+  EmotionTopTag,
+  MonthlyStatisticsData,
+  RecentReport,
+  WeeklyStatisticsData,
 } from "@/types/emotionStatisticsType";
 import type { TFunction } from "i18next";
 
-export type InsightCardViewModel = Pick<
-  WeeklyInsightMock,
-  | "periodLabel"
-  | "dateRangeLabel"
-  | "headline"
-  | "totalDays"
-  | "journalCount"
-  | "dominantEmotion"
-  | "emotionShares"
->;
+export type InsightCardViewModel = WeeklyInsightCardModel;
 
 function toEmotionKey(code: string): InsightEmotionKey {
   const upper = code.trim().toUpperCase();
@@ -83,10 +78,6 @@ function mapEmotionShares(
   });
 }
 
-function sumDistributionCounts(distribution: EmotionDistribution[]): number {
-  return distribution.reduce((sum, item) => sum + item.count, 0);
-}
-
 function findTopEmotion(
   distribution: EmotionDistribution[]
 ): EmotionDistribution | undefined {
@@ -100,7 +91,7 @@ function findTopEmotion(
 }
 
 function buildWeeklyHeadline(
-  data: WeeklyEmotionStatisticsData,
+  data: WeeklyStatisticsData,
   t: TFunction
 ): string {
   if (data.dominantEmotion?.name) {
@@ -117,7 +108,7 @@ function buildWeeklyHeadline(
 }
 
 function buildMonthlyHeadline(
-  data: MonthlyEmotionStatisticsData,
+  data: MonthlyStatisticsData,
   t: TFunction
 ): string {
   const top = findTopEmotion(data.emotionDistribution);
@@ -131,9 +122,16 @@ function buildMonthlyHeadline(
     return t("insights.monthly.headlineEmpty");
   }
 
-  if (data.averageScore != null) {
+  const scoredWeeks = data.weeklyAverages.filter(
+    (week) => typeof week.averageScore === "number"
+  );
+  if (scoredWeeks.length > 0) {
+    const sum = scoredWeeks.reduce(
+      (total, week) => total + (week.averageScore ?? 0),
+      0
+    );
     return t("insights.monthly.headlineAverage", {
-      score: data.averageScore.toFixed(1),
+      score: (sum / scoredWeeks.length).toFixed(1),
     });
   }
 
@@ -144,9 +142,9 @@ function buildMonthlyHeadline(
  * Maps weekly emotion-statistics API data into the Insights card view model.
  */
 export function mapWeeklyEmotionStatisticsToCard(
-  data: WeeklyEmotionStatisticsData,
+  data: WeeklyStatisticsData,
   t: TFunction
-): InsightCardViewModel {
+): WeeklyInsightCardModel {
   const emotionShares = mapEmotionShares(data.emotionDistribution);
   const dominantShare = data.dominantEmotion
     ? data.emotionDistribution.find(
@@ -168,8 +166,10 @@ export function mapWeeklyEmotionStatisticsToCard(
       t
     ),
     headline: buildWeeklyHeadline(data, t),
+    recordedDays: data.recordedDays,
+    totalRecordedDays: data.totalRecordedDays,
     totalDays: data.recordedDays,
-    journalCount: sumDistributionCounts(data.emotionDistribution),
+    journalCount: data.totalRecordedDays,
     dominantEmotion: {
       label: data.dominantEmotion?.name ?? "—",
       daysLabel:
@@ -179,6 +179,13 @@ export function mapWeeklyEmotionStatisticsToCard(
       color: dominantColor,
     },
     emotionShares,
+    aiObservation:
+      data.aiInsight?.content?.trim() || t("insights.aiObservationEmpty"),
+    observations: mapTopTagsToObservations(data.topTags, t),
+    previousReports: mapRecentReportsToPreviousReports(
+      data.recentReports,
+      t
+    ),
   };
 }
 
@@ -186,9 +193,9 @@ export function mapWeeklyEmotionStatisticsToCard(
  * Maps monthly emotion-statistics API data into the Insights card view model.
  */
 export function mapMonthlyEmotionStatisticsToCard(
-  data: MonthlyEmotionStatisticsData,
+  data: MonthlyStatisticsData,
   t: TFunction
-): InsightCardViewModel {
+): WeeklyInsightCardModel {
   const emotionShares = mapEmotionShares(data.emotionDistribution);
   const topEmotion = findTopEmotion(data.emotionDistribution);
   const topColor = topEmotion
@@ -210,18 +217,82 @@ export function mapMonthlyEmotionStatisticsToCard(
       t
     ),
     headline: buildMonthlyHeadline(data, t),
+    recordedDays: data.recordedDays,
+    totalRecordedDays: data.recordedDays,
     totalDays: data.recordedDays,
-    journalCount: sumDistributionCounts(data.emotionDistribution),
+    journalCount: data.recordedDays,
     dominantEmotion: {
       label: topEmotion?.emotionName ?? "—",
       daysLabel:
         topEmotion != null
           ? t("insights.weekly.daysCount", { count: topEmotion.count })
           : t("insights.monthly.recordRateLabel", {
-              rate: Math.round(data.recordRate),
+              rate: Math.round(data.recordedRate),
             }),
       color: topColor,
     },
     emotionShares,
+    aiObservation:
+      data.aiInsight?.content?.trim() || t("insights.aiObservationEmpty"),
+    observations: mapTopTagsToObservations(data.topTags, t),
+    previousReports: [],
   };
+}
+
+export function isEmotionTopTag(value: unknown): value is EmotionTopTag {
+  if (typeof value !== "object" || value == null) {
+    return false;
+  }
+
+  const tag = value as Record<string, unknown>;
+  return (
+    typeof tag.tagId === "number" &&
+    typeof tag.tagName === "string" &&
+    typeof tag.count === "number"
+  );
+}
+
+export function mapTopTagsToObservations(
+  topTags: unknown[] | EmotionTopTag[] | undefined,
+  t: TFunction
+): InsightObservation[] {
+  if (!topTags?.length) {
+    return [];
+  }
+
+  return (topTags.filter(isEmotionTopTag) as EmotionTopTag[])
+    .slice(0, 2)
+    .map((tag, index) => ({
+      id: String(tag.tagId),
+      title:
+        index === 0
+          ? t("insights.observation.recurring")
+          : t("insights.observation.commonTag"),
+      subtitle: `${tag.tagName} · ${tag.count}`,
+      icon: (index === 0 ? "recurring" : "helpful") as "recurring" | "helpful",
+      accent:
+        index === 0
+          ? EMOTION_CHART_COLORS.HAPPY
+          : EMOTION_CHART_COLORS.SAD,
+    }));
+}
+
+export function mapRecentReportsToPreviousReports(
+  reports: RecentReport[],
+  t: TFunction
+): PreviousReport[] {
+  return reports.map((report) => {
+    const key = toEmotionKey(report.resultCode);
+    return {
+      id: String(report.analysisId),
+      title: formatStatisticsDateRangeLabel(
+        report.period.startDate,
+        report.period.endDate,
+        t
+      ),
+      moodLabel: report.resultName,
+      moodColor: EMOTION_CHART_COLORS[key],
+      icon: report.analysisType === "MONTHLY" ? "sun" : "cloud",
+    };
+  });
 }

@@ -1,17 +1,12 @@
-import { emailSignupResponseSchema, loginResponseSchema, sendEmailVerificationCodeResponseSchema, verifyEmailCodeResponseSchema } from "@/schemas/authSchema";
-import type { LoginRequestType, LoginResponseType, SendEmailVerificationCodeRequest, SendEmailVerificationCodeResponse } from "@/types/authType";
+import { emailSignupResponseSchema, loginResponseSchema, logoutRequestSchema, logoutResponseSchema, sendEmailVerificationCodeResponseSchema, verifyEmailCodeResponseSchema } from "@/schemas/authSchema";
+import type { LoginRequestType, LoginResponseType, LogoutRequest, LogoutResponse, SendEmailVerificationCodeRequest, SendEmailVerificationCodeResponse } from "@/types/authType";
 import { EmailSignupRequest, EmailSignupResponse, VerifyEmailCodeRequest, VerifyEmailCodeResponse } from "@/types/authType";
-import type { AxiosRequestConfig } from "axios";
 import axiosInstance from "./axiosInstance";
 import { normalizeTokenPayload } from "./normalizeAuthPayload";
 
 export { normalizeTokenPayload } from "./normalizeAuthPayload";
 export { refreshTokenApi } from "./refreshApi";
 export { socialLoginApi, socialSignupApi } from "./socialAuthApi";
-
-type AuthRequestConfig = AxiosRequestConfig & {
-  skipAuthRefresh?: boolean;
-};
 
 export const loginApi = async (
   loginData: LoginRequestType
@@ -28,9 +23,12 @@ export const loginApi = async (
   return loginResponseSchema.parse(normalized);
 };
 
-export const logoutApi = async (): Promise<void> => {
-  const config: AuthRequestConfig = { skipAuthRefresh: true };
-  await axiosInstance.post("api/v1/auth/logout", undefined, config);
+export const logoutApi = async (
+  request: LogoutRequest
+): Promise<LogoutResponse> => {
+  const body = logoutRequestSchema.parse(request);
+  const response = await axiosInstance.post("api/v1/auth/logout", body);
+  return logoutResponseSchema.parse(response.data);
 };
 
 export const emailSignupApi = async (data: EmailSignupRequest): Promise<EmailSignupResponse> => {

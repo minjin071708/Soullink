@@ -1,10 +1,10 @@
+import i18n from "@/i18n";
 import {
   voiceTranscribeResponseSchema,
   type VoiceAcceptLanguage,
   type VoiceAudioUpload,
   type VoiceTranscribeResponse,
 } from "@/schemas/voiceSchema";
-import i18n from "@/i18n";
 import axiosInstance from "./axiosInstance";
 
 const MAX_AUDIO_BYTES = 3 * 1024 * 1024;
@@ -32,7 +32,7 @@ function resolveVoiceAcceptLanguage(): VoiceAcceptLanguage {
  * POST /api/v1/voice/transcribe?punctuate=true
  * multipart/form-data field: `audio` (max 3MB)
  * Accept-Language: current UI language (ko | en | mn).
- * Server routes mn → Chimege, ko/en → OpenAI.
+ * Server routes mn → Duudlaga, ko/en → OpenAI.
  * Do not set Content-Type manually — axiosInstance strips it for FormData.
  */
 export const transcribeVoiceApi = async (

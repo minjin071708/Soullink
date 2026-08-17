@@ -26,34 +26,39 @@ export function AiObservationSection({
       </View>
       <Text style={styles.body}>{observation}</Text>
 
-      <View style={styles.list}>
-        {items.map((item, index) => (
-          <View key={item.id}>
-            {index > 0 ? <View style={styles.divider} /> : null}
-            <View style={styles.row}>
-              <View
-                style={[styles.iconWrap, { backgroundColor: `${item.accent}22` }]}
-              >
-                <Ionicons
-                  name={
-                    item.icon === "recurring"
-                      ? "git-network-outline"
-                      : "moon-outline"
-                  }
-                  size={18}
-                  color={item.accent}
-                />
-              </View>
-              <View style={styles.copy}>
-                <Text style={styles.itemTitle}>{item.title}</Text>
-                <Text style={[styles.itemSubtitle, { color: item.accent }]}>
-                  {item.subtitle}
-                </Text>
+      {items.length > 0 ? (
+        <View style={styles.list}>
+          {items.map((item, index) => (
+            <View key={item.id}>
+              {index > 0 ? <View style={styles.divider} /> : null}
+              <View style={styles.row}>
+                <View
+                  style={[
+                    styles.iconWrap,
+                    { backgroundColor: `${item.accent}22` },
+                  ]}
+                >
+                  <Ionicons
+                    name={
+                      item.icon === "recurring"
+                        ? "git-network-outline"
+                        : "moon-outline"
+                    }
+                    size={18}
+                    color={item.accent}
+                  />
+                </View>
+                <View style={styles.copy}>
+                  <Text style={styles.itemTitle}>{item.title}</Text>
+                  <Text style={[styles.itemSubtitle, { color: item.accent }]}>
+                    {item.subtitle}
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
-        ))}
-      </View>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -127,6 +132,16 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     color: INSIGHT_COLORS.muted,
     marginBottom: 14,
+    backgroundColor: "#ffffff",
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: INSIGHT_COLORS.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   list: {
     backgroundColor: INSIGHT_COLORS.card,

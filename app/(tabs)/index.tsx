@@ -1,5 +1,6 @@
 import { CommunityPostCard } from "@/components/community/CommunityPostCard";
 import { GreetingSection } from "@/components/home/GreetingSection";
+import { WeeklyInsightCard } from "@/components/home/WeeklyInsightCard";
 import { WeeklyMoodJourneyCard } from "@/components/home/WeeklyMoodJourneyCard";
 import { MOODS } from "@/constants/moods";
 import { useCommunityPosts } from "@/hooks/community/useCommunityPosts";
@@ -107,11 +108,14 @@ export default function HomeScreen() {
 
   const communityPostsQuery = useCommunityPosts({
     sort: "LATEST",
-    page: 0,
     size: HOME_COMMUNITY_POST_LIMIT,
   });
   const communityPosts = useMemo(
-    () => (communityPostsQuery.data ?? []).slice(0, HOME_COMMUNITY_POST_LIMIT),
+    () =>
+      (
+        communityPostsQuery.data?.pages.flatMap((page) => page.data.content) ??
+        []
+      ).slice(0, HOME_COMMUNITY_POST_LIMIT),
     [communityPostsQuery.data]
   );
 
@@ -142,6 +146,9 @@ export default function HomeScreen() {
       <CommunityPostCard
         post={item}
         width={cardWidth}
+        onPress={(post) => {
+          router.push(`/(tabs)/community/post/${post.postId}` as Href);
+        }}
         onImageGestureActiveChange={(active) => {
           setPostsSwipeEnabled(!active);
         }}
@@ -212,10 +219,12 @@ export default function HomeScreen() {
               })}
             </View>
           </View>
-
+              {/* Mood journey for the current week */}
           <WeeklyMoodJourneyCard />
         </View>
-
+        <View>
+        <WeeklyInsightCard />
+        </View>
         {communityPosts.length > 0 ? (
           <View style={styles.communitySection}>
             <View style={styles.communityHeader}>

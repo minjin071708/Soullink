@@ -169,7 +169,7 @@ export default function ProfileEditScreen() {
             value={nickname}
             onChangeText={setNickname}
             autoCapitalize="words"
-            maxLength={50}
+            maxLength={30}
           />
 
           <LanguageSelectField

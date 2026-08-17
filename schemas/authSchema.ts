@@ -1,20 +1,36 @@
 import { z } from "zod";
 
+function emptyToNull(value: unknown) {
+  if (value === "" || value === undefined) {
+    return null;
+  }
+  return value;
+}
+
+export const memberStatusSchema = z.enum([
+  "ACTIVE",
+  "WITHDRAWN",
+  "INACTIVE",
+  "SUSPENDED",
+]);
+
+/** MEM-001 / MEM-002 `data` member. Language fields are extra app/backend extras. */
 export const memberSchema = z
   .object({
     memberNo: z.number(),
     memberId: z.string(),
-    nickname: z.string().default(""),
-    email: z.string().optional().default(""),
-    preferredLanguageCode: z.string().optional().default(""),
-    languageCode: z.string().optional(),
-    memberStatus: z
-      .enum(["ACTIVE", "INACTIVE", "SUSPENDED"])
-      .default("ACTIVE"),
+    nickname: z.string(),
+    email: z.preprocess(emptyToNull, z.string().email().nullable()),
+    profileImageUrl: z.preprocess(
+      emptyToNull,
+      z.string().url().nullable()
+    ),
+    memberStatus: memberStatusSchema,
     marketingAgree: z.boolean().optional().default(false),
-    profileImageUrl: z.string().nullish(),
     createdAt: z.string().optional().default(""),
     updatedAt: z.string().optional().default(""),
+    preferredLanguageCode: z.string().optional().default(""),
+    languageCode: z.string().optional(),
   })
   .transform((member) => {
     const raw =
@@ -24,7 +40,6 @@ export const memberSchema = z
     return {
       ...rest,
       preferredLanguageCode,
-      profileImageUrl: rest.profileImageUrl?.trim() || null,
     };
   });
 
@@ -56,20 +71,34 @@ export const refreshResponseSchema = z.object({
   requestId: z.string().optional().default(""),
 });
 
-/** GET /api/v1/members/me */
+export const logoutRequestSchema = z.object({
+  refreshToken: z.string().min(1),
+  allDevices: z.boolean().default(false),
+});
+
+export const logoutResponseSchema = z.object({
+  success: z.boolean(),
+  code: z.string(),
+  message: z.string(),
+  requestId: z.uuid(),
+});
+
+/** GET /api/v1/members/me and PATCH /api/v1/members/me */
 export const memberMeResponseSchema = z.object({
   success: z.boolean(),
   code: z.string(),
   message: z.string(),
   data: memberSchema,
-  requestId: z.string().optional().default(""),
+  requestId: z.string(),
 });
 
 export const preferredLanguageCodeSchema = z.enum(["en", "mn", "ko"]);
 
 export const updateMemberRequestSchema = z.object({
-  nickname: z.string().trim().min(1).max(50),
-  preferredLanguageCode: preferredLanguageCodeSchema,
+  nickname: z.string().trim().min(1).max(30).optional(),
+  email: z.string().email().max(254).optional(),
+  marketingAgree: z.boolean().optional(),
+  preferredLanguageCode: preferredLanguageCodeSchema.optional(),
 });
 
 export const socialProviderSchema = z.enum(["GOOGLE", "APPLE"]);
@@ -119,7 +148,7 @@ export const socialLoginResponseSchema = z.object({
   code: z.string(),
   message: z.string(),
   data: socialLoginDataSchema,
-  requestId: z.string().optional().default(""),
+  requestId: z.uuid(),
 });
 
 export const socialSignupResponseSchema = z.object({

@@ -1,13 +1,13 @@
 import { getWeeklyEmotionStatisticsApi } from "@/api/emotionStatisticsApi";
-import type { GetWeeklyEmotionStatisticsRequest } from "@/types/emotionStatisticsType";
+import type { WeeklyStatisticsRequest } from "@/types/emotionStatisticsType";
 import { useQuery } from "@tanstack/react-query";
 
 export const weeklyEmotionStatisticsQueryKey = (
-  params: GetWeeklyEmotionStatisticsRequest = {}
+  params: WeeklyStatisticsRequest = {}
 ) => ["emotion-statistics", "weekly", params] as const;
 
 export const useWeeklyEmotionStatistics = (
-  params: GetWeeklyEmotionStatisticsRequest = {},
+  params: WeeklyStatisticsRequest = {},
   enabled = true
 ) => {
   return useQuery({

@@ -2,16 +2,24 @@ import {
   MAX_AUDIO_BYTES,
   VoiceFileTooLargeError,
 } from "@/api/voiceApi";
+import { AudioLevelMeter } from "@/components/journal/AudioLevelMeter";
+import { VoiceOrb } from "@/components/journal/VoiceOrb";
 import { useTranscribeVoice } from "@/hooks/useTranscribeVoice";
 import {
   VOICE_ERROR_CODES,
   type VoiceAudioUpload,
 } from "@/schemas/voiceSchema";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import type { Audio as ExpoAvAudio } from "expo-av";
+import type { AxiosError } from "axios";
 import * as DocumentPicker from "expo-document-picker";
+import {
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  useAudioRecorder,
+  useAudioRecorderState,
+} from "expo-audio";
 import * as FileSystem from "expo-file-system/legacy";
-import { requireOptionalNativeModule } from "expo-modules-core";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -21,30 +29,12 @@ import {
   Text,
   View,
 } from "react-native";
-import type { AxiosError } from "axios";
 
 const PRIMARY = "#8A6BE8";
-
-type AudioModule = typeof ExpoAvAudio;
-
-/**
- * expo-av needs a native rebuild. Loading it while ExponentAV is missing
- * crashes the screen, so only require when the native module exists.
- */
-function loadAudioModule(): AudioModule | null {
-  if (!requireOptionalNativeModule("ExponentAV")) {
-    return null;
-  }
-
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require("expo-av").Audio as AudioModule;
-  } catch {
-    return null;
-  }
-}
-
-const Audio = loadAudioModule();
+const RECORDING_OPTIONS = {
+  ...RecordingPresets.HIGH_QUALITY,
+  isMeteringEnabled: true,
+};
 
 type VoiceJournalPanelProps = {
   textColor: string;
@@ -53,6 +43,7 @@ type VoiceJournalPanelProps = {
   borderColor: string;
   onTranscribed: (transcription: string) => void;
   onError: (message: string, requestId?: string) => void;
+  onDismiss?: () => void;
 };
 
 function guessMimeType(fileName: string): string {
@@ -78,6 +69,22 @@ async function getFileSizeBytes(uri: string): Promise<number | undefined> {
   return undefined;
 }
 
+function normalizeMetering(value: number | undefined): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return 0;
+  }
+
+  // Metering is dB: -60 dB ≈ silence, 0 dB ≈ peak.
+  return Math.max(0, Math.min(1, (value + 60) / 60));
+}
+
+function formatDuration(durationMillis: number): string {
+  const totalSeconds = Math.floor(Math.max(0, durationMillis) / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
 export function VoiceJournalPanel({
   textColor,
   mutedColor,
@@ -85,25 +92,46 @@ export function VoiceJournalPanel({
   borderColor,
   onTranscribed,
   onError,
+  onDismiss,
 }: VoiceJournalPanelProps) {
   const { t } = useTranslation();
-  const recordingRef = useRef<InstanceType<AudioModule["Recording"]> | null>(
-    null
-  );
-  const [isRecording, setIsRecording] = useState(false);
+  const recorder = useAudioRecorder(RECORDING_OPTIONS);
+  const recorderState = useAudioRecorderState(recorder, 100);
+  const smoothedLevelRef = useRef(0);
+  const isRecordingActiveRef = useRef(false);
+  const [audioLevel, setAudioLevel] = useState(0);
   const { mutateAsync: transcribe, isPending: isTranscribing } =
     useTranscribeVoice();
-  const canRecord = Audio !== null;
+  const isRecording = recorderState.isRecording;
+
+  useEffect(() => {
+    isRecordingActiveRef.current = isRecording;
+  }, [isRecording]);
 
   useEffect(() => {
     return () => {
-      const active = recordingRef.current;
-      if (active) {
-        void active.stopAndUnloadAsync().catch(() => undefined);
-        recordingRef.current = null;
+      // useAudioRecorder may already have released the native shared object by
+      // the time this cleanup runs. Never read recorder.* properties here.
+      if (isRecordingActiveRef.current) {
+        try {
+          void recorder.stop().catch(() => undefined);
+        } catch {
+          // Shared object already released.
+        }
       }
+      void setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
     };
+    // Intentionally empty deps: bind once to this mount's recorder instance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const raw = isRecording ? normalizeMetering(recorderState.metering) : 0;
+    // Exponential smoothing avoids jitter without retaining sample history.
+    const next = smoothedLevelRef.current * 0.68 + raw * 0.32;
+    smoothedLevelRef.current = next;
+    setAudioLevel(next);
+  }, [isRecording, recorderState.metering]);
 
   const uploadAudio = async (audio: VoiceAudioUpload) => {
     try {
@@ -175,30 +203,23 @@ export function VoiceJournalPanel({
   };
 
   const startRecording = async () => {
-    if (!Audio || isRecording || isTranscribing) {
-      if (!Audio) {
-        onError(t("journal.write.voiceNativeUnavailable"));
-      }
+    if (isRecording || isTranscribing) {
       return;
     }
 
     try {
-      const permission = await Audio.requestPermissionsAsync();
+      const permission = await requestRecordingPermissionsAsync();
       if (!permission.granted) {
         onError(t("journal.write.voicePermissionDenied"));
         return;
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
-
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      recordingRef.current = recording;
-      setIsRecording(true);
+      await recorder.prepareToRecordAsync();
+      recorder.record();
     } catch (error) {
       onError(
         error instanceof Error
@@ -209,22 +230,17 @@ export function VoiceJournalPanel({
   };
 
   const stopRecordingAndTranscribe = async () => {
-    if (!Audio) {
-      return;
-    }
-
-    const recording = recordingRef.current;
-    if (!recording) {
+    if (!isRecordingActiveRef.current && !recorderState.isRecording) {
       return;
     }
 
     try {
-      setIsRecording(false);
-      await recording.stopAndUnloadAsync();
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
-
-      const uri = recording.getURI();
-      recordingRef.current = null;
+      isRecordingActiveRef.current = false;
+      await recorder.stop();
+      await setAudioModeAsync({ allowsRecording: false });
+      smoothedLevelRef.current = 0;
+      setAudioLevel(0);
+      const uri = recorder.uri;
 
       if (!uri) {
         onError(t("journal.write.voiceRecordFailed"));
@@ -237,13 +253,27 @@ export function VoiceJournalPanel({
         mimeType: "audio/mp4",
       });
     } catch (error) {
-      recordingRef.current = null;
-      setIsRecording(false);
       onError(
         error instanceof Error
           ? error.message
           : t("journal.write.voiceRecordFailed")
       );
+    }
+  };
+
+  const discardRecording = async () => {
+    try {
+      if (isRecordingActiveRef.current || recorderState.isRecording) {
+        isRecordingActiveRef.current = false;
+        await recorder.stop();
+      }
+      await setAudioModeAsync({ allowsRecording: false });
+    } catch {
+      // Dismissing the screen should still succeed if native cleanup fails.
+    } finally {
+      smoothedLevelRef.current = 0;
+      setAudioLevel(0);
+      onDismiss?.();
     }
   };
 
@@ -280,158 +310,233 @@ export function VoiceJournalPanel({
   };
 
   const busy = isRecording || isTranscribing;
+  const title = isTranscribing
+    ? t("journal.write.voiceTranscribing")
+    : isRecording
+      ? t("journal.write.voiceListening")
+      : t("journal.write.voiceTitle");
 
   return (
-    <View
-      style={[
-        styles.panel,
-        { backgroundColor: inputBackground, borderColor },
-      ]}
-    >
-      <Ionicons
-        name={isRecording ? "radio-button-on" : "mic-outline"}
-        size={36}
-        color={isRecording ? "#E0567A" : PRIMARY}
-      />
-      <Text style={[styles.title, { color: textColor }]}>
-        {isTranscribing
-          ? t("journal.write.voiceTranscribing")
-          : isRecording
-            ? t("journal.write.voiceRecording")
-            : t("journal.write.voiceTitle")}
-      </Text>
-      <Text style={[styles.body, { color: mutedColor }]}>
-        {canRecord
-          ? t("journal.write.voiceBody")
-          : t("journal.write.voiceNativeUnavailable")}
-      </Text>
+    <View style={[styles.panel, { backgroundColor: inputBackground, borderColor }]}>
+      <View style={styles.topBar}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("journal.write.voiceClose")}
+          onPress={() => void discardRecording()}
+          style={styles.topButton}
+        >
+          <Ionicons name="chevron-back" size={24} color={textColor} />
+        </Pressable>
+        <Text style={[styles.navTitle, { color: textColor }]}>
+          {t("journal.write.voiceTitle")}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("journal.write.voicePick")}
+          disabled={busy}
+          onPress={() => {
+            void pickAudioFile();
+          }}
+          style={({ pressed }) => [
+            styles.topButton,
+            pressed && styles.pressed,
+            busy && styles.disabled,
+          ]}
+        >
+          <Ionicons name="ellipsis-horizontal" size={22} color={textColor} />
+        </Pressable>
+      </View>
 
-      {isTranscribing ? (
-        <ActivityIndicator color={PRIMARY} style={styles.spinner} />
-      ) : (
-        <View style={styles.actions}>
-          {canRecord ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={
-                isRecording
-                  ? t("journal.write.voiceStop")
-                  : t("journal.write.voiceRecord")
-              }
-              disabled={busy && !isRecording}
-              onPress={() => {
-                if (isRecording) {
-                  void stopRecordingAndTranscribe();
-                } else {
-                  void startRecording();
-                }
-              }}
-              style={({ pressed }) => [
-                styles.primaryButton,
-                {
-                  backgroundColor: isRecording ? "#E0567A" : PRIMARY,
-                },
-                pressed && styles.pressed,
-              ]}
-            >
-              <Ionicons
-                name={isRecording ? "stop" : "mic"}
-                size={18}
-                color="#FFFFFF"
-              />
-              <Text style={styles.primaryButtonText}>
-                {isRecording
-                  ? t("journal.write.voiceStop")
-                  : t("journal.write.voiceRecord")}
-              </Text>
-            </Pressable>
-          ) : null}
+      <View style={styles.visualArea}>
+        <VoiceOrb level={audioLevel} isRecording={isRecording} />
+        <Text style={[styles.title, { color: textColor }]}>{title}</Text>
+        <Text style={[styles.body, { color: mutedColor }]}>
+          {isRecording
+            ? t("journal.write.voiceSharePrompt")
+            : t("journal.write.voiceBody")}
+        </Text>
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("journal.write.voicePick")}
-            disabled={busy}
-            onPress={() => {
-              void pickAudioFile();
-            }}
-            style={({ pressed }) => [
-              styles.secondaryButton,
-              { borderColor },
-              pressed && styles.pressed,
-              busy && styles.disabled,
-            ]}
-          >
-            <Ionicons name="folder-open-outline" size={18} color={textColor} />
-            <Text style={[styles.secondaryButtonText, { color: textColor }]}>
-              {t("journal.write.voicePick")}
+        {isRecording ? (
+          <>
+            <Text style={[styles.duration, { color: textColor }]}>
+              {formatDuration(recorderState.durationMillis)}
+              <Text style={styles.liveDot}> ●</Text>
             </Text>
-          </Pressable>
-        </View>
-      )}
+            <AudioLevelMeter level={audioLevel} active color={PRIMARY} />
+          </>
+        ) : null}
+
+        {isTranscribing ? (
+          <ActivityIndicator color={PRIMARY} style={styles.spinner} />
+        ) : null}
+      </View>
+
+      <Text style={[styles.autoSaveHint, { color: mutedColor }]}>
+        {t("journal.write.voiceAutoSave")}
+      </Text>
+
+      <View style={styles.bottomControls}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={
+            isRecording
+              ? t("journal.write.voiceStop")
+              : t("journal.write.voiceRecord")
+          }
+          disabled={isTranscribing}
+          onPress={() => {
+            if (isRecording) {
+              void stopRecordingAndTranscribe();
+            } else {
+              void startRecording();
+            }
+          }}
+          style={({ pressed }) => [
+            styles.listenControl,
+            pressed && styles.pressed,
+            isTranscribing && styles.disabled,
+          ]}
+        >
+          <View style={styles.microphoneCircle}>
+            <Ionicons
+              name={isRecording ? "mic" : "mic-outline"}
+              size={25}
+              color={textColor}
+            />
+          </View>
+          <Text style={[styles.listenLabel, { color: textColor }]}>
+            {isRecording
+              ? t("journal.write.voiceListening")
+              : t("journal.write.voiceRecord")}
+          </Text>
+          <AudioLevelMeter level={audioLevel} active={isRecording} color={PRIMARY} />
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("journal.write.voiceStop")}
+          disabled={!isRecording || isTranscribing}
+          onPress={() => void stopRecordingAndTranscribe()}
+          style={({ pressed }) => [
+            styles.stopButton,
+            (!isRecording || isTranscribing) && styles.disabled,
+            pressed && isRecording && styles.pressed,
+          ]}
+        >
+          {isTranscribing ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <Ionicons name="stop" size={20} color="#FFFFFF" />
+          )}
+        </Pressable>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   panel: {
-    minHeight: 220,
+    minHeight: 620,
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 28,
+    overflow: "hidden",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 18,
+  },
+  topBar: {
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  topButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    gap: 8,
+    backgroundColor: "rgba(255,255,255,0.74)",
+  },
+  navTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
+  visualArea: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: 16,
   },
   title: {
-    fontSize: 16,
-    fontWeight: "700",
+    marginTop: 12,
+    fontSize: 25,
+    fontWeight: "800",
     textAlign: "center",
   },
   body: {
+    marginTop: 8,
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
-    marginBottom: 8,
+    paddingHorizontal: 18,
   },
-  spinner: {
-    marginTop: 12,
-  },
-  actions: {
-    width: "100%",
-    gap: 10,
-    marginTop: 8,
-  },
-  primaryButton: {
-    minHeight: 48,
-    borderRadius: 999,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  secondaryButton: {
-    minHeight: 48,
-    borderRadius: 999,
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  secondaryButtonText: {
-    fontSize: 15,
+  duration: {
+    marginTop: 26,
+    fontSize: 19,
     fontWeight: "600",
   },
+  liveDot: {
+    color: "#FF5B64",
+    fontSize: 14,
+  },
+  spinner: {
+    marginTop: 26,
+  },
+  autoSaveHint: {
+    marginBottom: 16,
+    textAlign: "center",
+    fontSize: 13,
+  },
+  bottomControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  listenControl: {
+    flex: 1,
+    minHeight: 68,
+    borderRadius: 34,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    gap: 12,
+  },
+  microphoneCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(233,228,255,0.84)",
+  },
+  listenLabel: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  stopButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#1C1C1E",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   pressed: {
-    opacity: 0.88,
+    opacity: 0.72,
   },
   disabled: {
-    opacity: 0.55,
+    opacity: 0.42,
   },
 });

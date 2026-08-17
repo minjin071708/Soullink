@@ -1,32 +1,43 @@
-import { EMOTION_CODES } from "@/types/emotionType";
 import { z } from "zod";
 
-export const emotionCodeSchema = z.enum(EMOTION_CODES);
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
-export const weeklyStatisticsPeriodSchema = z.object({
+export const statisticsPeriodSchema = z.object({
   startDate: z.string(),
   endDate: z.string(),
 });
 
-export const weeklyDominantEmotionSchema = z.object({
-  code: emotionCodeSchema,
+/** @deprecated Prefer statisticsPeriodSchema */
+export const weeklyStatisticsPeriodSchema = statisticsPeriodSchema;
+
+export const dominantEmotionSchema = z.object({
+  code: z.string(),
   name: z.string(),
 });
+
+/** @deprecated Prefer dominantEmotionSchema */
+export const weeklyDominantEmotionSchema = dominantEmotionSchema;
 
 /**
  * Diary бичээгүй өдөр `emotionCode` field өөрөө байхгүй.
  */
-export const weeklyDailyScoreSchema = z.object({
+export const dailyEmotionScoreSchema = z.object({
   date: z.string(),
-  emotionCode: emotionCodeSchema.optional(),
+  emotionCode: z.string().optional(),
 });
 
-export const emotionDistributionSchema = z.object({
-  emotionCode: emotionCodeSchema,
+/** @deprecated Prefer dailyEmotionScoreSchema */
+export const weeklyDailyScoreSchema = dailyEmotionScoreSchema;
+
+export const emotionDistributionItemSchema = z.object({
+  emotionCode: z.string(),
   emotionName: z.string(),
   count: z.number().int().nonnegative(),
-  ratio: z.number(),
+  ratio: z.number().min(0).max(100),
 });
+
+/** Shared distribution item (weekly + monthly) */
+export const emotionDistributionSchema = emotionDistributionItemSchema;
 
 export const emotionTopTagSchema = z.object({
   tagId: z.number().int(),
@@ -34,56 +45,110 @@ export const emotionTopTagSchema = z.object({
   count: z.number().int().nonnegative(),
 });
 
-export const weeklyEmotionStatisticsDataSchema = z.object({
-  period: weeklyStatisticsPeriodSchema,
-  recordedDays: z.number().int().nonnegative(),
-  dominantEmotion: weeklyDominantEmotionSchema.nullable(),
-  dailyScores: z.array(weeklyDailyScoreSchema),
-  emotionDistribution: z.array(emotionDistributionSchema),
-  topTags: z.array(emotionTopTagSchema),
+export const aiInsightSchema = z.object({
+  analysisId: z.number().int().positive(),
+  status: z.string(),
+  title: z.string(),
+  content: z.string(),
 });
 
-export const weeklyEmotionStatisticsResponseSchema = z.object({
+export const recentReportSchema = z.object({
+  analysisId: z.number().int().positive(),
+  analysisType: z.enum(["DAILY", "WEEKLY", "MONTHLY"]),
+  period: statisticsPeriodSchema,
+  resultType: z.string(),
+  resultCode: z.string(),
+  resultName: z.string(),
+});
+
+export const weeklyStatisticsRequestSchema = z.object({
+  /**
+   * 7 хоногийн хугацааны төгсгөлийн өдөр.
+   * Илгээхгүй бол backend өнөөдрөөр тооцно.
+   */
+  baseDate: z
+    .string()
+    .regex(dateRegex, "baseDate must use yyyy-MM-dd format")
+    .optional(),
+});
+
+export const weeklyStatisticsDataSchema = z.object({
+  period: statisticsPeriodSchema,
+  /** Энэ долоо хоногт тэмдэглэл бичсэн өдрийн тоо */
+  recordedDays: z.number().int().nonnegative(),
+  /** Одоог хүртэл нийт тэмдэглэл бичсэн өдрийн тоо */
+  totalRecordedDays: z.number().int().nonnegative(),
+  dominantEmotion: dominantEmotionSchema.nullable(),
+  dailyScores: z.array(dailyEmotionScoreSchema),
+  emotionDistribution: z.array(emotionDistributionItemSchema),
+  /** topTags item бүтэц response дээр хараахан тодорхойгүй. */
+  topTags: z.array(z.unknown()),
+  aiInsight: aiInsightSchema.nullable(),
+  recentReports: z.array(recentReportSchema),
+  hasMoreReports: z.boolean(),
+});
+
+/** @deprecated Prefer weeklyStatisticsDataSchema */
+export const weeklyEmotionStatisticsDataSchema = weeklyStatisticsDataSchema;
+
+export const weeklyStatisticsResponseSchema = z.object({
   success: z.boolean(),
   code: z.string(),
   message: z.string(),
-  data: weeklyEmotionStatisticsDataSchema,
-  requestId: z.string().optional().default(""),
+  data: weeklyStatisticsDataSchema,
+  requestId: z.string(),
 });
 
-export const monthlyScoreDaySchema = z.object({
-  date: z.string(),
-  score: z.number(),
-});
+/** @deprecated Prefer weeklyStatisticsResponseSchema */
+export const weeklyEmotionStatisticsResponseSchema =
+  weeklyStatisticsResponseSchema;
 
-/** Backend may omit averageScore when that week has no diary scores. */
+export const monthlyStatisticsPeriodSchema = statisticsPeriodSchema;
+
+/**
+ * Тэмдэглэлгүй долоо хоногт averageScore / dominantEmotionCode ирэхгүй байж болно.
+ */
 export const weeklyAverageSchema = z.object({
   weekStartDate: z.string(),
   weekEndDate: z.string(),
-  averageScore: z.number().nullable().optional(),
+  averageScore: z.number().optional(),
+  dominantEmotionCode: z.string().optional(),
 });
 
-/**
- * Monthly STAT response — optional score fields may be omitted when insufficient data.
- */
-export const monthlyEmotionStatisticsDataSchema = z.object({
-  period: weeklyStatisticsPeriodSchema,
+export const monthlyEmotionDistributionItemSchema =
+  emotionDistributionItemSchema;
+
+export const monthlyStatisticsDataSchema = z.object({
+  period: monthlyStatisticsPeriodSchema,
+  /** Сонгосон хугацаанд тэмдэглэлтэй өдрийн тоо */
   recordedDays: z.number().int().nonnegative(),
-  recordRate: z.number(),
-  averageScore: z.number().nullable().optional(),
-  scoreChange: z.number().nullable().optional(),
-  bestDay: monthlyScoreDaySchema.nullable().optional(),
-  lowestDay: monthlyScoreDaySchema.nullable().optional(),
-  weeklyAverages: z.array(weeklyAverageSchema).default([]),
-  emotionDistribution: z.array(emotionDistributionSchema).default([]),
-  topTags: z.array(emotionTopTagSchema).default([]),
-  sleepCorrelation: z.number().nullable().optional(),
+  /** Нийт хугацаанаас хэдэн хувьд нь тэмдэглэл бичсэн */
+  recordedRate: z.number().min(0).max(100),
+  weeklyAverages: z.array(weeklyAverageSchema),
+  emotionDistribution: z.array(monthlyEmotionDistributionItemSchema),
+  /** Item бүтэц response-оос хараахан тодорхойгүй; хоосон ирж болно */
+  topTags: z.array(z.unknown()).default([]),
+  /** Хоосон/null ирж болно */
+  aiInsight: aiInsightSchema.nullable().default(null),
 });
 
-export const monthlyEmotionStatisticsResponseSchema = z.object({
+/** @deprecated Prefer monthlyStatisticsDataSchema */
+export const monthlyEmotionStatisticsDataSchema = monthlyStatisticsDataSchema;
+
+export const monthlyStatisticsResponseSchema = z.object({
   success: z.boolean(),
   code: z.string(),
   message: z.string(),
-  data: monthlyEmotionStatisticsDataSchema,
-  requestId: z.string().optional().default(""),
+  data: monthlyStatisticsDataSchema,
+  requestId: z.string(),
+});
+
+/** @deprecated Prefer monthlyStatisticsResponseSchema */
+export const monthlyEmotionStatisticsResponseSchema =
+  monthlyStatisticsResponseSchema;
+
+/** @deprecated Removed from monthly STAT response */
+export const monthlyScoreDaySchema = z.object({
+  date: z.string(),
+  score: z.number(),
 });

@@ -1,4 +1,5 @@
 import { CommunityPostCard } from "@/components/community/CommunityPostCard";
+import { AppText } from "@/components/ui/AppText";
 import { useCommunityPosts } from "@/hooks/community/useCommunityPosts";
 import type { CommunityCategory, CommunitySort } from "@/types/community";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -9,17 +10,22 @@ import {
   ActivityIndicator,
   FlatList,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
-  Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const TEXT = "#2A2A6A";
-const MUTED = "#7A7596";
-const PRIMARY = "#8A6BE8";
-const SCREEN_BG = "#F7F5FB";
+const INK = "#1C1C1E";
+const SECONDARY = "#8E8E93";
+const BG = "#FFFFFF";
+const CARD = "#FFFFFF";
+const BORDER = "#E5E5EA";
+const SEARCH_BG = "#F7F7F8";
+const SEPARATOR = "#C6C6C8";
+const PRIMARY = "#8a6be8";
 
 type FilterKey = "ALL" | CommunityCategory;
 type SortKey = CommunitySort;
@@ -29,18 +35,29 @@ export default function CommunityScreen() {
   const [filter, setFilter] = useState<FilterKey>("ALL");
   const [sort, setSort] = useState<SortKey>("LATEST");
   const [sortOpen, setSortOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const listParams = useMemo(
     () => ({
       ...(filter === "ALL" ? {} : { categoryCode: filter }),
       sort,
-      page: 0,
       size: 20,
     }),
     [filter, sort]
   );
 
   const postsQuery = useCommunityPosts(listParams);
+  const posts = useMemo(() => {
+    const all =
+      postsQuery.data?.pages.flatMap((page) => page.data.content) ?? [];
+    const query = search.trim().toLowerCase();
+    if (!query) {
+      return all;
+    }
+    return all.filter((post) =>
+      (post.content ?? "").toLowerCase().includes(query)
+    );
+  }, [postsQuery.data, search]);
 
   const filters: { key: FilterKey; label: string }[] = [
     { key: "ALL", label: t("community.filters.all") },
@@ -48,12 +65,44 @@ export default function CommunityScreen() {
     { key: "KNOWLEDGE", label: t("community.filters.knowledge") },
   ];
 
+  const handlePostPress = (postId: number) => {
+    router.push(`/(tabs)/community/post/${postId}` as Href);
+  };
+
+  const listHeader = (
+    <View style={styles.listHeader}>
+      <View style={styles.searchBar}>
+        <Ionicons name="search" size={18} color={SECONDARY} />
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder={t("community.searchPlaceholder")}
+          placeholderTextColor={SECONDARY}
+          style={styles.searchInput}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+        />
+      </View>
+      <AppText weight="bold" style={styles.sectionTitle}>
+        {t("community.latestPosts")}
+      </AppText>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={styles.headerTitle}>{t("community.title")}</Text>
-          <Text style={styles.headerSubtitle}>{t("community.subtitle")}</Text>
+          <AppText weight="bold" style={styles.headerSmallsub}>
+            Together, gently
+          </AppText>
+          <AppText weight="bold" style={styles.headerTitle}>
+            {t("community.title")}
+          </AppText>
+          <AppText weight="regular" style={styles.headerSubtitle}>
+            {t("community.subtitle")}
+          </AppText>
+
         </View>
 
         <Pressable
@@ -65,12 +114,12 @@ export default function CommunityScreen() {
             pressed && styles.pressed,
           ]}
         >
-          <Ionicons name="add" size={24} color="#FFFFFF" />
+          <Ionicons name="add" size={24} color={CARD} />
         </Pressable>
       </View>
 
       <View style={styles.filterRow}>
-        <View style={styles.filterPills}>
+        <View style={styles.chipRow}>
           {filters.map((item) => {
             const selected = filter === item.key;
             return (
@@ -78,44 +127,49 @@ export default function CommunityScreen() {
                 key={item.key}
                 onPress={() => setFilter(item.key)}
                 style={[
-                  styles.filterPill,
-                  selected ? styles.filterPillSelected : styles.filterPillIdle,
+                  styles.chip,
+                  selected ? styles.chipSelected : styles.chipIdle,
                 ]}
               >
-                <Text
+                <AppText
+                  weight={selected ? "semibold" : "medium"}
                   style={[
-                    styles.filterPillText,
-                    selected && styles.filterPillTextSelected,
+                    styles.chipText,
+                    selected && styles.chipTextSelected,
                   ]}
                 >
                   {item.label}
-                </Text>
+                </AppText>
               </Pressable>
             );
           })}
         </View>
 
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("community.sort.latest")}
           onPress={() => setSortOpen(true)}
-          style={styles.sortButton}
+          style={({ pressed }) => [
+            styles.filterIconButton,
+            pressed && styles.pressed,
+          ]}
         >
-          <Text style={styles.sortButtonText}>
-            {sort === "LATEST"
-              ? t("community.sort.latest")
-              : t("community.sort.popular")}
-          </Text>
-          <Ionicons name="chevron-down" size={14} color={TEXT} />
+          <Ionicons name="options-outline" size={18} color={INK} />
         </Pressable>
       </View>
 
       {postsQuery.isLoading ? (
         <View style={styles.stateBox}>
-          <ActivityIndicator color={PRIMARY} />
-          <Text style={styles.stateText}>{t("community.loading")}</Text>
+          <ActivityIndicator color={INK} />
+          <AppText weight="medium" style={styles.stateText}>
+            {t("community.loading")}
+          </AppText>
         </View>
       ) : postsQuery.isError ? (
         <View style={styles.stateBox}>
-          <Text style={styles.stateText}>{t("community.error")}</Text>
+          <AppText weight="medium" style={styles.stateText}>
+            {t("community.error")}
+          </AppText>
           <Pressable
             accessibilityRole="button"
             onPress={() => {
@@ -126,26 +180,48 @@ export default function CommunityScreen() {
               pressed && styles.pressed,
             ]}
           >
-            <Text style={styles.retryText}>
+            <AppText weight="semibold" style={styles.retryText}>
               {postsQuery.isFetching
                 ? t("community.loading")
                 : t("community.retry")}
-            </Text>
+            </AppText>
           </Pressable>
         </View>
       ) : (
         <FlatList
-          data={postsQuery.data ?? []}
+          data={posts}
           keyExtractor={(item) => String(item.postId)}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={listHeader}
           refreshing={postsQuery.isRefetching}
           onRefresh={() => {
             void postsQuery.refetch();
           }}
-          renderItem={({ item }) => <CommunityPostCard post={item} />}
+          onEndReached={() => {
+            if (postsQuery.hasNextPage && !postsQuery.isFetchingNextPage) {
+              void postsQuery.fetchNextPage();
+            }
+          }}
+          onEndReachedThreshold={0.4}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => (
+            <CommunityPostCard
+              post={item}
+              onPress={() => handlePostPress(item.postId)}
+            />
+          )}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>{t("community.empty")}</Text>
+            <AppText weight="regular" style={styles.emptyText}>
+              {t("community.empty")}
+            </AppText>
+          }
+          ListFooterComponent={
+            postsQuery.isFetchingNextPage ? (
+              <View style={styles.nextPageBox}>
+                <ActivityIndicator color={INK} />
+              </View>
+            ) : null
           }
         />
       )}
@@ -157,20 +233,24 @@ export default function CommunityScreen() {
         onRequestClose={() => setSortOpen(false)}
       >
         <Pressable
-          style={styles.modalBackdrop}
+          style={styles.sheetBackdrop}
           onPress={() => setSortOpen(false)}
         >
           <View style={styles.sortSheet}>
-            {(["LATEST", "POPULAR"] as SortKey[]).map((option) => (
+            {(["LATEST", "POPULAR"] as SortKey[]).map((option, index) => (
               <Pressable
                 key={option}
                 onPress={() => {
                   setSort(option);
                   setSortOpen(false);
                 }}
-                style={styles.sortOption}
+                style={[
+                  styles.sortOption,
+                  index > 0 && styles.sortOptionBorder,
+                ]}
               >
-                <Text
+                <AppText
+                  weight={sort === option ? "semibold" : "regular"}
                   style={[
                     styles.sortOptionText,
                     sort === option && styles.sortOptionTextActive,
@@ -179,12 +259,24 @@ export default function CommunityScreen() {
                   {option === "LATEST"
                     ? t("community.sort.latest")
                     : t("community.sort.popular")}
-                </Text>
+                </AppText>
                 {sort === option ? (
-                  <Ionicons name="checkmark" size={18} color={PRIMARY} />
+                  <Ionicons name="checkmark" size={18} color={INK} />
                 ) : null}
               </Pressable>
             ))}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setSortOpen(false)}
+              style={({ pressed }) => [
+                styles.sortCancel,
+                pressed && styles.pressed,
+              ]}
+            >
+              <AppText weight="semibold" style={styles.sortCancelText}>
+                {t("community.detail.cancel")}
+              </AppText>
+            </Pressable>
           </View>
         </Pressable>
       </Modal>
@@ -195,7 +287,7 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: SCREEN_BG,
+    backgroundColor: BG,
   },
   header: {
     flexDirection: "row",
@@ -203,90 +295,159 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 12,
+    paddingBottom: 14,
     gap: 12,
   },
   headerCopy: {
     flex: 1,
-    gap: 4,
+    gap: 6,
+    paddingRight: 8,
   },
   headerTitle: {
-    color: TEXT,
-    fontSize: 30,
-    lineHeight: 36,
+    color: INK,
+    fontSize: 34,
+    lineHeight: 40,
     fontWeight: "800",
     letterSpacing: -0.6,
   },
   headerSubtitle: {
-    color: MUTED,
+    color: SECONDARY,
     fontSize: 14,
     lineHeight: 20,
+    letterSpacing: -0.2,
   },
   addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: PRIMARY,
-    marginTop: 4,
+    backgroundColor: INK,
+    marginTop: 2,
   },
   filterRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
     paddingHorizontal: 20,
-    marginBottom: 12,
+    paddingBottom: 14,
   },
-  filterPills: {
+  chipRow: {
     flex: 1,
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },
-  filterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     borderRadius: 999,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+      default: {},
+    }),
   },
-  filterPillSelected: {
-    backgroundColor: PRIMARY,
+  chipSelected: {
+    backgroundColor: INK,
   },
-  filterPillIdle: {
-    backgroundColor: "#ECEAF3",
+  chipIdle: {
+    backgroundColor: CARD,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
   },
-  filterPillText: {
-    color: TEXT,
-    fontSize: 13,
+  chipText: {
+    color: INK,
+    fontSize: 14,
     fontWeight: "600",
   },
-  filterPillTextSelected: {
+  chipTextSelected: {
     color: "#FFFFFF",
   },
-  sortButton: {
+  filterIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: CARD,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+      default: {},
+    }),
+  },
+  listHeader: {
+    gap: 18,
+    paddingBottom: 8,
+  },
+  searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    gap: 10,
+    minHeight: 52,
+    paddingHorizontal: 18,
     borderRadius: 999,
-    backgroundColor: "#ECEAF3",
+    backgroundColor: SEARCH_BG,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+      default: {},
+    }),
   },
-  sortButtonText: {
-    color: TEXT,
-    fontSize: 13,
-    fontWeight: "600",
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: INK,
+    paddingVertical: 12,
+  },
+  sectionTitle: {
+    color: INK,
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "700",
+    letterSpacing: -0.3,
   },
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 28,
-    gap: 14,
+    gap: 16,
     flexGrow: 1,
   },
   emptyText: {
-    color: MUTED,
+    color: SECONDARY,
+    fontSize: 15,
     textAlign: "center",
-    marginTop: 40,
+    marginTop: 48,
+  },
+  nextPageBox: {
+    paddingVertical: 16,
+    alignItems: "center",
   },
   stateBox: {
     flex: 1,
@@ -296,49 +457,73 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   stateText: {
-    color: MUTED,
-    fontSize: 14,
-    fontWeight: "600",
+    color: SECONDARY,
+    fontSize: 15,
+    fontWeight: "500",
     textAlign: "center",
   },
   retryButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: "#ECEAF3",
+    backgroundColor: SEARCH_BG,
   },
   retryText: {
-    color: PRIMARY,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(20,16,40,0.28)",
-    justifyContent: "center",
-    paddingHorizontal: 40,
-  },
-  sortSheet: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    paddingVertical: 8,
-  },
-  sortOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  sortOptionText: {
-    color: TEXT,
+    color: INK,
     fontSize: 15,
     fontWeight: "600",
   },
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.32)",
+    justifyContent: "flex-end",
+    paddingHorizontal: 12,
+    paddingBottom: 28,
+  },
+  sortSheet: {
+    backgroundColor: CARD,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  sortOption: {
+    minHeight: 52,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 18,
+  },
+  sortOptionBorder: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: SEPARATOR,
+  },
+  sortOptionText: {
+    color: INK,
+    fontSize: 17,
+  },
   sortOptionTextActive: {
-    color: PRIMARY,
+    fontWeight: "600",
+  },
+  sortCancel: {
+    minHeight: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: SEPARATOR,
+  },
+  sortCancelText: {
+    color: INK,
+    fontSize: 17,
+    fontWeight: "600",
   },
   pressed: {
-    opacity: 0.88,
+    opacity: 0.7,
+  },
+  headerSmallsub:{
+    color: PRIMARY
+  },
+  headerSmallsubText: {
+    color: PRIMARY,
+    fontSize: 14,
+    fontWeight: "900",
   },
 });

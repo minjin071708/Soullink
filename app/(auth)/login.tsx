@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const APPLE_INK = "#1d1d1f";
 const MUTED = "#6E6E73";
-const LOGIN_BACKGROUND = require("@/assets/images/loginBackground.png");
+const LOGIN_BACKGROUND = require("@/assets/images/hellomascot.png");
 const LOGIN_LOGO_WHITE = require("@/assets/images/logo_default.png");
 const EMAIL_LOGIN_HREF = "/(auth)/email-login" as Href;
 const SIGNUP_HREF = "/(auth)/signup" as Href;
@@ -83,6 +83,7 @@ export default function LoginScreen() {
         <View style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.title}>{copy.title}</Text>
+            <Text style={styles.subtitle}>{copy.subtitle}</Text>
             <Image
               source={LOGIN_LOGO_WHITE}
               style={styles.logo}
@@ -213,12 +214,20 @@ const styles = StyleSheet.create({
   header: {
     marginTop: 24,
     alignItems: "center",
-    gap: 12,
+    gap: 4,
   },
   title: {
     fontSize: 32,
     lineHeight: 36,
     fontWeight: "700",
+    letterSpacing: -0.5,
+    color: APPLE_INK,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 24,
+    fontWeight: "400",
     letterSpacing: -0.5,
     color: APPLE_INK,
     textAlign: "center",

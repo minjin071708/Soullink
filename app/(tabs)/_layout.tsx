@@ -15,7 +15,10 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useAppTheme();
   const bottomInset = Math.max(insets.bottom, 0);
-  const hideTabBar = segments.some((segment) => segment === "add-post");
+  const hideTabBar =
+    (segments as string[]).includes("add-post") ||
+    (segments as string[]).includes("edit-post") ||
+    (segments as string[]).includes("post");
 
   useEffect(() => {
     if (Platform.OS !== "android") {

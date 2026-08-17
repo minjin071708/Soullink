@@ -1,8 +1,3 @@
-import { MOCK_WEEKLY_INSIGHT } from "@/features/insights/api/insightsMock";
-import {
-  AiObservationSection,
-  PreviousReportsSection,
-} from "@/features/insights/components/InsightSections";
 import { MonthlyInsightCard } from "@/features/insights/components/MonthlyInsightCard";
 import { PeriodSegment } from "@/features/insights/components/PeriodSegment";
 import { WeeklyInsightCard } from "@/features/insights/components/WeeklyInsightCard";
@@ -14,7 +9,6 @@ import {
 } from "@/features/insights/utils/mapWeeklyEmotionStatistics";
 import { useMonthlyEmotionStatistics } from "@/hooks/insights/useMonthlyEmotionStatistics";
 import { useWeeklyEmotionStatistics } from "@/hooks/insights/useWeeklyEmotionStatistics";
-import type { EmotionTopTag } from "@/types/emotionStatisticsType";
 import { formatEmotionDate } from "@/utils/emotionDate";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -57,48 +51,6 @@ export function InsightsScreen() {
     }
     return mapMonthlyEmotionStatisticsToCard(monthlyQuery.data, t);
   }, [isMonth, monthlyQuery.data, t]);
-
-  const observationItems = useMemo(() => {
-    const topTags = isMonth
-      ? monthlyQuery.data?.topTags
-      : weeklyQuery.data?.topTags;
-
-    if (!topTags?.length) {
-      return [];
-    }
-
-    return topTags.slice(0, 2).map((tag: EmotionTopTag, index) => ({
-      id: String(tag.tagId),
-      title:
-        index === 0
-          ? t("insights.observation.recurring")
-          : t("insights.observation.commonTag"),
-      subtitle: `${tag.tagName} · ${tag.count}`,
-      icon: (index === 0 ? "recurring" : "helpful") as "recurring" | "helpful",
-      accent: index === 0 ? INSIGHT_COLORS.happy : INSIGHT_COLORS.sad,
-    }));
-  }, [
-    isMonth,
-    monthlyQuery.data?.topTags,
-    t,
-    weeklyQuery.data?.topTags,
-  ]);
-
-  const previousReports = useMemo(
-    () =>
-      MOCK_WEEKLY_INSIGHT.previousReports.map((report, index) => ({
-        ...report,
-        title:
-          index === 0
-            ? t("insights.mock.previous.weekTitle")
-            : t("insights.mock.previous.monthTitle"),
-        moodLabel:
-          index === 0
-            ? t("insights.mock.previous.weekMood")
-            : t("insights.mock.previous.monthMood"),
-      })),
-    [t]
-  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -165,51 +117,16 @@ export function InsightsScreen() {
                 monthlyQuery.data
                   ? {
                       recordedDays: monthlyQuery.data.recordedDays,
-                      recordRate: monthlyQuery.data.recordRate,
-                      averageScore: monthlyQuery.data.averageScore,
-                      scoreChange: monthlyQuery.data.scoreChange,
-                      bestDay: monthlyQuery.data.bestDay,
-                      lowestDay: monthlyQuery.data.lowestDay,
+                      recordedRate: monthlyQuery.data.recordedRate,
+                      weeklyAverages: monthlyQuery.data.weeklyAverages,
                     }
                   : null
               }
             />
           ) : isWeek && weeklyCardData ? (
-            <WeeklyInsightCard
-              data={weeklyCardData}
-              stats={
-                weeklyQuery.data
-                  ? { recordedDays: weeklyQuery.data.recordedDays }
-                  : null
-              }
-            />
+            <WeeklyInsightCard data={weeklyCardData} />
           ) : null}
         </View>
-
-        {!isDay ? (
-          <>
-            <AiObservationSection
-              observation={t("insights.mock.aiObservation")}
-              items={observationItems}
-            />
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t("insights.detailReport")}
-              style={({ pressed }) => [
-                styles.detailButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Ionicons name="stats-chart" size={18} color="#FFFFFF" />
-              <Text style={styles.detailButtonText}>
-                {t("insights.detailReport")}
-              </Text>
-            </Pressable>
-
-            <PreviousReportsSection reports={previousReports} />
-          </>
-        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -284,20 +201,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: INSIGHT_COLORS.accent,
-  },
-  detailButton: {
-    marginTop: 20,
-    minHeight: 54,
-    borderRadius: 999,
-    backgroundColor: INSIGHT_COLORS.accent,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  detailButtonText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#FFFFFF",
   },
 });

@@ -19,7 +19,7 @@ import axiosInstance from "./axiosInstance";
  */
 export const createWeeklyAnalysisApi = async (
   payload: CreateWeeklyAnalysisRequestType
-): Promise<WeeklyAnalysisData> => {
+): Promise<WeeklyAnalysisData | null> => {
   const response = await axiosInstance.post(
     "api/v1/ai-analyses/weekly",
     {

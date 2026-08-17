@@ -1,103 +1,81 @@
 import { z } from "zod";
 
-export const analysisTypeSchema = z.enum(["DAILY", "WEEKLY", "MONTHLY"]);
+function upperStringEnum<const T extends readonly [string, ...string[]]>(
+  values: T,
+  fallback: T[number]
+) {
+  return z.preprocess((value) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+    return value.trim().toUpperCase();
+  }, z.enum(values).catch(fallback));
+}
 
-export const analysisStatusSchema = z.enum([
-  "REQUESTED",
-  "PROCESSING",
-  "SUCCESS",
-  "FAILED",
-  "INVALIDATED",
-]);
+export const analysisTypeSchema = upperStringEnum(
+  ["DAILY", "WEEKLY", "MONTHLY"],
+  "WEEKLY"
+);
 
-export const scoreTrendSchema = z.enum([
-  "IMPROVING",
-  "STABLE",
-  "DECLINING",
-  "INSUFFICIENT",
-]);
+export const analysisStatusSchema = upperStringEnum(
+  [
+    "NONE",
+    "REQUESTED",
+    "PROCESSING",
+    "READY",
+    "SUCCESS",
+    "FAILED",
+    "INVALIDATED",
+  ],
+  "REQUESTED"
+);
 
-export const safetyRiskLevelSchema = z.enum([
-  "NONE",
-  "LOW",
-  "MEDIUM",
-  "HIGH",
-]);
+export const scoreTrendSchema = upperStringEnum(
+  ["IMPROVING", "STABLE", "DECLINING", "INSUFFICIENT"],
+  "INSUFFICIENT"
+);
 
-const weeklyAnalysisPeriodSchema = z.object({
-  startDate: z.string(),
-  endDate: z.string(),
-});
+export const safetyRiskLevelSchema = upperStringEnum(
+  ["NONE", "LOW", "MEDIUM", "HIGH"],
+  "NONE"
+);
 
-const weeklyMainEmotionSchema = z.object({
-  code: z.string().max(30).nullable(),
-  name: z.string().max(50).nullable(),
-});
-
-const weeklyKeyPatternSchema = z.object({
-  patternCode: z.string().max(50),
-  title: z.string().max(100),
-  description: z.string().max(500),
-  confidence: z.number().min(0).max(1).nullable(),
-});
-
-const weeklyTriggerSchema = z.object({
-  tagCode: z.string(),
-  tagName: z.string(),
-  count: z.number(),
-});
-
-const weeklyRecommendationSchema = z.object({
-  recommendationId: z.string().max(50),
-  title: z.string().max(100),
-  description: z.string().max(500),
-  priority: z.number().int().min(1).max(5),
-});
-
-const weeklySafetySchema = z.object({
-  riskLevel: safetyRiskLevelSchema,
-  showHelpGuide: z.boolean(),
-});
-
-const weeklyComparisonSchema = z.object({
-  previousAverageScore: z.number().min(1).max(10).nullable(),
-  scoreDifference: z.number().nullable(),
-  description: z.string().max(300).nullable(),
-});
-
-const weeklyDailyHighlightSchema = z.object({
-  date: z.string(),
-  emotionCode: z.string(),
-  score: z.number().int().min(1).max(10),
-  reason: z.string().max(300),
-});
-
+/** AI-002 POST /api/v1/ai-analyses/weekly — response `data` payload */
 export const weeklyAnalysisDataSchema = z.object({
   analysisId: z.number(),
-  analysisType: analysisTypeSchema,
-  analysisStatus: analysisStatusSchema,
-  period: weeklyAnalysisPeriodSchema,
-  summary: z.string().max(2000),
-  mainEmotion: weeklyMainEmotionSchema,
-  averageScore: z.number().min(1).max(10).nullable(),
-  scoreTrend: scoreTrendSchema.nullable(),
-  keyPatterns: z.array(weeklyKeyPatternSchema),
-  triggers: z.array(weeklyTriggerSchema),
-  recommendations: z.array(weeklyRecommendationSchema).max(3),
-  safety: weeklySafetySchema,
-  generatedAt: z.string(),
-  modelName: z.string().max(100),
-  recordedDays: z.number().int().min(0).max(7),
-  comparison: weeklyComparisonSchema,
-  dailyHighlights: z.array(weeklyDailyHighlightSchema).max(3),
+  type: z.literal("WEEKLY"),
+  status: z.enum([
+    "NONE",
+    "REQUESTED",
+    "PROCESSING",
+    "READY",
+    "SUCCESS",
+    "FAILED",
+    "INVALIDATED",
+  ]),
+  title: z.string().optional().default(""),
+  summary: z.string().optional().default(""),
+  recordedDays: z.number().int().min(0).max(7).optional().default(0),
+  keyPatterns: z.array(z.string()).optional().default([]),
+  recommendations: z.array(z.string()).optional().default([]),
+  dailyHighlights: z
+    .array(
+      z.object({
+        date: z.string(),
+        emotionCode: z.string(),
+        reason: z.string(),
+      })
+    )
+    .optional()
+    .default([]),
 });
 
 /** POST /api/v1/ai-analyses/weekly response envelope */
 export const createWeeklyAnalysisResponseSchema = z.object({
   success: z.boolean(),
-  code: z.string().max(50),
-  message: z.string().max(200),
-  data: weeklyAnalysisDataSchema,
+  code: z.string(),
+  message: z.string(),
+  data: weeklyAnalysisDataSchema.nullable(),
   requestId: z.string(),
 });
 
@@ -105,9 +83,9 @@ export type CreateWeeklyAnalysisResponseType = z.infer<
   typeof createWeeklyAnalysisResponseSchema
 >;
 
-export type WeeklyAnalysisData = z.infer<
-  typeof createWeeklyAnalysisResponseSchema
->["data"];
+export type WeeklyAnalysisData = NonNullable<
+  CreateWeeklyAnalysisResponseType["data"]
+>;
 
 export const analysisPeriodSchema = z.object({
   startDate: z.string(),

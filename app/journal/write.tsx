@@ -447,6 +447,7 @@ export default function JournalWriteScreen() {
                 mutedColor={mutedColor}
                 inputBackground={inputBackground}
                 borderColor={borderColor}
+                onDismiss={() => setInputMode("text")}
                 onTranscribed={(transcription) => {
                   setJournalText(transcription);
                   setContentSource("voice");

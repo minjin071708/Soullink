@@ -1,4 +1,7 @@
+import { CommunityCommentSheet } from "@/components/community/CommunityComments";
+import { useToggleCommunityPostLike } from "@/hooks/community/useToggleCommunityPostLike";
 import type { CommunityPost } from "@/types/community";
+import AntDesign from '@expo/vector-icons/AntDesign';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -24,6 +27,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const TEXT = "#2A2A6A";
 const MUTED = "#7A7596";
+const APPLE_INK = "#1d1d1f";
 const PRIMARY = "#8A6BE8";
 const BADGE_BG = "#F5F0FF";
 const DEFAULT_AVATAR = require("@/assets/mascotImages/maskot3dwhite.png");
@@ -268,6 +272,7 @@ export const CommunityPostCard = memo(function CommunityPostCard({
   onImageGestureActiveChange,
 }: CommunityPostCardProps) {
   const { t } = useTranslation();
+  const [commentSheetOpen, setCommentSheetOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
@@ -332,7 +337,17 @@ export const CommunityPostCard = memo(function CommunityPostCard({
     setActiveImageIndex(Math.max(0, Math.min(nextIndex, images.length - 1)));
   };
 
+  const likeToggle = useToggleCommunityPostLike(post.postId);
+
   const handleCardPress = () => onPress?.(post);
+  const handleCommentPress = () => setCommentSheetOpen(true);
+
+  const handleLikePress = () => {
+    if (likeToggle.isPending) {
+      return;
+    }
+    likeToggle.mutate();
+  };
 
   return (
     <View
@@ -438,8 +453,16 @@ export const CommunityPostCard = memo(function CommunityPostCard({
             onPress={() => openViewer(activeImageIndex)}
             style={styles.expandButton}
           >
-            <Ionicons name="expand-outline" size={16} color="#FFFFFF" />
+            <AntDesign name="expand" size={16} color="#FFFFFF" />
           </Pressable>
+
+          {images.length > 1 ? (
+            <View style={styles.imageCounter} pointerEvents="none">
+              <Text style={styles.imageCounterText}>
+                {activeImageIndex + 1} / {images.length}
+              </Text>
+            </View>
+          ) : null}
 
           <PageDots count={images.length} activeIndex={activeImageIndex} />
         </View>
@@ -461,28 +484,52 @@ export const CommunityPostCard = memo(function CommunityPostCard({
             {preview}
           </Text>
         ) : null}
-
-        <View style={styles.actionsRow}>
-          <View style={styles.actionGroup}>
-            <Ionicons
-              name={post.likedByMe ? "heart" : "heart-outline"}
-              size={24}
-              color={post.likedByMe ? "#E56B8A" : MUTED}
-            />
-            <Text style={styles.actionCount}>{post.likeCount}</Text>
-          </View>
-          <View style={styles.actionGroup}>
-            <Ionicons name="chatbubble-outline" size={22} color={MUTED} />
-            <Text style={styles.actionCount}>{post.commentCount}</Text>
-          </View>
-          <View style={styles.actionSpacer} />
-          <Ionicons
-            name={isBookmarked ? "bookmark" : "bookmark-outline"}
-            size={24}
-            color={MUTED}
-          />
-        </View>
       </Pressable>
+
+      <View style={styles.actionsRow}>
+        {/* post like */}
+        <Pressable
+          accessibilityRole="button"
+          disabled={likeToggle.isPending}
+          onPress={handleLikePress}
+          hitSlop={8}
+          style={styles.actionGroup}
+        >
+          <Ionicons
+            name={post.likedByMe ? "heart" : "heart-outline"}
+            size={24}
+            color={post.likedByMe ? "#FF3B30" : APPLE_INK}
+          />
+          <Text style={styles.actionCount}>{post.likeCount}</Text>
+        </Pressable>
+        {/* post comment */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("community.detail.comments", {
+            count: post.commentCount,
+          })}
+          onPress={handleCommentPress}
+          hitSlop={8}
+          style={styles.actionGroup}
+        >
+          <Ionicons name="chatbubble-outline" size={22} color={APPLE_INK} />
+          <Text style={styles.actionCount}>{post.commentCount}</Text>
+        </Pressable>
+        {/* post bookmark */}
+        <View style={styles.actionSpacer} />
+        <Ionicons
+          name={isBookmarked ? "bookmark" : "bookmark-outline"}
+          size={24}
+          color={APPLE_INK}
+        />
+      </View>
+
+      <CommunityCommentSheet
+        visible={commentSheetOpen}
+        postId={post.postId}
+        commentCount={post.commentCount}
+        onClose={() => setCommentSheetOpen(false)}
+      />
 
       <FullscreenImageViewer
         visible={viewerVisible}
@@ -498,7 +545,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
-    padding: 16,
+    paddingHorizontal: 0,
+    paddingVertical: 20,
     shadowColor: "#1A1238",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
@@ -509,7 +557,7 @@ const styles = StyleSheet.create({
     opacity: 0.92,
   },
   imageWrap: {
-    borderRadius: 18,
+    borderRadius: 0,
     overflow: "hidden",
     marginBottom: 14,
     backgroundColor: "#EEEAF8",
@@ -517,7 +565,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   storyImage: {
-    borderRadius: 18,
+    borderRadius: 0,
   },
   matchBadge: {
     position: "absolute",
@@ -538,7 +586,7 @@ const styles = StyleSheet.create({
   },
   expandButton: {
     position: "absolute",
-    top: 12,
+    bottom: 12,
     right: 12,
     zIndex: 2,
     width: 32,
@@ -547,6 +595,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(20,16,40,0.55)",
+  },
+  imageCounter: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "rgba(20, 16, 40, 0.55)",
+  },
+  imageCounterText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
   },
   imageDots: {
     position: "absolute",
@@ -576,25 +638,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     marginBottom: 12,
+    paddingHorizontal: 16,
   },
   avatar: {
-    width: 48,
-    height: 48,
+    width: 38,
+    height: 38,
     borderRadius: 50,
     backgroundColor: BADGE_BG,
   },
   authorCopy: {
     flex: 1,
-    gap: 2,
+    gap: 0,
   },
   authorName: {
     color: TEXT,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "700",
   },
   authorTime: {
     color: MUTED,
-    fontSize: 14,
+    fontSize: 13,
   },
   categoryBadge: {
     maxWidth: 96,
@@ -616,16 +679,18 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   preview: {
-    color: MUTED,
+    color: APPLE_INK,
     fontSize: 14,
     lineHeight: 19,
     marginBottom: 14,
+    paddingHorizontal: 16,
   },
   actionsRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
     marginTop: 3,
+    paddingHorizontal: 16,
   },
   actionGroup: {
     flexDirection: "row",
@@ -633,7 +698,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionCount: {
-    color: MUTED,
+    color: APPLE_INK,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -656,7 +721,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "rgba(48, 48, 48, 0.16)",
   },
   viewerCounter: {
     position: "absolute",

@@ -1,117 +1,133 @@
 import { EmotionDonutChart } from "@/features/insights/components/EmotionDonutChart";
+import {
+  AiObservationSection,
+  PreviousReportsSection,
+} from "@/features/insights/components/InsightSections";
 import { INSIGHT_COLORS } from "@/features/insights/constants/insights.constants";
-import type { WeeklyInsightMock } from "@/features/insights/types/insights.types";
-import type { WeeklyEmotionStatisticsData } from "@/types/emotionStatisticsType";
+import type { WeeklyInsightCardModel } from "@/features/insights/types/insights.types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 const INSIGHT_MASCOT = require("@/assets/mascotImages/insightMascot.png");
 
 type WeeklyInsightCardProps = {
-  data: Pick<
-    WeeklyInsightMock,
-    | "periodLabel"
-    | "dateRangeLabel"
-    | "headline"
-    | "totalDays"
-    | "journalCount"
-    | "dominantEmotion"
-    | "emotionShares"
-  >;
-  stats?: Pick<WeeklyEmotionStatisticsData, "recordedDays"> | null;
+  data: WeeklyInsightCardModel;
 };
 
-export function WeeklyInsightCard({ data, stats }: WeeklyInsightCardProps) {
+export function WeeklyInsightCard({ data }: WeeklyInsightCardProps) {
   const { t } = useTranslation();
 
   return (
-    <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <Image
-          source={INSIGHT_MASCOT}
-          style={styles.mascot}
-          contentFit="contain"
-          accessibilityLabel="AI Insight mascot"
-        />
+    <View>
+      <View style={styles.card}>
+        <View style={styles.headerRow}>
+          <Image
+            source={INSIGHT_MASCOT}
+            style={styles.mascot}
+            contentFit="contain"
+            accessibilityLabel="AI Insight mascot"
+          />
 
-        <View style={styles.headerCopy}>
-          <View style={styles.periodRow}>
-            <Ionicons name="calendar" size={14} color={INSIGHT_COLORS.accent} />
-            <Text style={styles.periodLabel}>{data.periodLabel}</Text>
+          <View style={styles.headerCopy}>
+            <View style={styles.periodRow}>
+              <Ionicons
+                name="calendar"
+                size={14}
+                color={INSIGHT_COLORS.accent}
+              />
+              <Text style={styles.periodLabel}>{data.periodLabel}</Text>
+            </View>
+            <Text style={styles.dateRange}>{data.dateRangeLabel}</Text>
           </View>
-          <Text style={styles.dateRange}>{data.dateRangeLabel}</Text>
         </View>
-      </View>
 
-      <Text style={styles.headline}>{data.headline}</Text>
+        <Text style={styles.headline}>{data.headline}</Text>
 
-      {stats ? (
         <View style={styles.metricRow}>
           <View style={styles.metricBox}>
             <Text style={styles.metricTitle}>
               {t("insights.weekly.recordedDays")}
             </Text>
-            <Text style={styles.metricValue}>{stats.recordedDays}</Text>
+            <Text style={styles.metricValue}>{data.recordedDays}</Text>
             <Text style={styles.metricHint}>
               {t("insights.weekly.withinWeek")}
             </Text>
           </View>
           <View style={styles.metricBox}>
             <Text style={styles.metricTitle}>
-              {t("insights.weekly.journals")}
+              {t("insights.weekly.totalRecordedDays")}
             </Text>
-            <Text style={styles.metricValue}>{data.journalCount}</Text>
+            <Text style={styles.metricValue}>{data.totalRecordedDays}</Text>
             <Text style={styles.metricHint}>
               {t("insights.weekly.totalEntries")}
             </Text>
           </View>
         </View>
-      ) : null}
 
-      <View style={styles.chartSection}>
-        <EmotionDonutChart
-          shares={data.emotionShares}
-          totalDays={data.totalDays}
-        />
-      </View>
-
-      <View style={styles.summaryRow}>
-        <View style={styles.summaryBox}>
-          <Ionicons name="leaf" size={20} color={data.dominantEmotion.color} />
-          <View style={styles.summaryCopy}>
-            <Text
-              style={[
-                styles.summaryTitle,
-                { color: data.dominantEmotion.color },
-              ]}
-            >
-              {data.dominantEmotion.label}
-            </Text>
-            <Text style={styles.summaryValue}>
-              {data.dominantEmotion.daysLabel}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.summaryBox}>
-          <Ionicons
-            name="document-text-outline"
-            size={20}
-            color={INSIGHT_COLORS.sad}
+        <View style={styles.chartSection}>
+          <EmotionDonutChart
+            shares={data.emotionShares}
+            totalDays={data.totalDays}
           />
-          <View style={styles.summaryCopy}>
-            <Text style={styles.summaryValue}>{data.journalCount}</Text>
-            <Text style={styles.summaryCaption}>
-              {t("insights.weekly.journalCaption")}
-            </Text>
+        </View>
+
+        <View style={styles.summaryRow}>
+          <View style={styles.summaryBox}>
+            <Ionicons name="leaf" size={20} color={data.dominantEmotion.color} />
+            <View style={styles.summaryCopy}>
+              <Text
+                style={[
+                  styles.summaryTitle,
+                  { color: data.dominantEmotion.color },
+                ]}
+              >
+                {data.dominantEmotion.label}
+              </Text>
+              <Text style={styles.summaryValue}>
+                {data.dominantEmotion.daysLabel}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.summaryBox}>
+            <Ionicons
+              name="document-text-outline"
+              size={20}
+              color={INSIGHT_COLORS.sad}
+            />
+            <View style={styles.summaryCopy}>
+              <Text style={styles.summaryValue}>{data.recordedDays}</Text>
+              <Text style={styles.summaryCaption}>
+                {t("insights.weekly.journalCaption")}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
+
+      <AiObservationSection
+        observation={data.aiObservation}
+        items={data.observations}
+      />
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("insights.detailReport")}
+        style={({ pressed }) => [styles.detailButton, pressed && styles.pressed]}
+      >
+        <Ionicons name="stats-chart" size={18} color="#FFFFFF" />
+        <Text style={styles.detailButtonText}>{t("insights.detailReport")}</Text>
+      </Pressable>
+
+      {data.previousReports.length > 0 ? (
+        <PreviousReportsSection reports={data.previousReports} />
+      ) : null}
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   card: {
     backgroundColor: INSIGHT_COLORS.card,
@@ -232,5 +248,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: INSIGHT_COLORS.muted,
+  },
+  detailButton: {
+    marginTop: 20,
+    minHeight: 54,
+    borderRadius: 999,
+    backgroundColor: INSIGHT_COLORS.accent,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  detailButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  pressed: {
+    opacity: 0.85,
   },
 });

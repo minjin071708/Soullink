@@ -1,93 +1,61 @@
-import type { EmotionCode } from "@/types/emotionType";
 import type { z } from "zod";
 import {
-  monthlyEmotionStatisticsDataSchema,
-  monthlyEmotionStatisticsResponseSchema,
+  aiInsightSchema,
+  dailyEmotionScoreSchema,
+  dominantEmotionSchema,
+  emotionDistributionItemSchema,
+  emotionTopTagSchema,
+  monthlyStatisticsDataSchema,
+  monthlyStatisticsResponseSchema,
+  recentReportSchema,
+  statisticsPeriodSchema,
+  weeklyAverageSchema,
+  weeklyStatisticsDataSchema,
+  weeklyStatisticsRequestSchema,
+  weeklyStatisticsResponseSchema,
 } from "../schemas/emotionStatisticsSchema";
 
-export type WeeklyEmotionPeriod = {
-  startDate: string;
-  endDate: string;
-};
-
-export type WeeklyDominantEmotion = {
-  code: EmotionCode;
-  name: string;
-};
-
-export type WeeklyDailyScore = {
-  date: string;
-  /** Diary бичээгүй өдөр response-д field өөрөө байхгүй. */
-  emotionCode?: EmotionCode;
-};
-
-export type WeeklyEmotionDistribution = {
-  emotionCode: EmotionCode;
-  emotionName: string;
-  count: number;
-  ratio: number;
-};
-
-export type WeeklyTopTag = {
-  tagId: number;
-  tagName: string;
-  count: number;
-};
-
-export type WeeklyEmotionStatisticsData = {
-  period: WeeklyEmotionPeriod;
-  recordedDays: number;
-  dominantEmotion: WeeklyDominantEmotion | null;
-  dailyScores: WeeklyDailyScore[];
-  emotionDistribution: WeeklyEmotionDistribution[];
-  topTags: WeeklyTopTag[];
-};
-
-export type WeeklyEmotionStatisticsResponse = {
-  success: boolean;
-  code: string;
-  message: string;
-  data: WeeklyEmotionStatisticsData;
-  requestId: string;
-};
-
-/** @deprecated Prefer WeeklyEmotionPeriod — kept for existing imports */
-export type WeeklyStatisticsPeriod = WeeklyEmotionPeriod;
-
-/** @deprecated Prefer WeeklyDominantEmotion */
-export type DominantEmotion = WeeklyDominantEmotion;
-
-/** @deprecated Prefer WeeklyDailyScore */
-export type DailyEmotionScore = WeeklyDailyScore;
-
-/** Shared distribution item (weekly + monthly) */
-export type EmotionDistribution = WeeklyEmotionDistribution;
-
-/** Shared top tag (weekly + monthly) */
-export type EmotionTopTag = WeeklyTopTag;
-
-export type GetWeeklyEmotionStatisticsRequest = {
-  /** yyyy-MM-dd — backend resolves the week that contains this date */
-  baseDate?: string;
-};
-
-export type MonthlyEmotionStatisticsResponse = z.infer<
-  typeof monthlyEmotionStatisticsResponseSchema
+export type StatisticsPeriod = z.infer<typeof statisticsPeriodSchema>;
+export type DominantEmotion = z.infer<typeof dominantEmotionSchema>;
+export type DailyEmotionScore = z.infer<typeof dailyEmotionScoreSchema>;
+export type EmotionDistributionItem = z.infer<
+  typeof emotionDistributionItemSchema
+>;
+export type AiInsight = z.infer<typeof aiInsightSchema>;
+export type RecentReport = z.infer<typeof recentReportSchema>;
+export type WeeklyStatisticsRequest = z.infer<
+  typeof weeklyStatisticsRequestSchema
+>;
+export type WeeklyStatisticsData = z.infer<typeof weeklyStatisticsDataSchema>;
+export type WeeklyStatisticsResponse = z.infer<
+  typeof weeklyStatisticsResponseSchema
 >;
 
-export type MonthlyEmotionStatisticsData = z.infer<
-  typeof monthlyEmotionStatisticsDataSchema
+/** Aliases used across the app */
+export type WeeklyEmotionPeriod = StatisticsPeriod;
+export type WeeklyDominantEmotion = DominantEmotion;
+export type WeeklyDailyScore = DailyEmotionScore;
+export type WeeklyEmotionDistribution = EmotionDistributionItem;
+export type EmotionDistribution = EmotionDistributionItem;
+export type EmotionTopTag = z.infer<typeof emotionTopTagSchema>;
+export type WeeklyEmotionStatisticsData = WeeklyStatisticsData;
+export type WeeklyEmotionStatisticsResponse = WeeklyStatisticsResponse;
+export type GetWeeklyEmotionStatisticsRequest = WeeklyStatisticsRequest;
+
+/** @deprecated Prefer StatisticsPeriod */
+export type WeeklyStatisticsPeriod = StatisticsPeriod;
+
+export type WeeklyAverage = z.infer<typeof weeklyAverageSchema>;
+export type MonthlyStatisticsData = z.infer<typeof monthlyStatisticsDataSchema>;
+export type MonthlyStatisticsResponse = z.infer<
+  typeof monthlyStatisticsResponseSchema
 >;
+export type MonthlyStatisticsPeriod = MonthlyStatisticsData["period"];
+export type MonthlyEmotionDistributionItem = EmotionDistributionItem;
 
-export type MonthlyStatisticsPeriod =
-  MonthlyEmotionStatisticsData["period"];
-
-export type MonthlyScoreDay = NonNullable<
-  MonthlyEmotionStatisticsData["bestDay"]
->;
-
-export type WeeklyAverage =
-  MonthlyEmotionStatisticsData["weeklyAverages"][number];
+/** Aliases for existing imports */
+export type MonthlyEmotionStatisticsData = MonthlyStatisticsData;
+export type MonthlyEmotionStatisticsResponse = MonthlyStatisticsResponse;
 
 export type GetMonthlyEmotionStatisticsParams = {
   /** yyyy-MM-dd, default: today */
