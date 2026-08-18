@@ -1,4 +1,3 @@
-import { useDayNightTheme } from "@/components/day-night/DayNightProvider";
 import { MOODS } from "@/constants/moods";
 import type { MoodId } from "@/types/moodType";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -6,17 +5,14 @@ import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const DAY_CARD = "rgb(255, 255, 255)";
-const NIGHT_CARD = "rgba(255,255,255,0.08)";
-const DAY_BORDER = "rgba(138,107,232,0.12)";
-const NIGHT_BORDER = "rgba(255,255,255,0.12)";
+const CARD_BG = "#FFFFFF";
+const CARD_BORDER = "rgba(138,107,232,0.12)";
 const SELECTED_BORDER = "#A884FF";
 const SELECTED_FILL = "#A884FF";
+const TITLE_COLOR = "#2A2A6A";
+const MUTED = "#7D8097";
 
-const MOOD_CARD_COLORS: Record<
-  MoodId,
-  { tint: string; glow: string }
-> = {
+const MOOD_CARD_COLORS: Record<MoodId, { tint: string; glow: string }> = {
   ANGRY: { tint: "#fff0f0", glow: "#F0E5FF" },
   ANXIOUS: { tint: "#F1F6FF", glow: "#E7F0FF" },
   CALM: { tint: "#f4fffe", glow: "#EEE7FF" },
@@ -39,16 +35,11 @@ export function MoodPicker({
   showTitle = true,
 }: MoodPickerProps) {
   const { t } = useTranslation();
-  const { colors, isNight } = useDayNightTheme();
-  const textColor = colors.text;
-  const mutedColor = isNight ? colors.mutedText : "#7D8097";
 
   return (
     <View style={styles.container}>
       {showTitle ? (
-        <Text style={[styles.title, { color: textColor }]}>
-          {title ?? t("home.howAreYouFeeling")}
-        </Text>
+        <Text style={styles.title}>{title ?? t("home.howAreYouFeeling")}</Text>
       ) : null}
 
       <View style={styles.cardList}>
@@ -66,15 +57,8 @@ export function MoodPicker({
               style={({ pressed }) => [
                 styles.card,
                 {
-                  backgroundColor: isNight ? NIGHT_CARD : DAY_CARD,
-                  borderColor: isSelected
-                    ? SELECTED_BORDER
-                    : isNight
-                      ? NIGHT_BORDER
-                      : DAY_BORDER,
+                  borderColor: isSelected ? SELECTED_BORDER : CARD_BORDER,
                   shadowColor: isSelected ? "#B191FF" : "#31285F",
-                },
-                !isNight && {
                   shadowOpacity: isSelected ? 0.14 : 0.06,
                 },
                 pressed && styles.cardPressed,
@@ -83,21 +67,13 @@ export function MoodPicker({
               <View
                 style={[
                   styles.leadingOrb,
-                  {
-                    backgroundColor: isNight
-                      ? "rgba(255,255,255,0.12)"
-                      : cardColors.glow,
-                  },
+                  { backgroundColor: cardColors.glow },
                 ]}
               >
                 <View
                   style={[
                     styles.leadingTint,
-                    {
-                      backgroundColor: isNight
-                        ? "rgba(255,255,255,0.08)"
-                        : cardColors.tint,
-                    },
+                    { backgroundColor: cardColors.tint },
                   ]}
                 />
                 <Image
@@ -108,10 +84,8 @@ export function MoodPicker({
               </View>
 
               <View style={styles.textBlock}>
-                <Text style={[styles.moodTitle, { color: textColor }]}>
-                  {t(mood.labelKey)}
-                </Text>
-                <Text style={[styles.moodSubtitle, { color: mutedColor }]}>
+                <Text style={styles.moodTitle}>{t(mood.labelKey)}</Text>
+                <Text style={styles.moodSubtitle}>
                   {t(`journal.mood.options.${mood.id}.subtitle`)}
                 </Text>
               </View>
@@ -149,6 +123,7 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     fontWeight: "800",
     letterSpacing: -0.3,
+    color: TITLE_COLOR,
   },
   cardList: {
     gap: 16,
@@ -161,10 +136,10 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: CARD_BG,
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 18,
     elevation: 3,
-
   },
   cardPressed: {
     transform: [{ scale: 0.985 }],
@@ -196,11 +171,13 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 4,
     letterSpacing: -0.4,
+    color: TITLE_COLOR,
   },
   moodSubtitle: {
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "500",
+    color: MUTED,
   },
   trailingCircle: {
     width: 44,

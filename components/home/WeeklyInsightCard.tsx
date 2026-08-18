@@ -9,47 +9,88 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
 
-const TEXT = "#302060";
-const MUTED = "#706784";
-const PRIMARY = "#8A6BE8";
+const COLORS = {
+  text: "#2A2A6A",
+  secondary: "#48484A",
+  muted: "#6E6E8A",
+  primary: "#7C63E6",
+  primarySoft: "#F1EDFF",
+  border: "rgba(60, 60, 67, 0.08)",
+  divider: "rgba(60, 60, 67, 0.10)",
+  button: "#7C63E6",
+  white: "#FFFFFF",
+};
 
 export function WeeklyInsightCard() {
   const { t } = useTranslation();
   const router = useRouter();
+
   const baseDate = useMemo(() => formatEmotionDate(), []);
   const query = useWeeklyEmotionStatistics({ baseDate });
 
-  const title = query.data?.aiInsight?.title?.trim() ?? "";
-  const summary = query.data?.aiInsight?.content?.trim() ?? "";
-  const hasContent = Boolean(title || summary);
+  const data = query.data;
+  const insight = data?.aiInsight;
+
+  const title = insight?.title?.trim() ?? "";
+  const summary = insight?.content?.trim() ?? "";
+
+  const hasInsight =
+    insight?.status === "SUCCESS" && Boolean(title || summary);
+
+  const recordedDays = data?.recordedDays ?? 0;
+  const dominantEmotion = data?.dominantEmotion?.name ?? "—";
+
+  const recordRate = Math.min(
+    Math.round((recordedDays / 7) * 100),
+    100,
+  );
+
+  const periodLabel = useMemo(() => {
+    if (!data?.period) return "";
+
+    const start = data.period.startDate.slice(5).replace("-", ".");
+    const end = data.period.endDate.slice(5).replace("-", ".");
+
+    return `${start} – ${end}`;
+  }, [data?.period]);
+
+  const openInsights = () => {
+    router.push("/insights");
+  };
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerLeft}>
-            <View style={styles.sparkleIcon}>
-              <Ionicons name="sparkles" size={16} color={PRIMARY} />
-            </View>
-            <Text style={styles.headerTitle}>
-              {t("home.weeklyInsight.title")}
-            </Text>
-          </View>
+      <View>
+   
+          <View pointerEvents="none" />
+        <View style={styles.topRow}>
           <View style={styles.badge}>
+            <Ionicons
+              name="sparkles"
+              size={15}
+              color={COLORS.primary}
+            />
+
             <Text style={styles.badgeText}>
-              {t("home.weeklyInsight.aiBadge")}
+              {t("home.weeklyInsight.badge")}
             </Text>
           </View>
+
+          {periodLabel ? (
+            <Text style={styles.period}>{periodLabel}</Text>
+          ) : null}
         </View>
 
-        <View style={styles.headerDivider} />
-
         {query.isLoading ? (
-          <View style={styles.stateBox}>
-            <ActivityIndicator color={PRIMARY} />
+          <View style={styles.stateContainer}>
+            <ActivityIndicator
+              size="small"
+              color={COLORS.primary}
+            />
+
             <Text style={styles.stateText}>
               {t("home.weeklyInsight.loading")}
             </Text>
@@ -57,196 +98,313 @@ export function WeeklyInsightCard() {
         ) : null}
 
         {query.isError ? (
-          <View style={styles.stateBox}>
-            <Text style={styles.stateText}>
+          <View style={styles.stateContainer}>
+            <View style={styles.stateIcon}>
+              <Ionicons
+                name="cloud-offline-outline"
+                size={22}
+                color={COLORS.muted}
+              />
+            </View>
+
+            <Text style={styles.stateTitle}>
               {t("home.weeklyInsight.error")}
             </Text>
+
             <Pressable
               accessibilityRole="button"
-              onPress={() => {
-                void query.refetch();
-              }}
+              onPress={() => void query.refetch()}
+              hitSlop={8}
               style={({ pressed }) => [
                 styles.retryButton,
                 pressed && styles.pressed,
               ]}
             >
-              <Text style={styles.retryText}>
+              <Text style={styles.retryLabel}>
                 {t("home.weeklyInsight.retry")}
               </Text>
             </Pressable>
           </View>
         ) : null}
 
-        {!query.isLoading && !query.isError && hasContent ? (
-          <View style={styles.content}>
-            {title ? <Text style={styles.mainTitle}>{title}</Text> : null}
-            {summary ? <Text style={styles.summary}>{summary}</Text> : null}
+        {!query.isLoading && !query.isError ? (
+          <>
+            <View style={styles.insightContent}>
+              {/* <Text style={styles.eyebrow}>
+                {t("home.weeklyInsight.title")}
+              </Text> */}
+
+              <Text style={styles.mainTitle}>
+                {hasInsight
+                  ? title
+                  : t("home.weeklyInsight.insufficientTitle")}
+              </Text>
+
+              <Text style={styles.summary} numberOfLines={4}>
+                {hasInsight
+                  ? summary
+                  : t(
+                      "home.weeklyInsight.insufficientDescription",
+                    )}
+              </Text>
+            </View>
+
+            <View style={styles.statsContainer}>
+              <StatItem
+                value={String(recordedDays)}
+                label={t("home.weeklyInsight.recordedDays")}
+              />
+
+              <View style={styles.divider} />
+
+              <StatItem
+                value={dominantEmotion}
+                label={t("home.weeklyInsight.mainEmotion")}
+              />
+
+              <View style={styles.divider} />
+
+              <StatItem
+                value={`${recordRate}%`}
+                label={t("home.weeklyInsight.recordRate")}
+              />
+            </View>
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={t("home.weeklyInsight.seeMore")}
-              onPress={() => router.push("/insights")}
+              accessibilityLabel={t(
+                "home.weeklyInsight.viewReport",
+              )}
+              onPress={openInsights}
               style={({ pressed }) => [
-                styles.seeMoreButton,
-                pressed && styles.pressed,
+                styles.reportButton,
+                pressed && styles.buttonPressed,
               ]}
             >
-              <Text style={styles.seeMoreText}>
-                {t("home.weeklyInsight.seeMore")}
+              <Text style={styles.reportButtonLabel}>
+                {t("home.weeklyInsight.viewReport")}
               </Text>
-              <Ionicons name="chevron-forward" size={16} color={PRIMARY} />
-            </Pressable>
-          </View>
-        ) : null}
 
-        {!query.isLoading && !query.isError && !hasContent ? (
-          <View style={styles.stateBox}>
-            <Text style={styles.emptyTitle}>
-              {t("home.weeklyInsight.insufficientTitle")}
-            </Text>
-            <Text style={styles.stateText}>
-              {t("home.weeklyInsight.insufficientDescription")}
-            </Text>
-          </View>
+              <Ionicons
+                name="arrow-forward"
+                size={17}
+                color={COLORS.white}
+              />
+  
+            </Pressable>
+          </>
         ) : null}
       </View>
     </View>
   );
 }
 
+type StatItemProps = {
+  value: string;
+  label: string;
+};
+
+function StatItem({ value, label }: StatItemProps) {
+  return (
+    <View style={styles.statItem}>
+      <Text style={styles.statValue} numberOfLines={1}>
+        {value}
+      </Text>
+
+      <Text style={styles.statLabel} numberOfLines={1}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   wrapper: {
-    paddingHorizontal: 20,
-    marginTop: 8,
-    marginBottom: 20,
+    marginTop: 4,
+    marginBottom: 24,
+    backgroundColor: "#ffffff",
+    padding: 22,
+    borderRadius: 24,
   },
+
+
   card: {
-    backgroundColor: "#FFFCFD",
-    borderColor: "rgba(168, 140, 230, 0.35)",
-    borderWidth: 1,
+    overflow: "hidden",
     borderRadius: 28,
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 18,
-    shadowColor: "#C8B6E8",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.14,
-    shadowRadius: 14,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.72)",
+    backgroundColor: "#ffffff",
   },
-  headerRow: {
+
+  topRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 12,
+    marginBottom: 22,
   },
-  headerLeft: {
-    flex: 1,
+
+  badge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    minWidth: 0,
-  },
-  sparkleIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F0EAFE",
-  },
-  headerTitle: {
-    flex: 1,
-    flexShrink: 1,
-    color: TEXT,
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    gap: 6,
+    backgroundColor: COLORS.primarySoft,
     borderRadius: 999,
-    backgroundColor: "rgba(138, 107, 232, 0.12)",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
   },
+
   badgeText: {
-    color: PRIMARY,
-    fontSize: 11,
-    lineHeight: 14,
+    color: COLORS.primary,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "700",
+    letterSpacing: -0.1,
   },
-  headerDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: "rgba(138, 107, 232, 0.18)",
-    marginTop: 14,
-    marginBottom: 16,
-  },
-  content: {
-    gap: 12,
-  },
-  mainTitle: {
-    color: "#302060",
-    fontSize: 20,
-    lineHeight: 27,
-    fontWeight: "800",
-    letterSpacing: -0.3,
-  },
-  summary: {
-    color: "#706784",
-    fontSize: 14,
-    lineHeight: 21,
+
+  period: {
+    color: COLORS.muted,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "500",
   },
-  seeMoreButton: {
-    marginTop: 4,
+
+  insightContent: {
+    alignItems: "center",
+    paddingHorizontal: 2,
+  },
+
+  eyebrow: {
+    marginBottom: 8,
+    color: COLORS.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "600",
+    letterSpacing: 0.1,
+  },
+
+  mainTitle: {
+    color: COLORS.text,
+    fontSize: 20,
+    lineHeight: 30,
+    fontWeight: "700",
+  },
+
+  summary: {
+    marginTop: 10,
+    color: COLORS.secondary,
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: "400",
+    textAlign: "center",
+  },
+
+  statsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 24,
+    marginBottom: 20,
+    paddingVertical: 15,
+    backgroundColor: "#F8F8FA",
+    borderRadius: 18,
+  },
+
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+    paddingHorizontal: 6,
+  },
+
+  statValue: {
+    color: COLORS.text,
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
+
+  statLabel: {
+    marginTop: 3,
+    color: COLORS.muted,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "500",
+  },
+
+  divider: {
+    width: StyleSheet.hairlineWidth,
+    height: 30,
+    backgroundColor: COLORS.divider,
+  },
+
+  reportButton: {
+    height: 52,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    backgroundColor: "rgba(138, 107, 232, 0.10)",
+    gap: 8,
+    backgroundColor: COLORS.button,
+    borderRadius: 99,
   },
-  seeMoreText: {
-    color: PRIMARY,
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "700",
+
+  reportButtonLabel: {
+    color: COLORS.white,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "600",
+    letterSpacing: -0.1,
   },
-  stateBox: {
+
+  stateContainer: {
+    minHeight: 210,
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    paddingVertical: 24,
-    paddingHorizontal: 12,
+    paddingHorizontal: 20,
   },
-  stateText: {
-    color: MUTED,
-    fontSize: 13,
-    lineHeight: 19,
-    textAlign: "center",
+
+  stateIcon: {
+    width: 46,
+    height: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+    backgroundColor: "#F2F2F7",
+    borderRadius: 23,
   },
-  emptyTitle: {
-    color: TEXT,
-    fontSize: 16,
+
+  stateTitle: {
+    color: COLORS.secondary,
+    fontSize: 15,
     lineHeight: 22,
-    fontWeight: "700",
     textAlign: "center",
   },
+
+  stateText: {
+    marginTop: 10,
+    color: COLORS.muted,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+
   retryButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: "rgba(138, 107, 232, 0.12)",
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  retryText: {
-    color: PRIMARY,
-    fontSize: 13,
-    fontWeight: "700",
+
+  retryLabel: {
+    color: COLORS.primary,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "600",
   },
+
   pressed: {
-    opacity: 0.84,
+    opacity: 0.65,
+  },
+
+  buttonPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.99 }],
   },
 });

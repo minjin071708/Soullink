@@ -219,12 +219,14 @@ export default function HomeScreen() {
               })}
             </View>
           </View>
-              {/* Mood journey for the current week */}
-          <WeeklyMoodJourneyCard />
         </View>
-        <View>
-        <WeeklyInsightCard />
-        </View>
+
+          <View style={styles.weeklySection}>
+            <WeeklyMoodJourneyCard />
+          </View>
+          <View style={styles.weeklyInsightSection}>
+          <WeeklyInsightCard />
+          </View>
         {communityPosts.length > 0 ? (
           <View style={styles.communitySection}>
             <View style={styles.communityHeader}>
@@ -252,7 +254,7 @@ export default function HomeScreen() {
               disableIntervalMomentum
               contentContainerStyle={{
                 paddingHorizontal:
-                  (windowWidth - cardWidth) / 2 - CARD_GAP / 2,
+                (windowWidth - cardWidth) / 2 - CARD_GAP / 3,
               }}
               getItemLayout={(_, index) => ({
                 length: itemWidth,
@@ -301,6 +303,13 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: CONTENT_HORIZONTAL_PADDING,
     paddingTop: 16,
+  },
+
+  weeklySection: {
+    padding: 16,
+  },
+  weeklyInsightSection: {
+    padding: 16,
   },
   glassCard: {
     borderRadius: 24,
@@ -381,7 +390,7 @@ const styles = StyleSheet.create({
   },
   communityHeader: {
     alignItems: "center",
-    paddingHorizontal: CONTENT_HORIZONTAL_PADDING,
+    paddingHorizontal: 16,
     marginBottom: 16,
     gap: 6,
   },
@@ -424,7 +433,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 999,
     backgroundColor: BADGE_BG,

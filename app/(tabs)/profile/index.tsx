@@ -1,20 +1,29 @@
 import { useLogout } from "@/hooks/auth/useLogout";
+import { memberMeQueryKey, useMemberMe } from "@/hooks/useMemberMe";
 import {
   useDeleteMemberProfileImage,
   useUploadMemberProfileImage,
 } from "@/hooks/useMemberProfileImage";
-import { memberMeQueryKey } from "@/hooks/useMemberMe";
 import { useUpdateMemberMe } from "@/hooks/useUpdateMemberMe";
 import i18n from "@/i18n";
+import {
+  getBiometricCapability,
+  promptBiometricUnlock,
+} from "@/services/biometricService";
 import { useAuthStore } from "@/store/authStore";
-import { toI18nLanguage, useAppStore, type Language } from "@/store/use-language-store";
+import {
+  toI18nLanguage,
+  useAppStore,
+  type Language,
+} from "@/store/use-language-store";
+import Entypo from '@expo/vector-icons/Entypo';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -23,6 +32,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   View,
 } from "react-native";
@@ -32,10 +42,11 @@ const SCREEN_BG = "#F7F8FC";
 const TITLE_COLOR = "#27265E";
 const MUTED = "#8B8FA8";
 const PRIMARY = "#8A6BE8";
-const ICON_BG = "#F0EAFF";
+const ICON_BG = "#EFE7FF";
+const CARD_BORDER = "#EEEAF6";
+const DIVIDER = "#F0EEF6";
 const LOGOUT = "#E0567A";
-const LOGOUT_BG = "#FDE8EE";
-const DEFAULT_AVATAR = require("@/assets/mascotImages/happy.png");
+const DEFAULT_AVATAR = require("@/assets/images/defaultAvatar.png");
 const MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_PROFILE_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -51,12 +62,12 @@ type MenuIcon = keyof typeof Ionicons.glyphMap;
 type MenuItem = {
   key: string;
   labelKey:
-    | "profile.editProfile"
     | "profile.settings"
     | "profile.notifications"
     | "profile.language"
     | "profile.biometricLogin";
   icon: MenuIcon;
+  iconColor: string;
   onPress?: () => void;
 };
 
@@ -68,18 +79,64 @@ function normalizeLanguageCode(value: string | null | undefined): Language {
   return "MN";
 }
 
+function formatJoinDate(value: string | undefined): string {
+  if (!value) {
+    return "";
+  }
+
+  const isoDate = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (isoDate) {
+    return `${isoDate[1]}.${isoDate[2]}.${isoDate[3]}`;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}.${month}.${day}`;
+}
+
 export default function Profile() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const member = useAuthStore((state) => state.member);
+  const storeMember = useAuthStore((state) => state.member);
   const setMember = useAuthStore((state) => state.setMember);
+  const { data: memberMe } = useMemberMe();
+  const member = memberMe ?? storeMember;
   const storedLanguage = useAppStore((state) => state.language);
   const setLanguage = useAppStore((state) => state.setLanguage);
+  const biometricUnlockEnabled = useAppStore(
+    (state) => state.biometricUnlockEnabled
+  );
+  const setBiometricUnlockEnabled = useAppStore(
+    (state) => state.setBiometricUnlockEnabled
+  );
   const { mutate: logout, isPending } = useLogout();
   const updateMember = useUpdateMemberMe();
   const uploadProfileImage = useUploadMemberProfileImage();
   const deleteProfileImage = useDeleteMemberProfileImage();
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState<boolean | null>(
+    null
+  );
+  const [biometricBusy, setBiometricBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getBiometricCapability().then((capability) => {
+      if (!cancelled) {
+        setBiometricAvailable(capability.isAvailable);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
 
   const isPhotoBusy =
     uploadProfileImage.isPending || deleteProfileImage.isPending;
@@ -97,10 +154,12 @@ export default function Profile() {
     [member?.preferredLanguageCode, storedLanguage]
   );
 
-  const displayName =
-    member?.nickname?.trim() ||
-    member?.memberId?.trim() ||
-    t("home.friend");
+  const displayName = member?.nickname?.trim() || "";
+  const email = member?.email?.trim() || "";
+  const joinedOn = formatJoinDate(member?.createdAt);
+  const statusKey = member?.memberStatus
+    ? (`profile.status.${member.memberStatus}` as const)
+    : null;
 
   const showPhotoError = (messageKey = "profile.photo.uploadFailed") => {
     Alert.alert(t("profile.photo.title"), t(messageKey));
@@ -195,6 +254,7 @@ export default function Profile() {
     Alert.alert(t("profile.photo.title"), undefined, buttons);
   };
 
+
   const handleSelectLanguage = (code: Language) => {
     if (updateMember.isPending) {
       return;
@@ -205,10 +265,7 @@ export default function Profile() {
       return;
     }
 
-    const nickname =
-      member?.nickname?.trim() ||
-      member?.memberId?.trim() ||
-      displayName;
+    const nickname = member?.nickname?.trim() || member?.memberId?.trim() || "";
 
     updateMember.mutate(
       {
@@ -231,33 +288,54 @@ export default function Profile() {
     );
   };
 
+  const handleBiometricToggle = async (nextEnabled: boolean) => {
+    if (biometricBusy || biometricAvailable !== true) {
+      return;
+    }
+
+    if (!nextEnabled) {
+      setBiometricUnlockEnabled(false);
+      return;
+    }
+
+    setBiometricBusy(true);
+    try {
+      const result = await promptBiometricUnlock(
+        t("profile.biometricLogin")
+      );
+      if (result.success) {
+        setBiometricUnlockEnabled(true);
+      }
+    } finally {
+      setBiometricBusy(false);
+    }
+  };
+
   const menuItems: MenuItem[] = [
-    {
-      key: "edit",
-      labelKey: "profile.editProfile",
-      icon: "person-outline",
-      onPress: () => router.push("/profile/edit"),
-    },
     {
       key: "settings",
       labelKey: "profile.settings",
       icon: "settings-outline",
+      iconColor: "#ff9759",
     },
     {
       key: "notifications",
       labelKey: "profile.notifications",
       icon: "notifications-outline",
+      iconColor: "#a995fb",
     },
     {
       key: "language",
       labelKey: "profile.language",
       icon: "globe-outline",
+      iconColor: "#9AB87A",
       onPress: () => setLanguagePickerOpen(true),
     },
     {
       key: "biometric",
       labelKey: "profile.biometricLogin",
       icon: "finger-print-outline",
+      iconColor: "#569cf6",
     },
   ];
 
@@ -267,94 +345,203 @@ export default function Profile() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>{t("profile.title")}</Text>
-
-        <LinearGradient
-          colors={["#FFE6EF", "#F3E9FF", "#F7F8FC"]}
-          start={{ x: 1, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.profileCard}
-        >
-          <View style={styles.profileRow}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t("profile.photo.title")}
-              disabled={isPhotoBusy}
-              onPress={handleAvatarPress}
-              style={({ pressed }) => [
-                styles.avatarPressable,
-                pressed && styles.pressed,
-                isPhotoBusy && styles.disabled,
-              ]}
-            >
-              <View style={styles.avatarRing}>
-                <Image
-                  source={avatarSource}
-                  style={styles.avatar}
-                  contentFit="cover"
-                />
-                {isPhotoBusy ? (
-                  <View style={styles.avatarOverlay}>
-                    <ActivityIndicator color="#FFFFFF" />
-                  </View>
-                ) : (
-                  <View style={styles.cameraBadge}>
-                    <Ionicons name="camera" size={12} color="#FFFFFF" />
-                  </View>
-                )}
-              </View>
-            </Pressable>
-
-            <View style={styles.profileText}>
-              <Text style={styles.userName} numberOfLines={1}>
-                {displayName}
-              </Text>
-              <Text style={styles.tagline}>{t("profile.tagline")}</Text>
-            </View>
-          </View>
-
+        <View style={styles.header}>
+          <Text style={styles.title} numberOfLines={1}>
+            {t("profile.title")}
+          </Text>
           <Pressable
             onPress={() => router.push("/profile/edit")}
             accessibilityRole="button"
             accessibilityLabel={t("profile.edit")}
             style={({ pressed }) => [
-              styles.editFab,
+              styles.editButton,
               pressed && styles.pressed,
             ]}
           >
-            <Ionicons name="pencil" size={16} color={LOGOUT} />
+            <FontAwesome5 name="user-edit" size={16} color={PRIMARY} />
           </Pressable>
-        </LinearGradient>
+        </View>
 
-        <View style={styles.menuCard}>
-          {menuItems.map((item) => (
-            <View key={item.key}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t(item.labelKey)}
-                onPress={item.onPress}
-                style={({ pressed }) => [
-                  styles.menuRow,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <View style={styles.menuLeft}>
-                  <View style={styles.menuIconBox}>
-                    <Ionicons name={item.icon} size={20} color={PRIMARY} />
-                  </View>
-                  <View style={styles.menuTextWrap}>
-                    <Text style={styles.menuLabel}>{t(item.labelKey)}</Text>
-                    {item.key === "language" ? (
-                      <Text style={styles.menuValue}>
-                        {t(`profile.editPage.languages.${selectedLanguage}`)}
-                      </Text>
+        <View style={styles.identity}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("profile.photo.title")}
+            disabled={isPhotoBusy}
+            onPress={handleAvatarPress}
+            style={({ pressed }) => [
+              styles.avatarPressable,
+              pressed && styles.pressed,
+              isPhotoBusy && styles.disabled,
+            ]}
+          >
+            <View style={styles.avatarRing}>
+              <Image
+                source={avatarSource}
+                style={styles.avatar}
+                contentFit="cover"
+              />
+              {isPhotoBusy ? (
+                <View style={styles.avatarOverlay}>
+                  <ActivityIndicator color="#FFFFFF" />
+                </View>
+              ) : null}
+            </View>
+            {isPhotoBusy ? null : (
+              <View style={styles.cameraBadge} pointerEvents="none">
+                <Entypo name="camera" size={13} color={PRIMARY} />
+              </View>
+            )}
+          </Pressable>
+
+          {displayName ? (
+            <Text style={styles.userName} numberOfLines={2}>
+              {displayName}
+            </Text>
+          ) : null}
+
+          {email ? (
+            <Text style={styles.email} numberOfLines={2}>
+              {email}
+            </Text>
+          ) : null}
+        </View>
+
+        <View style={styles.cardSurface}>
+          <Text style={styles.infoTitle} numberOfLines={2}>
+            {t("profile.accountInfo")}
+          </Text>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel} numberOfLines={2}>
+              {t("profile.userStatus")}
+            </Text>
+            {statusKey ? (
+              <View style={styles.statusRow}>
+                <Text style={styles.statusText} numberOfLines={2}>
+                  {t(statusKey)}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
+          <View style={styles.infoDivider} />
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel} numberOfLines={2}>
+              {t("profile.memberSince")}
+            </Text>
+            <Text style={styles.infoValue} numberOfLines={1}>
+              {joinedOn}
+            </Text>
+          </View>
+        </View>
+
+        <View style={[styles.cardSurface, styles.menuCard]}>
+          {menuItems.map((item, index) => {
+            const isBiometric = item.key === "biometric";
+            const biometricReady = biometricAvailable === true;
+
+            return (
+              <View key={item.key}>
+                {isBiometric ? (
+                  <View style={styles.menuRow}>
+                    <View style={styles.menuLeft}>
+                      <View
+                        style={[
+                          styles.menuIconBox,
+                          { backgroundColor: `${item.iconColor}55` },
+                        ]}
+                      >
+                        <Ionicons
+                          name={item.icon}
+                          size={20}
+                          color={item.iconColor}
+                        />
+                      </View>
+                      <View style={styles.menuTextWrap}>
+                        <Text style={styles.menuLabel} numberOfLines={2}>
+                          {t(
+                            biometricAvailable === false
+                              ? "profile.biometricProtection"
+                              : item.labelKey
+                          )}
+                        </Text>
+                        {biometricAvailable === false ? (
+                          <Text style={styles.menuValue} numberOfLines={2}>
+                            {t("profile.biometricUnavailable")}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                    {biometricReady ? (
+                      <Switch
+                        value={biometricUnlockEnabled}
+                        onValueChange={(value) => {
+                          void handleBiometricToggle(value);
+                        }}
+                        disabled={biometricBusy}
+                        trackColor={{ false: "#E5E7EB", true: PRIMARY }}
+                        thumbColor="#FFFFFF"
+                        ios_backgroundColor="#E5E7EB"
+                      />
+                    ) : biometricAvailable === null ? (
+                      <ActivityIndicator size="small" color={PRIMARY} />
                     ) : null}
                   </View>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#C5C8D6" />
-              </Pressable>
-            </View>
-          ))}
+                ) : (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t(item.labelKey)}
+                    onPress={item.onPress}
+                    style={({ pressed }) => [
+                      styles.menuRow,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <View style={styles.menuLeft}>
+                      <View
+                        style={[
+                          styles.menuIconBox,
+                          {
+                            backgroundColor:
+                              item.iconColor === "#F8F991"
+                                ? "#4B644A"
+                                : `${item.iconColor}55`,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name={item.icon}
+                          size={20}
+                          color={item.iconColor}
+                        />
+                      </View>
+                      <View style={styles.menuTextWrap}>
+                        <Text style={styles.menuLabel} numberOfLines={2}>
+                          {t(item.labelKey)}
+                        </Text>
+                        {item.key === "language" ? (
+                          <Text style={styles.menuValue} numberOfLines={1}>
+                            {t(
+                              `profile.editPage.languages.${selectedLanguage}`
+                            )}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color="#C5C8D6"
+                    />
+                  </Pressable>
+                )}
+                {index < menuItems.length - 1 ? (
+                  <View style={styles.menuDivider} />
+                ) : null}
+              </View>
+            );
+          })}
         </View>
 
         <Pressable
@@ -363,6 +550,7 @@ export default function Profile() {
           disabled={isPending}
           onPress={() => logout()}
           style={({ pressed }) => [
+            styles.cardSurface,
             styles.logoutCard,
             pressed && styles.pressed,
             isPending && styles.disabled,
@@ -372,7 +560,9 @@ export default function Profile() {
             <View style={[styles.menuIconBox, styles.logoutIconBox]}>
               <Ionicons name="exit-outline" size={20} color={LOGOUT} />
             </View>
-            <Text style={styles.logoutLabel}>{t("profile.logout")}</Text>
+            <Text style={styles.logoutLabel} numberOfLines={2}>
+              {t("profile.logout")}
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={LOGOUT} />
         </Pressable>
@@ -422,6 +612,7 @@ export default function Profile() {
                       styles.optionText,
                       selected && styles.optionTextSelected,
                     ]}
+                    numberOfLines={1}
                   >
                     {t(`profile.editPage.languages.${code}`)}
                   </Text>
@@ -460,45 +651,52 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 120,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 28,
+  },
   title: {
-    marginBottom: 18,
-    fontSize: 34,
+    flex: 1,
+    fontSize: 28,
     lineHeight: 40,
     fontWeight: "700",
     letterSpacing: -0.6,
     color: TITLE_COLOR,
   },
-  profileCard: {
-    borderRadius: 28,
-    padding: 18,
-    marginBottom: 18,
-    overflow: "hidden",
-    minHeight: 120,
-    justifyContent: "center",
-  },
-  profileRow: {
-    flexDirection: "row",
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: ICON_BG,
     alignItems: "center",
-    gap: 14,
-    paddingRight: 36,
+    justifyContent: "center",
+
+  },
+  identity: {
+    alignItems: "center",
+    paddingHorizontal: 12,
+    marginBottom: 28,
   },
   avatarPressable: {
-    borderRadius: 36,
+    marginBottom: 16,
+    padding: 4,
   },
   avatarRing: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 3,
-    borderColor: PRIMARY,
+    width: 150,
+    height: 150,
+    borderRadius: 999,
+    borderWidth: 0,
     overflow: "hidden",
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },
   avatar: {
-    width: 68,
-    height: 68,
+    width: 150,
+    height: 150,
   },
   avatarOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -508,71 +706,123 @@ const styles = StyleSheet.create({
   },
   cameraBadge: {
     position: "absolute",
-    right: 2,
-    bottom: 2,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: PRIMARY,
+    right: 10,
+    bottom: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 14,
+    backgroundColor: ICON_BG,
     alignItems: "center",
     justifyContent: "center",
   },
-  profileText: {
-    flex: 1,
-  },
   userName: {
-    fontSize: 22,
-    lineHeight: 28,
+    textAlign: "center",
+    fontSize: 24,
+    lineHeight: 30,
     fontWeight: "700",
     color: TITLE_COLOR,
   },
-  tagline: {
-    marginTop: 4,
-    fontSize: 13,
-    lineHeight: 18,
+  email: {
+    marginTop: 6,
+    textAlign: "center",
+    fontSize: 14,
+    lineHeight: 20,
     color: MUTED,
   },
-  editFab: {
-    position: "absolute",
-    right: 16,
-    bottom: 16,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
+  statusRow: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#8A6BE8",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
+    justifyContent: "flex-end",
+    gap: 6,
   },
-  menuCard: {
+  statusText: {
+    flexShrink: 1,
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "600",
+    color: TITLE_COLOR,
+  },
+  cardSurface: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    paddingHorizontal: 8,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 8,
     marginBottom: 14,
     shadowColor: "#27265E",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
     elevation: 2,
   },
+  infoTitle: {
+    marginBottom: 8,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "700",
+    color: TITLE_COLOR,
+  },
+  infoRow: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  infoLabel: {
+    flexShrink: 1,
+    maxWidth: "48%",
+    fontSize: 14,
+    lineHeight: 20,
+    color: MUTED,
+  },
+  infoValueWrap: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 8,
+  },
+  infoValue: {
+    flexShrink: 1,
+    maxWidth: "100%",
+    fontSize: 14,
+    lineHeight: 20,
+    color: MUTED,
+    textAlign: "right",
+  },
+  infoDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: DIVIDER,
+  },
+  menuCard: {
+    paddingHorizontal: 8,
+    paddingTop: 0,
+    paddingBottom: 0,
+  },
   menuRow: {
-    minHeight: 64,
+    minHeight: 74,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginHorizontal: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f5f2f2",
+  },
+  menuDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: DIVIDER,
+    marginHorizontal: 10,
   },
   menuLeft: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     flex: 1,
+    paddingRight: 8,
   },
   menuTextWrap: {
     flex: 1,
@@ -581,7 +831,7 @@ const styles = StyleSheet.create({
   menuIconBox: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 999,
     backgroundColor: ICON_BG,
     alignItems: "center",
     justifyContent: "center",
@@ -599,22 +849,18 @@ const styles = StyleSheet.create({
   },
   logoutCard: {
     minHeight: 64,
-    borderRadius: 24,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 18,
+    paddingTop: 0,
+    paddingBottom: 0,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    shadowColor: "#27265E",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 2,
   },
   logoutIconBox: {
-    backgroundColor: LOGOUT_BG,
+    backgroundColor: "#fff0f0",
+    borderRadius: 999,
   },
   logoutLabel: {
+    flex: 1,
     fontSize: 16,
     fontWeight: "600",
     color: LOGOUT,
@@ -651,6 +897,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3EEFF",
   },
   optionText: {
+    flex: 1,
     fontSize: 16,
     fontWeight: "600",
     color: TITLE_COLOR,

@@ -19,20 +19,35 @@ export const memberStatusSchema = z.enum([
 ]);
 
 /** MEM-001 / MEM-002 `data` member. Language fields are extra app/backend extras. */
-export const memberSchema = z
-  .object({
-    memberNo: z.number().int().positive(),
-    memberId: z.string(),
-    nickname: z.string(),
-    email: z.string().email().nullable(),
-    profileImageUrl: z.string().url().nullable(),
-    memberStatus: memberStatusSchema,
-    marketingAgree: z.boolean().optional().default(false),
-    createdAt: z.string().optional().default(""),
-    updatedAt: z.string().optional().default(""),
-    preferredLanguageCode: preferredLanguageCodeSchema,
-  })
- 
+export const memberSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  const member = value as Record<string, unknown>;
+  const language = member.preferredLanguageCode ?? member.languageCode;
+
+  return {
+    ...member,
+    email: emptyToNull(member.email),
+    profileImageUrl: emptyToNull(member.profileImageUrl),
+    preferredLanguageCode:
+      typeof language === "string" && language.trim().length > 0
+        ? language.trim().toUpperCase()
+        : undefined,
+  };
+}, z.object({
+  memberNo: z.number().int().positive(),
+  memberId: z.string(),
+  nickname: z.string(),
+  email: z.string().email().nullable(),
+  profileImageUrl: z.string().nullable(),
+  memberStatus: memberStatusSchema,
+  marketingAgree: z.boolean().optional().default(false),
+  createdAt: z.string().optional().default(""),
+  updatedAt: z.string().optional().default(""),
+  preferredLanguageCode: preferredLanguageCodeSchema.optional().default("MN"),
+})); 
 
 export const authTokensSchema = z.object({
   accessToken: z.string(),

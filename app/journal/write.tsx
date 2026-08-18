@@ -1,4 +1,3 @@
-import { useDayNightTheme } from "@/components/day-night/DayNightProvider";
 import { CauseTagsSection } from "@/components/journal/CauseTagsSection";
 import { VoiceJournalPanel } from "@/components/journal/VoiceJournalPanel";
 import { MoodPicker } from "@/components/mood/MoodPicker";
@@ -38,10 +37,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const PRIMARY = "#8A6BE8";
-const INPUT_BG_DAY = "#FFFFFF";
-const INPUT_BG_NIGHT = "rgba(255,255,255,0.08)";
-const BORDER_DAY = "#E4E0F5";
-const BORDER_NIGHT = "rgba(255,255,255,0.16)";
+const SCREEN_BG = "#f7f8fc";
+const TEXT = "#2A2A6A";
+const MUTED = "#6E6E8A";
+const INPUT_BG = "#FFFFFF";
+const BORDER = "#E4E0F5";
 
 const INPUT_MODES: JournalInputMode[] = ["text", "voice"];
 
@@ -62,7 +62,6 @@ export default function JournalWriteScreen() {
   const navigation = useNavigation();
   const { t } = useTranslation();
   const toast = useToast();
-  const { colors, isNight } = useDayNightTheme();
   const params = useLocalSearchParams<{
     mood?: string | string[];
     diaryId?: string | string[];
@@ -92,11 +91,11 @@ export default function JournalWriteScreen() {
   const { mutate: updateDiary, isPending: isUpdating } = useUpdateEmotionDiary();
   const isPending = isCreating || isUpdating;
 
-  const backgroundColor = colors.background;
-  const textColor = colors.text;
-  const mutedColor = colors.mutedText;
-  const inputBackground = isNight ? INPUT_BG_NIGHT : INPUT_BG_DAY;
-  const borderColor = isNight ? BORDER_NIGHT : BORDER_DAY;
+  const backgroundColor = SCREEN_BG;
+  const textColor = TEXT;
+  const mutedColor = MUTED;
+  const inputBackground = INPUT_BG;
+  const borderColor = BORDER;
 
   useEffect(() => {
     navigation.setOptions({

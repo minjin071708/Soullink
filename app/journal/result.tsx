@@ -1,5 +1,4 @@
 import { Button, ButtonText } from "@/components/ui/button";
-import { useDayNightTheme } from "@/components/day-night/DayNightProvider";
 import { useJournalResult } from "@/hooks/useJournalResult";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -11,6 +10,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const SCREEN_BG = "#f7f8fc";
+const TEXT = "#2A2A6A";
+const MUTED = "#6E6E8A";
 const PRIMARY = "#8A6BE8";
 
 function parseDiaryIdParam(
@@ -28,7 +30,6 @@ function parseDiaryIdParam(
 export default function JournalResultScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { colors } = useDayNightTheme();
   const params = useLocalSearchParams<{
     diaryId?: string | string[];
   }>();
@@ -36,9 +37,9 @@ export default function JournalResultScreen() {
   const diaryId = parseDiaryIdParam(params.diaryId);
   const { data, isLoading, isError, error } = useJournalResult(diaryId);
 
-  const backgroundColor = colors.background;
-  const textColor = colors.text;
-  const mutedColor = colors.mutedText;
+  const backgroundColor = SCREEN_BG;
+  const textColor = TEXT;
+  const mutedColor = MUTED;
 
   if (diaryId === undefined) {
     return (

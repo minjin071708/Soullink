@@ -1,14 +1,44 @@
 import { refreshSession } from "@/api/sessionRefresh";
-import { clearTokens, getAccessToken, getRefreshToken } from "@/api/tokenManager";
+import {
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+} from "@/api/tokenManager";
 import {
   getBiometricCapability,
   promptBiometricUnlock,
 } from "@/services/biometricService";
 import { useAuthStore } from "@/store/authStore";
+import { useAppStore } from "@/store/use-language-store";
 
 export async function clearLocalSession(): Promise<void> {
   await clearTokens();
   useAuthStore.getState().clearAuth();
+}
+
+async function restoreSessionFromStoredTokens(): Promise<
+  "authenticated" | "unauthenticated"
+> {
+  const { setAuthenticated, setHasCompletedBootstrap } =
+    useAuthStore.getState();
+
+  try {
+    const refreshToken = await getRefreshToken();
+    if (!refreshToken) {
+      await clearLocalSession();
+      setHasCompletedBootstrap(true);
+      return "unauthenticated";
+    }
+
+    await refreshSession();
+    setAuthenticated(true);
+    setHasCompletedBootstrap(true);
+    return "authenticated";
+  } catch {
+    await clearLocalSession();
+    setHasCompletedBootstrap(true);
+    return "unauthenticated";
+  }
 }
 
 /**
@@ -23,9 +53,7 @@ export async function unlockWithBiometric(): Promise<
 
   const capability = await getBiometricCapability();
   if (!capability.isAvailable) {
-    await clearLocalSession();
-    setHasCompletedBootstrap(true);
-    return "unauthenticated";
+    return restoreSessionFromStoredTokens();
   }
 
   const biometric = await promptBiometricUnlock(
@@ -34,9 +62,7 @@ export async function unlockWithBiometric(): Promise<
 
   if (!biometric.success) {
     if (biometric.reason === "unavailable") {
-      await clearLocalSession();
-      setHasCompletedBootstrap(true);
-      return "unauthenticated";
+      return restoreSessionFromStoredTokens();
     }
 
     setStatus("locked");
@@ -84,16 +110,17 @@ export async function bootstrapAuthSession(): Promise<void> {
       return;
     }
 
+    const biometricUnlockEnabled =
+      useAppStore.getState().biometricUnlockEnabled;
     const capability = await getBiometricCapability();
 
-    if (!capability.isAvailable) {
-      await clearLocalSession();
-      setHasCompletedBootstrap(true);
+    if (biometricUnlockEnabled && capability.isAvailable) {
+      setStatus("locked");
+      await unlockWithBiometric();
       return;
     }
 
-    setStatus("locked");
-    await unlockWithBiometric();
+    await restoreSessionFromStoredTokens();
   } catch {
     await clearLocalSession();
     setHasCompletedBootstrap(true);

@@ -1,4 +1,5 @@
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { useMemberMe } from "@/hooks/useMemberMe";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as NavigationBar from "expo-navigation-bar";
 import { Tabs, useRouter, useSegments } from "expo-router";
@@ -10,6 +11,7 @@ const TAB_BAR_CONTENT_HEIGHT = 64;
 const CREATE_BUTTON_SIZE = 58;
 
 export default function TabLayout() {
+  useMemberMe();
   const router = useRouter();
   const segments = useSegments();
   const insets = useSafeAreaInsets();

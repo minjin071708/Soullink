@@ -18,8 +18,12 @@ export const fetchMemberMeApi = async (): Promise<MemberType> => {
     "api/v1/members/me"
   );
 
-  const parsed = memberMeResponseSchema.parse(response.data);
-  return parsed.data;
+  const parsed = memberMeResponseSchema.safeParse(response.data);
+  if (!parsed.success) {
+    throw parsed.error;
+  }
+
+  return parsed.data.data;
 };
 
 /**

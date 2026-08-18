@@ -32,7 +32,7 @@ const DAY_COLORS: DayNightColors = {
 };
 
 const NIGHT_COLORS: DayNightColors = {
-  background: "#595168",
+  background: "#F7F8FC",
   text: "#FFFFFF",
   mutedText: "rgba(255,255,255,0.72)",
   card: "rgba(255,255,255,0.08)",

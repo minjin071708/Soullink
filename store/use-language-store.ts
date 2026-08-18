@@ -27,12 +27,14 @@ type AppStore = {
   hasCompletedOnboarding: boolean;
   isLoggedIn: boolean;
   hasHydrated: boolean;
+  biometricUnlockEnabled: boolean;
 
   setLanguage: (language: Language) => void;
   completeOnboarding: () => void;
   resetOnboarding: () => void;
   setLoggedIn: (isLoggedIn: boolean) => void;
   setHasHydrated: (hasHydrated: boolean) => void;
+  setBiometricUnlockEnabled: (enabled: boolean) => void;
 };
 
 export const useAppStore = create<AppStore>()(
@@ -42,6 +44,7 @@ export const useAppStore = create<AppStore>()(
       hasCompletedOnboarding: false,
       isLoggedIn: false,
       hasHydrated: false,
+      biometricUnlockEnabled: true,
 
       setLanguage: (language) => {
         const normalized = normalizeLanguage(language);
@@ -68,6 +71,10 @@ export const useAppStore = create<AppStore>()(
       setHasHydrated: (hasHydrated: boolean) => {
         set({ hasHydrated });
       },
+
+      setBiometricUnlockEnabled: (enabled) => {
+        set({ biometricUnlockEnabled: enabled });
+      },
     }),
     {
       name: "soulink-app-settings",
@@ -76,6 +83,7 @@ export const useAppStore = create<AppStore>()(
         language: state.language,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         isLoggedIn: state.isLoggedIn,
+        biometricUnlockEnabled: state.biometricUnlockEnabled,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

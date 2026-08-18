@@ -32,7 +32,7 @@ import Animated, {
 
 const CLOUD_MASCOT = require("@/assets/mascotImages/daymascot3d.png");
 
-const SECTION_BG = "#FFF6F8";
+const SECTION_BG = "#fffaf7";
 const CARD_BG = "#FFFFFF";
 const GHOST_BTN_BG = "#F5F0FF";
 const PRIMARY = "#8A6BE8";

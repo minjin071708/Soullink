@@ -48,8 +48,10 @@ export default function ProfileEditScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const setLanguage = useAppStore((state) => state.setLanguage);
+  const storeMember = useAuthStore((state) => state.member);
   const setMember = useAuthStore((state) => state.setMember);
-  const { data, isLoading, isError, refetch, isFetching } = useMemberMe();
+  const { data, isPending, isError, refetch, isFetching } = useMemberMe();
+  const member = data ?? storeMember;
   const updateMember = useUpdateMemberMe();
   const [nickname, setNickname] = useState("");
   const [preferredLanguageCode, setPreferredLanguageCode] = useState<
@@ -58,13 +60,13 @@ export default function ProfileEditScreen() {
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
 
   useEffect(() => {
-    if (!data) {
+    if (!member) {
       return;
     }
 
-    setNickname(data.nickname);
-    setPreferredLanguageCode(normalizeLanguageCode(data.preferredLanguageCode));
-  }, [data]);
+    setNickname(member.nickname);
+    setPreferredLanguageCode(normalizeLanguageCode(member.preferredLanguageCode));
+  }, [member]);
 
   const selectedLanguageLabel = useMemo(() => {
     if (!preferredLanguageCode) {
@@ -76,10 +78,11 @@ export default function ProfileEditScreen() {
   const isValid =
     nickname.trim().length > 0 && preferredLanguageCode.length > 0;
   const hasChanges =
-    data !== undefined &&
-    (nickname.trim() !== data.nickname ||
+    member !== undefined &&
+    member !== null &&
+    (nickname.trim() !== member.nickname ||
       preferredLanguageCode !==
-        normalizeLanguageCode(data.preferredLanguageCode));
+        normalizeLanguageCode(member.preferredLanguageCode));
 
   const handleSave = () => {
     if (!isValid || !preferredLanguageCode || updateMember.isPending) {
@@ -115,7 +118,7 @@ export default function ProfileEditScreen() {
     );
   };
 
-  if (isLoading) {
+  if (isPending && !member) {
     return (
       <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
         <View style={styles.centered}>
@@ -126,7 +129,7 @@ export default function ProfileEditScreen() {
     );
   }
 
-  if (isError || !data) {
+  if ((isError && !member) || !member) {
     return (
       <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
         <View style={styles.centered}>
