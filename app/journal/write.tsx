@@ -15,7 +15,7 @@ import { useUpdateEmotionDiary } from "@/hooks/useUpdateEmotionDiary";
 import type { JournalInputMode } from "@/types/journalType";
 import type { MoodId } from "@/types/moodType";
 import { getMoodItem, isMoodId, parseMoodParam } from "@/utils/mood";
-import AntDesign from "@expo/vector-icons/AntDesign";
+import Feather from '@expo/vector-icons/Feather';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { AxiosError } from "axios";
@@ -494,7 +494,7 @@ export default function JournalWriteScreen() {
 
             <Button
               variant="default"
-              className="mt-6 min-h-12"
+              className="mt-6 min-h-16 rounded-full"
               size="lg"
               disabled={!canSubmit}
               onPress={handleSubmit}
@@ -503,7 +503,7 @@ export default function JournalWriteScreen() {
               {isPending ? (
                 <ButtonSpinner />
               ) : (
-                <AntDesign name="send" size={20} color="#FFFFFF" />
+                <Feather name="check-circle" size={24} color="#FFFFFF" />
               )}
               <ButtonText className="text-lg font-bold">
                 {isEditMode

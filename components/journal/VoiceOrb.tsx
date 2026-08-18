@@ -72,7 +72,7 @@ export function VoiceOrb({ level, isRecording }: VoiceOrbProps) {
 const styles = StyleSheet.create({
   container: {
     width: 300,
-    height: 300,
+    height: 200,
     alignItems: "center",
     justifyContent: "center",
   },

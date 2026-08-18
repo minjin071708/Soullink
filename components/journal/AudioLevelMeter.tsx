@@ -6,7 +6,18 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-const BAR_MULTIPLIERS = [0.54, 0.76, 1, 0.68, 0.88, 0.6] as const;
+const BAR_WIDTH = 3;
+const BAR_GAP = 3;
+
+/** Symmetric waveform envelope: low at the edges, peak near the center. */
+const BAR_MULTIPLIERS = [
+  0.22, 0.28, 0.36, 0.42, 0.55, 0.48, 0.68, 0.58, 0.82, 0.7, 0.94, 0.78, 1,
+  0.86, 0.96, 0.74, 0.74, 0.96, 0.86, 1, 0.78, 0.94, 0.7, 0.82, 0.58, 0.68,
+  0.48, 0.55, 0.42, 0.36, 0.28, 0.22,
+] as const;
+
+const METER_WIDTH =
+  BAR_MULTIPLIERS.length * BAR_WIDTH + (BAR_MULTIPLIERS.length - 1) * BAR_GAP;
 
 type AudioLevelMeterProps = {
   level: number;
@@ -44,7 +55,7 @@ function AudioBar({
   );
 }
 
-/** Six bottom-anchored bars driven by the same normalized audio level. */
+/** Bottom-anchored bars driven by the same normalized audio level. */
 export function AudioLevelMeter({
   level,
   active,
@@ -67,18 +78,21 @@ export function AudioLevelMeter({
 
 const styles = StyleSheet.create({
   container: {
-    height: 32,
+    width: METER_WIDTH,
+    height: 36,
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 4,
+    justifyContent: "center",
+    alignSelf: "center",
+    gap: BAR_GAP,
   },
   barSlot: {
     height: "100%",
-    width: 4,
+    width: BAR_WIDTH,
     justifyContent: "flex-end",
   },
   bar: {
-    width: 4,
+    width: BAR_WIDTH,
     height: "100%",
     borderRadius: 999,
     transformOrigin: "bottom",
