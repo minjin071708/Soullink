@@ -1,10 +1,13 @@
 import { fetchJournalResultApi } from "@/api/journalApi";
+import { useCanFetchAuthenticatedData } from "@/hooks/useCanFetchAuthenticatedData";
 import { useQuery } from "@tanstack/react-query";
 
 export const journalDetailQueryKey = (diaryId: number) =>
   ["emotion-diary", "detail", diaryId] as const;
 
 export function useJournalDetail(diaryId: number | undefined) {
+  const canFetch = useCanFetchAuthenticatedData();
+
   return useQuery({
     queryKey: journalDetailQueryKey(diaryId ?? 0),
     queryFn: () => {
@@ -13,7 +16,7 @@ export function useJournalDetail(diaryId: number | undefined) {
       }
       return fetchJournalResultApi(diaryId);
     },
-    enabled: diaryId !== undefined,
+    enabled: canFetch && diaryId !== undefined,
     retry: 1,
   });
 }

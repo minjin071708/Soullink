@@ -1,10 +1,8 @@
-import { useCreateWeeklyAnalysis } from "@/hooks/analysis/useCreateWeeklyAnalysis";
-import type { WeeklyAnalysisData } from "@/types/analysisType";
-import { isApiTimeoutError } from "@/utils/apiError";
+import { useWeeklyEmotionStatistics } from "@/hooks/insights/useWeeklyEmotionStatistics";
 import { formatEmotionDate } from "@/utils/emotionDate";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -17,69 +15,16 @@ import {
 const TEXT = "#302060";
 const MUTED = "#706784";
 const PRIMARY = "#8A6BE8";
-const FOOTER_ICON = "#9B8DAF";
 
-type Props = { forceRegenerate?: boolean };
-
-export function WeeklyInsightCard({ forceRegenerate = false }: Props) {
+export function WeeklyInsightCard() {
   const { t } = useTranslation();
-  const requestedRef = useRef(false);
+  const router = useRouter();
   const baseDate = useMemo(() => formatEmotionDate(), []);
-  const [timedOut, setTimedOut] = useState(false);
-  const [genericError, setGenericError] = useState(false);
-  const { mutateAsync, data, isPending, reset } = useCreateWeeklyAnalysis();
+  const query = useWeeklyEmotionStatistics({ baseDate });
 
-  const runAnalysis = useCallback(
-    async (regenerate: boolean) => {
-      setTimedOut(false);
-      setGenericError(false);
-
-      try {
-        // POST /api/v1/ai-analyses/weekly
-        await mutateAsync({ baseDate, forceRegenerate: regenerate });
-      } catch (error) {
-        if (isApiTimeoutError(error)) {
-          setTimedOut(true);
-          return;
-        }
-        setGenericError(true);
-      }
-    },
-    [baseDate, mutateAsync]
-  );
-
-  useEffect(() => {
-    if (requestedRef.current) return;
-    requestedRef.current = true;
-    void runAnalysis(forceRegenerate);
-  }, [forceRegenerate, runAnalysis]);
-
-  const status = data?.status;
-  const isCompleted = status === "READY" || status === "SUCCESS";
-  const summary = data?.summary?.trim() ?? "";
-  const title = data?.title?.trim() ?? "";
-
-  const showLoading =
-    isPending || status === "REQUESTED" || status === "PROCESSING";
-  const showContent =
-    !isPending && !timedOut && !genericError && isCompleted && Boolean(summary);
-  const showFailed = !isPending && !timedOut && !genericError && status === "FAILED";
-  const showInvalidated =
-    !isPending && !timedOut && !genericError && status === "INVALIDATED";
-  const showTimeout = timedOut && !isPending;
-  const showGenericError = genericError && !isPending && !timedOut;
-  const showEmpty =
-    !showLoading &&
-    !showContent &&
-    !showFailed &&
-    !showInvalidated &&
-    !showTimeout &&
-    !showGenericError;
-
-  const retry = (regenerate: boolean) => {
-    reset();
-    void runAnalysis(regenerate);
-  };
+  const title = query.data?.aiInsight?.title?.trim() ?? "";
+  const summary = query.data?.aiInsight?.content?.trim() ?? "";
+  const hasContent = Boolean(title || summary);
 
   return (
     <View style={styles.wrapper}>
@@ -102,124 +47,70 @@ export function WeeklyInsightCard({ forceRegenerate = false }: Props) {
 
         <View style={styles.headerDivider} />
 
-        {showLoading ? (
+        {query.isLoading ? (
           <View style={styles.stateBox}>
             <ActivityIndicator color={PRIMARY} />
             <Text style={styles.stateText}>
-              {status === "PROCESSING"
-                ? t("home.weeklyInsight.processing")
-                : status === "REQUESTED"
-                  ? t("home.weeklyInsight.requested")
-                  : t("home.weeklyInsight.loading")}
+              {t("home.weeklyInsight.loading")}
             </Text>
           </View>
         ) : null}
 
-        {showContent && data ? (
-          <SuccessContent data={data} title={title} summary={summary} />
+        {query.isError ? (
+          <View style={styles.stateBox}>
+            <Text style={styles.stateText}>
+              {t("home.weeklyInsight.error")}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                void query.refetch();
+              }}
+              style={({ pressed }) => [
+                styles.retryButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.retryText}>
+                {t("home.weeklyInsight.retry")}
+              </Text>
+            </Pressable>
+          </View>
         ) : null}
 
-        {showEmpty ? (
+        {!query.isLoading && !query.isError && hasContent ? (
+          <View style={styles.content}>
+            {title ? <Text style={styles.mainTitle}>{title}</Text> : null}
+            {summary ? <Text style={styles.summary}>{summary}</Text> : null}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("home.weeklyInsight.seeMore")}
+              onPress={() => router.push("/insights")}
+              style={({ pressed }) => [
+                styles.seeMoreButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.seeMoreText}>
+                {t("home.weeklyInsight.seeMore")}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color={PRIMARY} />
+            </Pressable>
+          </View>
+        ) : null}
+
+        {!query.isLoading && !query.isError && !hasContent ? (
           <View style={styles.stateBox}>
             <Text style={styles.emptyTitle}>
-              {t("home.weeklyInsight.emptyTitle")}
+              {t("home.weeklyInsight.insufficientTitle")}
             </Text>
             <Text style={styles.stateText}>
-              {t("home.weeklyInsight.emptyDescription")}
+              {t("home.weeklyInsight.insufficientDescription")}
             </Text>
           </View>
         ) : null}
-
-        {showTimeout ? (
-          <ErrorState
-            message={t("home.weeklyInsight.timeout")}
-            label={t("home.weeklyInsight.regenerate")}
-            onRetry={() => retry(true)}
-          />
-        ) : null}
-
-        {showGenericError ? (
-          <ErrorState
-            message={t("home.weeklyInsight.error")}
-            label={t("home.weeklyInsight.retry")}
-            onRetry={() => retry(false)}
-          />
-        ) : null}
-
-        {showFailed ? (
-          <ErrorState
-            message={t("home.weeklyInsight.failed")}
-            label={t("home.weeklyInsight.regenerate")}
-            onRetry={() => retry(true)}
-          />
-        ) : null}
-
-        {showInvalidated ? (
-          <ErrorState
-            message={t("home.weeklyInsight.invalidated")}
-            label={t("home.weeklyInsight.regenerate")}
-            onRetry={() => retry(true)}
-          />
-        ) : null}
       </View>
-    </View>
-  );
-}
-
-function SuccessContent({
-  data,
-  title,
-  summary,
-}: {
-  data: WeeklyAnalysisData;
-  title: string;
-  summary: string;
-}) {
-  const { t } = useTranslation();
-  const router = useRouter();
-
-  return (
-    <View style={styles.content}>
-      {title ? <Text style={styles.mainTitle}>{title}</Text> : null}
-      <Text style={styles.summary}>{summary}</Text>
-
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t("home.weeklyInsight.seeMore")}
-        onPress={() => router.push("/insights")}
-        style={({ pressed }) => [
-          styles.seeMoreButton,
-          pressed && styles.pressed,
-        ]}
-      >
-        <Text style={styles.seeMoreText}>
-          {t("home.weeklyInsight.seeMore")}
-        </Text>
-        <Ionicons name="chevron-forward" size={16} color={PRIMARY} />
-      </Pressable>
-    </View>
-  );
-}
-
-function ErrorState({
-  message,
-  label,
-  onRetry,
-}: {
-  message: string;
-  label: string;
-  onRetry: () => void;
-}) {
-  return (
-    <View style={styles.stateBox}>
-      <Text style={styles.stateText}>{message}</Text>
-      <Pressable
-        accessibilityRole="button"
-        onPress={onRetry}
-        style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}
-      >
-        <Text style={styles.retryText}>{label}</Text>
-      </Pressable>
     </View>
   );
 }
@@ -305,20 +196,6 @@ const styles = StyleSheet.create({
     color: "#706784",
     fontSize: 14,
     lineHeight: 21,
-    fontWeight: "500",
-  },
-  footerMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 6,
-  },
-  footerMetaText: {
-    flex: 1,
-    flexShrink: 1,
-    color: MUTED,
-    fontSize: 12,
-    lineHeight: 16,
     fontWeight: "500",
   },
   seeMoreButton: {

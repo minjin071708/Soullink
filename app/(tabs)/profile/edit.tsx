@@ -1,8 +1,13 @@
-import i18n from "@/i18n";
 import { memberMeQueryKey, useMemberMe } from "@/hooks/useMemberMe";
 import { useUpdateMemberMe } from "@/hooks/useUpdateMemberMe";
+import i18n from "@/i18n";
 import { useAuthStore } from "@/store/authStore";
-import { useAppStore, type Language } from "@/store/use-language-store";
+import { PREFERRED_LANGUAGE_CODES } from "@/schemas/authSchema";
+import {
+  toI18nLanguage,
+  useAppStore,
+  type Language,
+} from "@/store/use-language-store";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -25,16 +30,18 @@ const TITLE_COLOR = "#27265E";
 const MUTED = "#8B8FA8";
 const PRIMARY = "#8A6BE8";
 const CARD_BG = "#FFFFFF";
+const APPLE_INK = "#1d1d1f";
 
-const LANGUAGE_OPTIONS: Language[] = ["ko", "mn", "en"];
+const LANGUAGE_OPTIONS: Language[] = [...PREFERRED_LANGUAGE_CODES];
 
-function normalizeLanguageCode(value: string): Language | "" {
-  const code = value.trim().toLowerCase();
-  if (code === "en" || code === "mn" || code === "ko") {
-    return code;
-  }
-  return "";
+function normalizeLanguageCode(
+  value: string | null | undefined
+): Language | "" {
+  const code = (value ?? "").trim().toUpperCase();
+  return LANGUAGE_OPTIONS.includes(code as Language) ? (code as Language) : "";
 }
+
+
 
 export default function ProfileEditScreen() {
   const { t } = useTranslation();
@@ -99,7 +106,10 @@ export default function ProfileEditScreen() {
           setNickname(patchedMember.nickname);
           setPreferredLanguageCode(selectedLanguage);
           setLanguage(selectedLanguage);
-          await i18n.changeLanguage(selectedLanguage);
+          await i18n.changeLanguage(toI18nLanguage(selectedLanguage));
+          setTimeout(() => {
+            router.back();
+          }, 1000);
         },
       }
     );
@@ -456,7 +466,7 @@ const styles = StyleSheet.create({
     minHeight: 52,
     marginTop: 20,
     borderRadius: 999,
-    backgroundColor: PRIMARY,
+    backgroundColor: APPLE_INK,
     alignItems: "center",
     justifyContent: "center",
   },

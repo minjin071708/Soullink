@@ -127,6 +127,8 @@
       "error": "Could not load weekly insight.",
       "emptyTitle": "This week’s analysis isn’t ready yet",
       "emptyDescription": "Weekly analysis is generated every Monday. If there aren’t enough entries, try recording a few more emotions this week.",
+      "insufficientTitle": "Not enough information",
+      "insufficientDescription": "Please add a journal entry.",
       "retry": "Try again",
       "regenerate": "Regenerate analysis"
     },
@@ -169,9 +171,9 @@
       "preferredLanguage": "Language",
       "selectLanguage": "Select language",
       "languages": {
-        "en": "English",
-        "mn": "Mongolian",
-        "ko": "Korean"
+        "EN": "English",
+        "MN": "Mongolian",
+        "KO": "Korean"
       },
       "validation": "Enter a nickname and select a language.",
       "save": "Save",
@@ -482,6 +484,12 @@
       "bestDay": "Best day",
       "lowestDay": "Lowest day",
       "recordRateLabel": "{{rate}}% recorded"
+    }
+  },
+  "calendar": {
+    "selectedDateSection": {
+      "noEntry": "No journal entry for this day",
+      "writeEntry": "Write a journal entry"
     }
   }
 }

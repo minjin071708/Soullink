@@ -5,6 +5,7 @@ import {
   toggleCommunityCommentLikeApi,
   updateCommunityCommentApi,
 } from "@/api/communityApi";
+import { useCanFetchAuthenticatedData } from "@/hooks/useCanFetchAuthenticatedData";
 import type {
   CommunityComment,
   CreateCommunityCommentRequest,
@@ -71,6 +72,7 @@ async function invalidateCommentRelatedQueries(
 
 export const useCommunityComments = (postId: number, size = DEFAULT_SIZE) => {
   const pageSize = Math.min(100, Math.max(1, size));
+  const canFetch = useCanFetchAuthenticatedData();
 
   return useInfiniteQuery({
     queryKey: communityCommentsQueryKey(postId, pageSize),
@@ -82,7 +84,7 @@ export const useCommunityComments = (postId: number, size = DEFAULT_SIZE) => {
     initialPageParam: 0,
     getNextPageParam: (lastPage) =>
       lastPage.data.hasNext ? lastPage.data.page + 1 : undefined,
-    enabled: Number.isFinite(postId) && postId > 0,
+    enabled: canFetch && Number.isFinite(postId) && postId > 0,
     staleTime: 60 * 1000,
   });
 };

@@ -1,5 +1,5 @@
 import { refreshSession } from "@/api/sessionRefresh";
-import { clearTokens, getRefreshToken } from "@/api/tokenManager";
+import { clearTokens, getAccessToken, getRefreshToken } from "@/api/tokenManager";
 import {
   getBiometricCapability,
   promptBiometricUnlock,
@@ -61,10 +61,13 @@ export async function bootstrapAuthSession(): Promise<void> {
     isAuthenticated,
     setStatus,
     setHasCompletedBootstrap,
+    setAccessToken,
     clearAuth,
   } = useAuthStore.getState();
 
   if (isAuthenticated) {
+    const storedAccessToken = await getAccessToken();
+    setAccessToken(storedAccessToken);
     setStatus("authenticated");
     setHasCompletedBootstrap(true);
     return;

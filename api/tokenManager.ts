@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/store/authStore";
 import * as SecureStore from "expo-secure-store";
 
 const ACCESS_TOKEN_KEY = "accessToken";
@@ -11,6 +12,7 @@ export const saveTokens = async (
     SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken),
     SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken),
   ]);
+  useAuthStore.getState().setAccessToken(accessToken);
 };
 
 export const getAccessToken = async (): Promise<string | null> => {
@@ -38,6 +40,7 @@ export const clearTokens = async (): Promise<void> => {
   } catch {
     // Ignore SecureStore cleanup failures
   }
+  useAuthStore.getState().setAccessToken(null);
 };
 
 /** @deprecated Prefer named exports from tokenManager */

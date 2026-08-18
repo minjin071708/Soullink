@@ -8,6 +8,7 @@ import {
   logoutResponseSchema,
   memberMeResponseSchema,
   memberSchema,
+  preferredLanguageCodeSchema,
   sendEmailVerificationCodeRequestSchema,
   sendEmailVerificationCodeResponseSchema,
   socialLoginRequestSchema,
@@ -20,6 +21,8 @@ import {
   verifyEmailCodeResponseSchema,
 } from "@/schemas/authSchema";
 import { z } from "zod";
+
+export type PreferredLanguageCode = z.infer<typeof preferredLanguageCodeSchema>;
 
 export type MemberType = z.infer<typeof memberSchema>;
 

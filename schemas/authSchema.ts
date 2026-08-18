@@ -7,6 +7,10 @@ function emptyToNull(value: unknown) {
   return value;
 }
 
+export const PREFERRED_LANGUAGE_CODES = ["KO", "MN", "EN"] as const;
+export const preferredLanguageCodeSchema = z.enum(PREFERRED_LANGUAGE_CODES);
+export type PreferredLanguageCode = z.infer<typeof preferredLanguageCodeSchema>;
+
 export const memberStatusSchema = z.enum([
   "ACTIVE",
   "WITHDRAWN",
@@ -17,31 +21,18 @@ export const memberStatusSchema = z.enum([
 /** MEM-001 / MEM-002 `data` member. Language fields are extra app/backend extras. */
 export const memberSchema = z
   .object({
-    memberNo: z.number(),
+    memberNo: z.number().int().positive(),
     memberId: z.string(),
     nickname: z.string(),
-    email: z.preprocess(emptyToNull, z.string().email().nullable()),
-    profileImageUrl: z.preprocess(
-      emptyToNull,
-      z.string().url().nullable()
-    ),
+    email: z.string().email().nullable(),
+    profileImageUrl: z.string().url().nullable(),
     memberStatus: memberStatusSchema,
     marketingAgree: z.boolean().optional().default(false),
     createdAt: z.string().optional().default(""),
     updatedAt: z.string().optional().default(""),
-    preferredLanguageCode: z.string().optional().default(""),
-    languageCode: z.string().optional(),
+    preferredLanguageCode: preferredLanguageCodeSchema,
   })
-  .transform((member) => {
-    const raw =
-      member.preferredLanguageCode || member.languageCode || "";
-    const preferredLanguageCode = raw.trim().toLowerCase();
-    const { languageCode: _languageCode, ...rest } = member;
-    return {
-      ...rest,
-      preferredLanguageCode,
-    };
-  });
+ 
 
 export const authTokensSchema = z.object({
   accessToken: z.string(),
@@ -92,14 +83,19 @@ export const memberMeResponseSchema = z.object({
   requestId: z.string(),
 });
 
-export const preferredLanguageCodeSchema = z.enum(["en", "mn", "ko"]);
+
 
 export const updateMemberRequestSchema = z.object({
   nickname: z.string().trim().min(1).max(30).optional(),
   email: z.string().email().max(254).optional(),
   marketingAgree: z.boolean().optional(),
   preferredLanguageCode: preferredLanguageCodeSchema.optional(),
-});
+}).refine(
+  (value) => Object.values(value).some((field) => field !== undefined),
+  {
+    message: "At least one field must be provided.",
+  }
+);
 
 export const socialProviderSchema = z.enum(["GOOGLE", "APPLE"]);
 

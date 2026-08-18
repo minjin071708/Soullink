@@ -35,7 +35,7 @@ const COPY: Record<
     createAccount: string;
   }
 > = {
-  en: {
+  EN: {
     title: "Welcome back",
     subtitle: "Sign in to continue your journal",
     google: "Continue with Google",
@@ -45,7 +45,7 @@ const COPY: Record<
     noAccount: "Don't have an account?",
     createAccount: "Create account",
   },
-  mn: {
+  MN: {
     title: "Тавтай морил",
     subtitle: "Журнал руугаа үргэлжлүүлэн нэвтэрнэ үү",
     google: "Google-р үргэлжлүүлэх",
@@ -55,7 +55,7 @@ const COPY: Record<
     noAccount: "Бүртгэл байхгүй юу?",
     createAccount: "Бүртгэл үүсгэх",
   },
-  ko: {
+  KO: {
     title: "다시 오신 걸 환영해요",
     subtitle: "저널을 이어가려면 로그인해 주세요",
     google: "Google로 계속하기",
@@ -68,7 +68,7 @@ const COPY: Record<
 };
 
 export default function LoginScreen() {
-  const language = useAppStore((state) => state.language) ?? "mn";
+  const language = useAppStore((state) => state.language) ?? "MN";
   const copy = COPY[language];
   const { isPending, startSocialAuth } = useSocialAuthActions();
 

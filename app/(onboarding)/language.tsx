@@ -1,5 +1,6 @@
 import i18n from "@/i18n";
 import {
+  toI18nLanguage,
   useAppStore,
   type Language,
 } from "@/store/use-language-store";
@@ -29,19 +30,19 @@ type LanguageItem = {
 
 const LANGUAGES: LanguageItem[] = [
   {
-    code: "en",
+    code: "EN",
     title: "English",
     flag: "🇺🇸",
     continueLabel: "Continue",
   },
   {
-    code: "mn",
+    code: "MN",
     title: "Монгол",
     flag: "🇲🇳",
     continueLabel: "Үргэлжлүүлэх",
   },
   {
-    code: "ko",
+    code: "KO",
     title: "한국어",
     flag: "🇰🇷",
     continueLabel: "계속하기",
@@ -49,9 +50,9 @@ const LANGUAGES: LanguageItem[] = [
 ];
 
 const TIP_BY_LANGUAGE: Record<Language, string> = {
-  en: "You can change this later in Settings",
-  mn: "Үүнийг дараа Settings-ээс өөрчилж болно",
-  ko: "나중에 설정에서 변경할 수 있습니다",
+  EN: "You can change this later in Settings",
+  MN: "Үүнийг дараа Settings-ээс өөрчилж болно",
+  KO: "나중에 설정에서 변경할 수 있습니다",
 };
 
 export default function LanguageScreen() {
@@ -59,7 +60,7 @@ export default function LanguageScreen() {
   const setLanguage = useAppStore((state) => state.setLanguage);
 
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(
-    savedLanguage ?? "mn"
+    savedLanguage ?? "MN"
   );
 
   const selectedItem = LANGUAGES.find(
@@ -67,7 +68,7 @@ export default function LanguageScreen() {
   );
 
   const handleContinue = async () => {
-    await i18n.changeLanguage(selectedLanguage);
+    await i18n.changeLanguage(toI18nLanguage(selectedLanguage));
     setLanguage(selectedLanguage);
     router.replace("/(onboarding)/introduction");
   };

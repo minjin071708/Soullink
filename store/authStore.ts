@@ -10,11 +10,14 @@ export type AuthStatus =
 type AuthStoreType = {
   member: MemberType | null;
   isAuthenticated: boolean;
+  /** In-memory access token mirror of SecureStore. Not persisted. */
+  accessToken: string | null;
   status: AuthStatus;
   hasCompletedBootstrap: boolean;
 
   setMember: (member: MemberType) => void;
   setAuthenticated: (value?: boolean) => void;
+  setAccessToken: (accessToken: string | null) => void;
   setStatus: (status: AuthStatus) => void;
   setHasCompletedBootstrap: (value: boolean) => void;
   clearAuth: () => void;
@@ -23,6 +26,7 @@ type AuthStoreType = {
 export const useAuthStore = create<AuthStoreType>((set) => ({
   member: null,
   isAuthenticated: false,
+  accessToken: null,
   status: "bootstrapping",
   hasCompletedBootstrap: false,
 
@@ -39,6 +43,8 @@ export const useAuthStore = create<AuthStoreType>((set) => ({
       status: value ? "authenticated" : "unauthenticated",
     }),
 
+  setAccessToken: (accessToken) => set({ accessToken }),
+
   setStatus: (status) => set({ status }),
 
   setHasCompletedBootstrap: (value) =>
@@ -48,6 +54,7 @@ export const useAuthStore = create<AuthStoreType>((set) => ({
     set({
       member: null,
       isAuthenticated: false,
+      accessToken: null,
       status: "unauthenticated",
     }),
 }));

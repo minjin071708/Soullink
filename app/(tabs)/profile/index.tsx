@@ -7,7 +7,7 @@ import { memberMeQueryKey } from "@/hooks/useMemberMe";
 import { useUpdateMemberMe } from "@/hooks/useUpdateMemberMe";
 import i18n from "@/i18n";
 import { useAuthStore } from "@/store/authStore";
-import { useAppStore, type Language } from "@/store/use-language-store";
+import { toI18nLanguage, useAppStore, type Language } from "@/store/use-language-store";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -44,7 +44,7 @@ const ALLOWED_PROFILE_IMAGE_TYPES = new Set([
   "image/webp",
 ]);
 
-const LANGUAGE_OPTIONS: Language[] = ["ko", "mn", "en"];
+const LANGUAGE_OPTIONS: Language[] = ["KO", "MN", "EN"];
 
 type MenuIcon = keyof typeof Ionicons.glyphMap;
 
@@ -61,11 +61,11 @@ type MenuItem = {
 };
 
 function normalizeLanguageCode(value: string | null | undefined): Language {
-  const code = (value ?? "").trim().toLowerCase();
-  if (code === "en" || code === "mn" || code === "ko") {
+  const code = (value ?? "").trim().toUpperCase();
+  if (code === "EN" || code === "MN" || code === "KO") {
     return code;
   }
-  return "mn";
+  return "MN";
 }
 
 export default function Profile() {
@@ -224,7 +224,7 @@ export default function Profile() {
           queryClient.setQueryData(memberMeQueryKey, patched);
           setMember(patched);
           setLanguage(code);
-          await i18n.changeLanguage(code);
+          await i18n.changeLanguage(toI18nLanguage(code));
           setLanguagePickerOpen(false);
         },
       }

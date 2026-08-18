@@ -1,3 +1,4 @@
+import type { Language } from "@/store/use-language-store";
 import type { AxiosError } from "axios";
 
 type ApiErrorBody = {
@@ -20,11 +21,11 @@ export function getAuthErrorMessage(
 
 export function mapSocialAuthErrorMessage(
   error: unknown,
-  language: "en" | "mn" | "ko" = "mn"
+  language: Language = "MN"
 ): string {
   const code = getAuthErrorCode(error);
   const messages = {
-    en: {
+    EN: {
       TERMS_AGREEMENT_REQUIRED:
         "Please agree to the required terms to continue.",
       SOCIAL_TOKEN_INVALID:
@@ -39,7 +40,7 @@ export function mapSocialAuthErrorMessage(
         "This account is locked. Please contact support.",
       fallback: "Social sign-in failed. Please try again.",
     },
-    mn: {
+    MN: {
       TERMS_AGREEMENT_REQUIRED: "Үргэлжлүүлэхийн тулд шаардлагатай нөхцөлийг зөвшөөрнө үү.",
       SOCIAL_TOKEN_INVALID:
         "Сошиал нэвтрэлт хүчингүй болсон. Дахин оролдоно уу.",
@@ -52,7 +53,7 @@ export function mapSocialAuthErrorMessage(
       ACCOUNT_LOCKED: "Энэ бүртгэл түгжигдсэн байна.",
       fallback: "Сошиал нэвтрэлт амжилтгүй. Дахин оролдоно уу.",
     },
-    ko: {
+    KO: {
       TERMS_AGREEMENT_REQUIRED: "필수 약관에 동의해 주세요.",
       SOCIAL_TOKEN_INVALID:
         "소셜 인증이 만료되었습니다. 다시 시도해 주세요.",

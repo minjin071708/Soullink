@@ -1,8 +1,26 @@
+import {
+  PREFERRED_LANGUAGE_CODES,
+  type PreferredLanguageCode,
+} from "@/schemas/authSchema";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-export type Language = "en" | "mn" | "ko";
+export type Language = PreferredLanguageCode;
+export type I18nLanguage = "en" | "mn" | "ko";
+
+export function normalizeLanguage(
+  value: string | null | undefined
+): Language | null {
+  const code = (value ?? "").trim().toUpperCase();
+  return PREFERRED_LANGUAGE_CODES.includes(code as Language)
+    ? (code as Language)
+    : null;
+}
+
+export function toI18nLanguage(language: Language): I18nLanguage {
+  return language.toLowerCase() as I18nLanguage;
+}
 
 type AppStore = {
   language: Language | null;
@@ -26,7 +44,10 @@ export const useAppStore = create<AppStore>()(
       hasHydrated: false,
 
       setLanguage: (language) => {
-        set({ language });
+        const normalized = normalizeLanguage(language);
+        if (normalized) {
+          set({ language: normalized });
+        }
       },
 
       completeOnboarding: () => {
@@ -40,11 +61,11 @@ export const useAppStore = create<AppStore>()(
         });
       },
 
-      setLoggedIn: (isLoggedIn) => {
+      setLoggedIn: (isLoggedIn: boolean) => {
         set({ isLoggedIn });
       },
 
-      setHasHydrated: (hasHydrated) => {
+      setHasHydrated: (hasHydrated: boolean) => {
         set({ hasHydrated });
       },
     }),
@@ -57,6 +78,9 @@ export const useAppStore = create<AppStore>()(
         isLoggedIn: state.isLoggedIn,
       }),
       onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.language = normalizeLanguage(state.language);
+        }
         state?.setHasHydrated(true);
       },
     }

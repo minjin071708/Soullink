@@ -50,7 +50,7 @@ const COPY: Record<
     passwordPlaceholder: string;
   }
 > = {
-  en: {
+  EN: {
     title: "Email login",
     subtitle: "Enter your email and password",
     email: "Email",
@@ -63,7 +63,7 @@ const COPY: Record<
     emailPlaceholder: "you@example.com",
     passwordPlaceholder: "••••••••",
   },
-  mn: {
+  MN: {
     title: "Имэйлээр нэвтрэх",
     subtitle: "Имэйл болон нууц үгээ оруулна уу",
     email: "Имэйл",
@@ -76,7 +76,7 @@ const COPY: Record<
     emailPlaceholder: "you@example.com",
     passwordPlaceholder: "••••••••",
   },
-  ko: {
+  KO: {
     title: "일반 로그인",
     subtitle: "이메일과 비밀번호를 입력해 주세요",
     email: "이메일",
@@ -95,7 +95,7 @@ export default function EmailLoginScreen() {
   const router = useRouter();
   const toast = useToast();
   const insets = useSafeAreaInsets();
-  const language = useAppStore((state) => state.language) ?? "mn";
+  const language = useAppStore((state) => state.language) ?? "MN";
   const copy = COPY[language];
 
   const [email, setEmail] = useState("");

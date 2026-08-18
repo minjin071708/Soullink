@@ -18,13 +18,13 @@ const PRETENDARD_FONTS = {
 
 /**
  * Locale-based font family names for `Text` `fontFamily`.
- * ko → Pretendard, mn/en → Inter.
+ * KO → Pretendard, MN/EN → Inter.
  */
 export function getFontFamily(
   language: Language | null | undefined,
   weight: FontWeight = "regular"
 ): string {
-  if (language === "ko") {
+  if (language === "KO") {
     return PRETENDARD_FONTS[weight];
   }
 

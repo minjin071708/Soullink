@@ -1,5 +1,5 @@
-import { CauseTagsSection } from "@/components/journal/CauseTagsSection";
 import { useDayNightTheme } from "@/components/day-night/DayNightProvider";
+import { CauseTagsSection } from "@/components/journal/CauseTagsSection";
 import { VoiceJournalPanel } from "@/components/journal/VoiceJournalPanel";
 import { MoodPicker } from "@/components/mood/MoodPicker";
 import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
@@ -16,9 +16,9 @@ import { useUpdateEmotionDiary } from "@/hooks/useUpdateEmotionDiary";
 import type { JournalInputMode } from "@/types/journalType";
 import type { MoodId } from "@/types/moodType";
 import { getMoodItem, isMoodId, parseMoodParam } from "@/utils/mood";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import { AxiosError } from "axios";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
@@ -300,12 +300,7 @@ export default function JournalWriteScreen() {
         edges={["bottom"]}
       >
         <View style={[styles.container, { backgroundColor }]}>
-          <Text style={[styles.invalidTitle, { color: textColor }]}>
-            {t("journal.write.invalidMoodTitle")}
-          </Text>
-          <Text style={[styles.invalidBody, { color: mutedColor }]}>
-            {t("journal.write.invalidMoodBody")}
-          </Text>
+        
           <MoodPicker
             title={t("journal.write.chooseMood")}
             selectedMoodId={selectedMood}
@@ -396,12 +391,13 @@ export default function JournalWriteScreen() {
                     accessibilityRole="button"
                     accessibilityState={{ selected: isActive }}
                     onPress={() => setInputMode(mode)}
-                    style={[
+                    style={({ pressed }) => [
                       styles.modeButton,
                       {
                         borderColor,
                         backgroundColor: isActive ? PRIMARY : inputBackground,
                       },
+                      pressed && styles.modeButtonPressed,
                     ]}
                   >
                     <Ionicons
@@ -503,6 +499,7 @@ export default function JournalWriteScreen() {
               size="lg"
               disabled={!canSubmit}
               onPress={handleSubmit}
+              style={styles.submitButton}
             >
               {isPending ? (
                 <ButtonSpinner />
@@ -534,9 +531,9 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 28,
   },
   centered: {
     flex: 1,
@@ -563,12 +560,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 14,
     borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 24,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 15,
+    marginBottom: 20,
+    shadowColor: "#2A2050",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.07,
+    shadowRadius: 14,
+    elevation: 2,
   },
   moodCardPressed: {
-    opacity: 0.88,
+    opacity: 0.92,
+    transform: [{ scale: 0.995 }],
   },
   moodImage: {
     width: 52,
@@ -592,43 +596,56 @@ const styles = StyleSheet.create({
   },
   moodPickerPanel: {
     borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 10,
+    borderRadius: 20,
+    paddingHorizontal: 12,
     paddingVertical: 14,
-    marginTop: -12,
-    marginBottom: 24,
+    marginTop: -8,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   modeRow: {
     flexDirection: "row",
     gap: 10,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   modeButton: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 46,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+  },
+  modeButtonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.99 }],
   },
   modeButtonText: {
     fontSize: 14,
     fontWeight: "600",
   },
   textInput: {
-    minHeight: 180,
+    minHeight: 210,
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 14,
     fontSize: 16,
     lineHeight: 24,
+    marginBottom: 2,
+  },
+  submitButton: {
+    borderRadius: 14,
+    shadowColor: "#4B2EA8",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    elevation: 3,
   },
 });

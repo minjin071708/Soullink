@@ -4,7 +4,7 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import i18n from "@/i18n";
-import { useAppStore } from "@/store/use-language-store";
+import { toI18nLanguage, useAppStore } from "@/store/use-language-store";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -60,8 +60,8 @@ export default function RootLayout() {
       return;
     }
 
-    if (i18n.language !== language) {
-      void i18n.changeLanguage(language);
+    if (i18n.language !== toI18nLanguage(language)) {
+      void i18n.changeLanguage(toI18nLanguage(language));
     }
   }, [hasHydrated, language]);
 

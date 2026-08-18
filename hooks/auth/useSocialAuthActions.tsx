@@ -17,14 +17,14 @@ import { useCallback } from "react";
 const TERMS_HREF = "/(auth)/terms" as Href;
 
 const ERROR_TITLE: Record<Language, string> = {
-  en: "Sign-in failed",
-  mn: "Нэвтрэлт амжилтгүй",
-  ko: "로그인 실패",
+  EN: "Sign-in failed",
+  MN: "Нэвтрэлт амжилтгүй",
+  KO: "로그인 실패",
 };
 
 export function useSocialAuthActions() {
   const toast = useToast();
-  const language = useAppStore((state) => state.language) ?? "mn";
+  const language = useAppStore((state) => state.language) ?? "MN";
   const { mutateAsync, isPending } = useSocialLogin();
 
   const showError = useCallback(

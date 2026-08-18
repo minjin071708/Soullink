@@ -1,5 +1,6 @@
 import { fetchEmotionDiariesByRangeApi } from "@/api/journalApi";
 import { getMonthDateRange } from "@/features/calendar/utils/calendar.utils";
+import { useCanFetchAuthenticatedData } from "@/hooks/useCanFetchAuthenticatedData";
 import { useQuery } from "@tanstack/react-query";
 
 export const emotionDiariesRangeQueryKey = (
@@ -13,10 +14,12 @@ export function useEmotionDiariesByRange(
   toDate: string,
   enabled = true
 ) {
+  const canFetch = useCanFetchAuthenticatedData();
+
   return useQuery({
     queryKey: emotionDiariesRangeQueryKey(fromDate, toDate),
     queryFn: () => fetchEmotionDiariesByRangeApi({ fromDate, toDate }),
-    enabled: enabled && Boolean(fromDate && toDate),
+    enabled: canFetch && enabled && Boolean(fromDate && toDate),
     staleTime: 60 * 1000,
   });
 }

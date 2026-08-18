@@ -4,6 +4,7 @@ import {
   getCommunityPostsApi,
   updateCommunityPostApi,
 } from "@/api/communityApi";
+import { useCanFetchAuthenticatedData } from "@/hooks/useCanFetchAuthenticatedData";
 import type {
   CommunityCategory,
   CommunitySort,
@@ -37,6 +38,7 @@ export const useCommunityPosts = (
   const sort = params.sort ?? DEFAULT_SORT;
   const size = resolvePageSize(params.size);
   const categoryCode = params.categoryCode;
+  const canFetch = useCanFetchAuthenticatedData();
 
   return useInfiniteQuery({
     queryKey: communityPostsQueryKey({ categoryCode, sort, size }),
@@ -50,6 +52,7 @@ export const useCommunityPosts = (
     initialPageParam: 0,
     getNextPageParam: (lastPage) =>
       lastPage.data.hasNext ? lastPage.data.page + 1 : undefined,
+    enabled: canFetch,
     staleTime: 60 * 1000,
   });
 };

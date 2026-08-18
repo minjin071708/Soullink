@@ -51,7 +51,7 @@ const COPY: Record<
     errorTitle: string;
   }
 > = {
-  en: {
+  EN: {
     title: "Agree to continue",
     subtitle: "Please review the terms to finish creating your account",
     nickname: "Nickname",
@@ -65,7 +65,7 @@ const COPY: Record<
     expiredMessage: "Please sign in with Google or Apple again.",
     errorTitle: "Signup failed",
   },
-  mn: {
+  MN: {
     title: "Үргэлжлүүлэхийн тулд зөвшөөрнө үү",
     subtitle: "Бүртгэлээ дуусгахын тулд нөхцөлийг шалгана уу",
     nickname: "Хоч нэр",
@@ -79,7 +79,7 @@ const COPY: Record<
     expiredMessage: "Google эсвэл Apple-р дахин нэвтэрнэ үү.",
     errorTitle: "Бүртгэл амжилтгүй",
   },
-  ko: {
+  KO: {
     title: "약관 동의",
     subtitle: "계정을 만들려면 약관에 동의해 주세요",
     nickname: "닉네임",
@@ -97,7 +97,7 @@ const COPY: Record<
 
 export default function TermsAgreementScreen() {
   const toast = useToast();
-  const language = useAppStore((state) => state.language) ?? "mn";
+  const language = useAppStore((state) => state.language) ?? "MN";
   const copy = COPY[language];
   const pending = useMemo(() => getSocialSignupPending(), []);
 

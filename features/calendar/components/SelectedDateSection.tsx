@@ -3,6 +3,8 @@ import { JournalPreviewCard } from "@/features/calendar/components/JournalPrevie
 import { CALENDAR_COLORS } from "@/features/calendar/constants/calendar.constants";
 import type { CalendarJournalPreview } from "@/features/calendar/types/calendar.types";
 import { formatSelectedDateMn } from "@/features/calendar/utils/calendar.utils";
+import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Pressable,
@@ -30,8 +32,11 @@ export function SelectedDateSection({
   isError,
   onPressJournal,
   onPressAiAnalysis,
-  onRetry,
+  onRetry: _onRetry,
 }: SelectedDateSectionProps) {
+  const { t } = useTranslation();
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
       <Text style={styles.dateTitle}>{formatSelectedDateMn(selectedDate)}</Text>
@@ -45,18 +50,20 @@ export function SelectedDateSection({
       {!isLoading && isError ? (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>
-            Тэмдэглэлүүдийг ачаалж чадсангүй. Дахин оролдоно уу.
+            {t("calendar.selectedDateSection.noEntry")}
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Дахин оролдох"
-            onPress={onRetry}
+            accessibilityLabel={t("calendar.selectedDateSection.writeEntry")}
+            onPress={() => router.push("/journal/write")}
             style={({ pressed }) => [
               styles.retryButton,
               pressed && styles.retryPressed,
             ]}
           >
-            <Text style={styles.retryText}>Дахин оролдох</Text>
+            <Text style={styles.retryText}>
+              {t("calendar.selectedDateSection.writeEntry")}
+            </Text>
           </Pressable>
         </View>
       ) : null}

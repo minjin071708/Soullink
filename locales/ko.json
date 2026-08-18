@@ -127,6 +127,8 @@
       "error": "주간 인사이트를 불러오지 못했어요.",
       "emptyTitle": "이번 주 분석이 아직 준비되지 않았어요",
       "emptyDescription": "주간 분석은 매주 월요일에 생성돼요. 감정 기록이 부족하다면 이번 주의 감정을 조금 더 기록해 주세요.",
+      "insufficientTitle": "정보가 부족해요",
+      "insufficientDescription": "일기를 작성해 주세요.",
       "retry": "다시 시도",
       "regenerate": "다시 분석하기"
     },
@@ -169,9 +171,9 @@
       "preferredLanguage": "언어",
       "selectLanguage": "언어 선택",
       "languages": {
-        "en": "영어",
-        "mn": "몽골어",
-        "ko": "한국어"
+        "EN": "영어",
+        "MN": "몽골어",
+        "KO": "한국어"
       },
       "validation": "닉네임을 입력하고 언어를 선택해 주세요.",
       "save": "저장",
@@ -482,6 +484,12 @@
       "bestDay": "가장 좋은 날",
       "lowestDay": "가장 낮은 날",
       "recordRateLabel": "{{rate}}% 기록"
+    }
+  },
+  "calendar": {
+    "selectedDateSection": {
+      "noEntry": "이 날짜의 일기가 없어요",
+      "writeEntry": "일기 작성하기"
     }
   }
 }
