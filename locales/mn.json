@@ -509,6 +509,26 @@
     "selectedDateSection": {
       "noEntry": "Энэ өдрийн тэмдэглэл ороогүй байна",
       "writeEntry": "Тэмдэглэл оруулах"
+    },
+    "journalDetail": {
+      "title": "Өдрийн AI мэдрэмжийн шинжилгээ",
+      "back": "Буцах",
+      "done": "Дуусгах",
+      "todaysEmotion": "Өнөөдрийн мэдрэмж",
+      "summaryTitle": "Өнөөдрийг нэг харахад",
+      "reflectionTitle": "Өнөөдрийн сэтгэлийг эргэцүүлэх",
+      "patternLabel": "Илэрсэн хэв маяг",
+      "triggerLabel": "Сэтгэлийг хөдөлгөсөн хүчин зүйл",
+      "recommendationsTitle": "Маргаашийн жижиг санал",
+      "originalDiary": "Миний бичсэн тэмдэглэл",
+      "noRiskSignal": "Эрсдэлийн дохио байхгүй",
+      "confidence": "Итгэлцэл {{percent}}%",
+      "generatedAt": "{{datetime}} шинжилгээ үүссэн",
+      "notFoundTitle": "Шинжилгээ олдсонгүй",
+      "notFoundBody": "Тэмдэглэлийн дэлгэрэнгүйг ачаалж чадсангүй. Дахин оролдоно уу.",
+      "retry": "Дахин оролдох",
+      "failedTitle": "Шинжилгээ амжилтгүй",
+      "failedBody": "Өдрийн шинжилгээ дуусаагүй байна. Дахин оролдоно уу."
     }
   }
 }

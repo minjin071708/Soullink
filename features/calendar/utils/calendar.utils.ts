@@ -99,6 +99,36 @@ export function formatSelectedDateMn(dateString: string): string {
   return `${month} сарын ${day}, ${weekday}`;
 }
 
+/** Formats `emotionDate` (yyyy-MM-dd) for the current app language. */
+export function formatEmotionDateLocalized(
+  dateString: string,
+  language: "EN" | "KO" | "MN" | null | undefined
+): string {
+  if (!dateString) {
+    return "";
+  }
+
+  if (language === "MN" || !language) {
+    try {
+      return formatSelectedDateMn(dateString);
+    } catch {
+      return dateString;
+    }
+  }
+
+  try {
+    const date = parseLocalDate(dateString);
+    const locale = language === "KO" ? "ko-KR" : "en-US";
+    return new Intl.DateTimeFormat(locale, {
+      month: "long",
+      day: "numeric",
+      weekday: "long",
+    }).format(date);
+  } catch {
+    return dateString;
+  }
+}
+
 export function formatJournalDateTimeMn(dateString: string, createdAt: string): string {
   const date = parseLocalDate(dateString);
   const timeMatch = /T(\d{2}:\d{2})/.exec(createdAt);

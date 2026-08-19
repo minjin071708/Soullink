@@ -509,6 +509,26 @@
     "selectedDateSection": {
       "noEntry": "No journal entry for this day",
       "writeEntry": "Write a journal entry"
+    },
+    "journalDetail": {
+      "title": "Daily AI Emotion Analysis",
+      "back": "Back",
+      "done": "Done",
+      "todaysEmotion": "Today’s emotion",
+      "summaryTitle": "Today at a glance",
+      "reflectionTitle": "A look into today’s heart",
+      "patternLabel": "Pattern found",
+      "triggerLabel": "What stirred the heart",
+      "recommendationsTitle": "A small suggestion for tomorrow",
+      "originalDiary": "What I wrote",
+      "noRiskSignal": "No warning signs",
+      "confidence": "Confidence {{percent}}%",
+      "generatedAt": "Generated {{datetime}}",
+      "notFoundTitle": "Analysis not found",
+      "notFoundBody": "Couldn’t load this journal. Please try again.",
+      "retry": "Try again",
+      "failedTitle": "Analysis failed",
+      "failedBody": "Daily analysis didn’t complete. Please try again."
     }
   }
 }

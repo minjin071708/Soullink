@@ -509,6 +509,26 @@
     "selectedDateSection": {
       "noEntry": "이 날짜의 일기가 없어요",
       "writeEntry": "일기 작성하기"
+    },
+    "journalDetail": {
+      "title": "일일 AI 감정 분석",
+      "back": "뒤로",
+      "done": "완료",
+      "todaysEmotion": "오늘의 감정",
+      "summaryTitle": "오늘 한눈에 보기",
+      "reflectionTitle": "오늘의 마음 돌아보기",
+      "patternLabel": "발견한 패턴",
+      "triggerLabel": "마음을 흔든 요인",
+      "recommendationsTitle": "내일을 위한 작은 제안",
+      "originalDiary": "내가 쓴 기록",
+      "noRiskSignal": "위험 신호 없음",
+      "confidence": "신뢰도 {{percent}}%",
+      "generatedAt": "{{datetime}}에 생성됨",
+      "notFoundTitle": "분석을 찾을 수 없어요",
+      "notFoundBody": "일기를 불러오지 못했어요. 다시 시도해 주세요.",
+      "retry": "다시 시도",
+      "failedTitle": "분석에 실패했어요",
+      "failedBody": "오늘의 분석이 완료되지 않았어요. 다시 시도해 주세요."
     }
   }
 }

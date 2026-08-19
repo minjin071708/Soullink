@@ -1,25 +1,42 @@
+import { AppText } from "@/components/ui/AppText";
 import { MOOD_IMAGES } from "@/constants/moods";
-import { CALENDAR_COLORS } from "@/features/calendar/constants/calendar.constants";
 import { useJournalDetail } from "@/features/calendar/hooks/useJournalDetail";
-import {
-  formatSelectedDateMn,
-} from "@/features/calendar/utils/calendar.utils";
+import { formatEmotionDateLocalized } from "@/features/calendar/utils/calendar.utils";
+import { useAppStore } from "@/store/use-language-store";
 import type { EmotionCode } from "@/types/emotionType";
-import type { EmotionDiaryData } from "@/types/journalType";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const PAGE_BG = "#F4F1F8";
+const CARD_BG = "#FFFFFF";
+const TEXT = "#1C1C1E";
+const MUTED = "#6C6C70";
+const GREEN = "#364A31";
+const BLUE = "#7388F2";
+const TEAL = "#2A9179";
+const CORAL = "#E6C923";
+const CORAL_SOFT = "rgba(208, 67, 42, 0.12)";
+const TEAL_SOFT = "rgba(42, 145, 121, 0.14)";
+const PILL_BG = "#F2F2F7";
+const DIVIDER = "rgba(60, 60, 67, 0.12)";
+const PRIMARY = "#8a6be8";
 
 type JournalDetailScreenProps = {
   diaryId?: number;
@@ -27,26 +44,6 @@ type JournalDetailScreenProps = {
 
 function isEmotionCode(value: string): value is EmotionCode {
   return value in MOOD_IMAGES;
-}
-
-function formatGeneratedAtMn(value: string): string {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hours = date.getHours();
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const period = hours < 12 ? "өглөө" : hours < 18 ? "өдөр" : "орой";
-  const hour12 = hours % 12 || 12;
-
-  return `${month} сарын ${day} ${period} ${hour12}:${minutes} шинжилгээ үүссэн`;
 }
 
 function getMoodImage(code?: string | null) {
@@ -57,56 +54,117 @@ function getMoodImage(code?: string | null) {
   return MOOD_IMAGES.CALM;
 }
 
+function formatConfidencePercent(value: number | undefined): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+
+  const percent = value <= 1 ? Math.round(value * 100) : Math.round(value);
+  return Math.max(0, Math.min(100, percent));
+}
+
+function formatGeneratedAt(
+  value: string,
+  language: "EN" | "KO" | "MN" | null
+): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  const locale =
+    language === "KO" ? "ko-KR" : language === "MN" ? "mn-MN" : "en-US";
+
+  return new Intl.DateTimeFormat(locale, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
 export function JournalDetailScreen({ diaryId }: JournalDetailScreenProps) {
   const router = useRouter();
+  const { t } = useTranslation();
+  const language = useAppStore((state) => state.language);
   const { data, isLoading, isError, refetch, isFetching } =
     useJournalDetail(diaryId);
-  const [diaryOpen, setDiaryOpen] = useState(false);
 
-  const analysis = data?.aiAnalysis ?? null;
-  const score = analysis?.averageScore ?? data?.emotionScore ?? null;
-  const scoreRatio = useMemo(() => {
-    if (score == null || score <= 0) {
-      return 0;
-    }
-    return Math.min(score / 10, 1);
-  }, [score]);
+  const diary = data;
+  const analysis = diary?.aiAnalysis ?? null;
+  const analysisStatus = diary?.analysisStatus ?? analysis?.analysisStatus;
+  const isProcessing = analysisStatus === "PROCESSING";
+  const isFailed = analysisStatus === "FAILED";
 
-  const dateLabel = data?.emotionDate
-    ? formatSelectedDateMn(data.emotionDate)
+  const emotionName = diary?.emotionName?.trim() || "";
+  const emotionCode = diary?.emotionCode ?? "";
+  const emotionDate = diary?.emotionDate ?? "";
+  const tags = diary?.tags ?? [];
+  const originalContent = diary?.content?.trim() || "";
+  const title = analysis?.title?.trim() || "";
+  const summary = analysis?.summary?.trim() || "";
+  const reflection = analysis?.dailyReflection?.trim() || "";
+  const pattern = analysis?.keyPatterns?.[0];
+  const trigger = analysis?.triggers?.[0];
+  const recommendations = analysis?.recommendations ?? [];
+  const safety = analysis?.safety;
+  const generatedAt = analysis?.generatedAt?.trim() || "";
+
+  const dateLabel = emotionDate
+    ? formatEmotionDateLocalized(emotionDate, language)
     : "";
+
+  const sortedRecommendations = useMemo(
+    () =>
+      recommendations
+        .slice()
+        .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0)),
+    [recommendations]
+  );
+
+  const showLoading = isLoading || isProcessing;
+  const showError = !showLoading && (isError || !diary || isFailed);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Буцах"
+          accessibilityLabel={t("calendar.journalDetail.back")}
           onPress={() => router.back()}
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
         >
-          <Ionicons
-            name="chevron-back"
-            size={22}
-            color={CALENDAR_COLORS.primary}
-          />
+          <Ionicons name="chevron-back" size={22} color={TEXT} />
         </Pressable>
-        <Text style={styles.headerTitle}>AI сэтгэл хөдлөлийн шинжилгээ</Text>
+        <AppText weight="bold" style={styles.headerTitle} numberOfLines={1}>
+          {t("calendar.journalDetail.title")}
+        </AppText>
         <View style={styles.headerSpacer} />
       </View>
 
-      {isLoading ? (
+      {showLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator color={CALENDAR_COLORS.primary} size="large" />
+          <ActivityIndicator color={BLUE} size="large" />
         </View>
       ) : null}
 
-      {isError || (!isLoading && !data) ? (
+      {showError ? (
         <View style={styles.centered}>
-          <Text style={styles.errorTitle}>Шинжилгээ олдсонгүй</Text>
-          <Text style={styles.errorBody}>
-            Тэмдэглэлийн дэлгэрэнгүйг ачаалж чадсангүй. Дахин оролдоно уу.
-          </Text>
+          <AppText weight="bold" style={styles.errorTitle}>
+            {t(
+              isFailed
+                ? "calendar.journalDetail.failedTitle"
+                : "calendar.journalDetail.notFoundTitle"
+            )}
+          </AppText>
+          <AppText style={styles.errorBody}>
+            {t(
+              isFailed
+                ? "calendar.journalDetail.failedBody"
+                : "calendar.journalDetail.notFoundBody"
+            )}
+          </AppText>
           <Pressable
             accessibilityRole="button"
             onPress={() => {
@@ -118,210 +176,139 @@ export function JournalDetailScreen({ diaryId }: JournalDetailScreenProps) {
               isFetching && styles.disabled,
             ]}
           >
-            <Text style={styles.retryText}>Дахин оролдох</Text>
+            <AppText weight="bold" style={styles.retryText}>
+              {t("calendar.journalDetail.retry")}
+            </AppText>
           </Pressable>
         </View>
       ) : null}
 
-      {data ? (
+      {diary && !showLoading && !showError ? (
         <>
           <ScrollView
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.dateRow}>
-              <Text style={styles.dateText}>{dateLabel}</Text>
-              {data.analysisStatus === "SUCCESS" ||
-              analysis?.analysisStatus === "SUCCESS" ? (
-                <View style={styles.statusBadge}>
-                  <Ionicons name="sparkles" size={12} color="#FFFFFF" />
-                  <Text style={styles.statusText}>Шинжилгээ дууссан</Text>
-                </View>
-              ) : (
-                <View style={[styles.statusBadge, styles.statusPending]}>
-                  <Text style={[styles.statusText, styles.statusPendingText]}>
-                    {data.analysisStatus}
-                  </Text>
-                </View>
-              )}
-            </View>
+            {dateLabel ? (
+              <AppText weight="medium" style={styles.dateText}>
+                {dateLabel}
+              </AppText>
+            ) : null}
 
-            <HeroEmotionCard data={data} score={score} scoreRatio={scoreRatio} />
+            <HeroEmotionCard
+              emotionCode={emotionCode}
+              emotionName={emotionName || "—"}
+              analysisTitle={title}
+              tags={tags
+                .map((tag) => tag.tagName.trim())
+                .filter((name) => name.length > 0)}
+            />
 
-            {analysis?.summary ? (
-              <InfoCard
-                icon="sparkles"
-                iconColor="#E6A23B"
-                iconBg="#FFF4DD"
-                title="Өнөөдрийн сэтгэлийн товч"
-                body={analysis.summary}
+            {summary ? (
+              <TextSectionCard
+                icon="clipboard-outline"
+                color={GREEN}
+                title={t("calendar.journalDetail.summaryTitle")}
+                body={summary}
               />
             ) : null}
 
-            {analysis?.scoreTrend === "INSUFFICIENT" ? (
-              <InfoCard
-                icon="time-outline"
-                iconColor={CALENDAR_COLORS.primary}
-                iconBg="#EEE9FF"
-                title="Өөрчлөлтийн хандлагыг одоохондоо харж байна"
-                body={
-                  analysis.recentContextDays
-                    ? `Бичлэг ${analysis.recentContextDays} өдөр тул урт хугацааны өөрчлөлтийг одоогоор дүгнэхэд хүндрэлтэй.`
-                    : "Урт хугацааны өөрчлөлтийг одоогоор дүгнэхэд хүндрэлтэй."
-                }
-                tint="#F3EEFF"
-              />
-            ) : null}
-
-            {analysis?.dailyReflection ? (
-              <InfoCard
-                icon="chatbubble-ellipses"
-                iconColor={CALENDAR_COLORS.primary}
-                iconBg="#EEE9FF"
-                title="Өнөөдрийн эргэцүүлэл"
-                body={analysis.dailyReflection}
-              />
-            ) : null}
-
-            {analysis?.keyPatterns && analysis.keyPatterns.length > 0 ? (
-              <SectionCard
-                icon="stats-chart"
-                iconColor={CALENDAR_COLORS.primary}
-                title="Өнөөдрийн бичлэгээс харагдсан урсгал"
-              >
-                <View style={styles.patternList}>
-                  {analysis.keyPatterns.map((pattern) => (
-                    <View key={pattern.patternCode || pattern.title} style={styles.patternItem}>
-                      <View style={styles.patternIcon}>
-                        <Ionicons
-                          name="clipboard-outline"
-                          size={18}
-                          color={CALENDAR_COLORS.primary}
-                        />
-                      </View>
-                      <View style={styles.patternCopy}>
-                        <Text style={styles.itemTitle}>{pattern.title}</Text>
-                        <Text style={styles.itemBody}>{pattern.description}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </SectionCard>
-            ) : null}
-
-            {analysis?.triggers && analysis.triggers.length > 0 ? (
-              <SectionCard
-                icon="flash"
-                iconColor="#E6A23B"
-                title="Сэтгэл хөдлөлтэй хамт гарсан хүчин зүйл"
-              >
-                <View style={styles.triggerGrid}>
-                  {analysis.triggers.map((trigger, index) => (
-                    <View
-                      key={trigger.triggerCode || trigger.title}
-                      style={[
-                        styles.triggerCard,
-                        index % 2 === 0 ? styles.triggerYellow : styles.triggerPurple,
-                      ]}
-                    >
-                      <Ionicons
-                        name={index % 2 === 0 ? "trending-up" : "walk-outline"}
-                        size={18}
-                        color={index % 2 === 0 ? "#D9922A" : CALENDAR_COLORS.primary}
-                      />
-                      <Text style={styles.itemTitle}>{trigger.title}</Text>
-                      <Text style={styles.itemBody}>{trigger.description}</Text>
-                    </View>
-                  ))}
-                </View>
-              </SectionCard>
-            ) : null}
-
-            {analysis?.recommendations && analysis.recommendations.length > 0 ? (
-              <SectionCard
+            {reflection ? (
+              <TextSectionCard
                 icon="heart"
-                iconColor="#E56B9A"
-                title="Өнөөдрийг үргэлжлүүлэх жижиг санал"
-              >
-                <View style={styles.recommendList}>
-                  {analysis.recommendations.map((item, index) => (
-                    <View key={`${item.priority ?? index}-${item.title}`} style={styles.recommendRow}>
-                      <View style={styles.recommendIndex}>
-                        <Text style={styles.recommendIndexText}>{index + 1}</Text>
-                      </View>
-                      <View style={styles.recommendCopy}>
-                        <Text style={styles.itemTitle}>{item.title}</Text>
-                        <Text style={styles.itemBody}>{item.description}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </SectionCard>
-            ) : null}
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ expanded: diaryOpen }}
-              onPress={() => setDiaryOpen((open) => !open)}
-              style={({ pressed }) => [
-                styles.diaryToggle,
-                pressed && styles.pressed,
-              ]}
-            >
-              <View style={styles.diaryToggleLeft}>
-                <Ionicons
-                  name="document-text-outline"
-                  size={18}
-                  color={CALENDAR_COLORS.primary}
-                />
-                <Text style={styles.diaryToggleText}>Миний бичсэн тэмдэглэл</Text>
-              </View>
-              <Ionicons
-                name={diaryOpen ? "chevron-up" : "chevron-down"}
-                size={18}
-                color={CALENDAR_COLORS.muted}
+                color={BLUE}
+                title={t("calendar.journalDetail.reflectionTitle")}
+                body={reflection}
               />
-            </Pressable>
+            ) : null}
 
-            {diaryOpen ? (
-              <View style={styles.diaryBodyCard}>
-                {data.title ? (
-                  <Text style={styles.diaryTitle}>{data.title}</Text>
+            {pattern || trigger ? (
+              <View style={styles.splitRow}>
+                {pattern?.title ? (
+                  <FactCard
+                    label={t("calendar.journalDetail.patternLabel")}
+                    title={pattern.title}
+                    accent={TEAL}
+                    badgeColor={TEAL_SOFT}
+                    confidence={formatConfidencePercent(pattern.confidence)}
+                    confidenceLabel={t("calendar.journalDetail.confidence", {
+                      percent: formatConfidencePercent(pattern.confidence) ?? 0,
+                    })}
+                  />
                 ) : null}
-                <Text style={styles.diaryBody}>{data.content || "—"}</Text>
-                {data.weatherName || data.sleepHours != null ? (
-                  <Text style={styles.diaryMeta}>
-                    {[
-                      data.weatherName ? `Цаг агаар: ${data.weatherName}` : null,
-                      data.sleepHours != null
-                        ? `Унталт: ${data.sleepHours} цаг`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </Text>
+                {trigger?.title ? (
+                  <FactCard
+                    label={t("calendar.journalDetail.triggerLabel")}
+                    title={trigger.title}
+                    accent={TEAL}
+                    badgeColor={TEAL_SOFT}
+                    confidence={formatConfidencePercent(trigger.confidence)}
+                    confidenceLabel={t("calendar.journalDetail.confidence", {
+                      percent: formatConfidencePercent(trigger.confidence) ?? 0,
+                    })}
+                  />
                 ) : null}
               </View>
             ) : null}
 
-            {analysis?.generatedAt ? (
-              <Text style={styles.generatedAt}>
-                {formatGeneratedAtMn(analysis.generatedAt)}
-              </Text>
+            {sortedRecommendations.length > 0 ? (
+              <View style={styles.card}>
+                <View style={styles.sectionHeader}>
+                  <View
+                    style={[styles.sectionIcon]}
+                  >
+                   <MaterialIcons name="insights" size={24} color={CORAL} />
+                  </View>
+                  <AppText weight="bold" style={[styles.sectionTitle, { color: CORAL }]}>
+                    {t("calendar.journalDetail.recommendationsTitle")}
+                  </AppText>
+                </View>
+
+                {sortedRecommendations.map((recommendation, index) => (
+                  <RecommendationRow
+                    key={`${recommendation.priority ?? index}-${recommendation.title}`}
+                    number={index + 1}
+                    title={recommendation.title}
+                    description={recommendation.description}
+                    showDivider={index < sortedRecommendations.length - 1}
+                  />
+                ))}
+              </View>
             ) : null}
+
+            {originalContent ? (
+              <OriginalDiaryCard content={originalContent} />
+            ) : null}
+
+            <View style={styles.metaBlock}>
+              {safety?.riskLevel === "NONE" ? (
+                <AppText style={styles.metaText}>
+                  {t("calendar.journalDetail.noRiskSignal")}
+                </AppText>
+              ) : null}
+              {generatedAt ? (
+                <AppText style={styles.metaText}>
+                  {t("calendar.journalDetail.generatedAt", {
+                    datetime: formatGeneratedAt(generatedAt, language),
+                  })}
+                </AppText>
+              ) : null}
+            </View>
           </ScrollView>
 
           <View style={styles.footer}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Дуусгах"
+              accessibilityLabel={t("calendar.journalDetail.done")}
               onPress={() => router.back()}
               style={({ pressed }) => [
                 styles.doneButton,
                 pressed && styles.pressed,
               ]}
             >
-              <Text style={styles.doneButtonText}>Дуусгах</Text>
+              <AppText weight="bold" style={styles.doneButtonText}>
+                {t("calendar.journalDetail.done")}
+              </AppText>
             </Pressable>
           </View>
         </>
@@ -331,105 +318,196 @@ export function JournalDetailScreen({ diaryId }: JournalDetailScreenProps) {
 }
 
 function HeroEmotionCard({
-  data,
-  score,
-  scoreRatio,
+  emotionCode,
+  emotionName,
+  analysisTitle,
+  tags,
 }: {
-  data: EmotionDiaryData;
-  score: number | null | undefined;
-  scoreRatio: number;
+  emotionCode: string;
+  emotionName: string;
+  analysisTitle: string;
+  tags: string[];
 }) {
-  const emotionCode =
-    data.aiAnalysis?.mainEmotionCode || data.emotionCode || "CALM";
-  const emotionName =
-    data.aiAnalysis?.mainEmotionName || data.emotionName || "—";
+  const { t } = useTranslation();
 
   return (
-    <View style={styles.heroCard}>
-      <View style={styles.heroTop}>
+    <View style={styles.card}>
+      <View style={styles.heroRow}>
         <Image
           source={getMoodImage(emotionCode)}
           style={styles.heroMascot}
           contentFit="contain"
         />
         <View style={styles.heroCopy}>
-          <Text style={styles.heroLabel}>Өнөөдрийн гол мэдрэмж</Text>
-          <Text style={styles.heroEmotion}>{emotionName}</Text>
-          <Text style={styles.heroScoreLabel}>Өнөөдрийн сэтгэлийн оноо</Text>
-          <Text style={styles.heroScore}>
-            <Text style={styles.heroScoreValue}>
-              {score == null ? "—" : score.toFixed(1)}
-            </Text>
-            {" / 10"}
-          </Text>
+          <AppText weight="semibold" style={styles.heroLabel}>
+            {t("calendar.journalDetail.todaysEmotion")}
+          </AppText>
+          <AppText weight="bold" style={styles.heroEmotion}>
+            {emotionName}
+          </AppText>
+          {analysisTitle ? (
+            <AppText style={styles.heroTitle}>{analysisTitle}</AppText>
+          ) : null}
+          {tags.length > 0 ? (
+            <View style={styles.tagRow}>
+              {tags.map((tag) => (
+                <View key={tag} style={styles.tagPill}>
+                  <AppText weight="medium" style={styles.tagText}>
+                    {tag}
+                  </AppText>
+                </View>
+              ))}
+            </View>
+          ) : null}
         </View>
-      </View>
-      <View style={styles.scoreTrack}>
-        <LinearGradient
-          colors={["#F7C948", "#8A6BE8"]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={[styles.scoreFill, { width: `${scoreRatio * 100}%` }]}
-        />
       </View>
     </View>
   );
 }
 
-function InfoCard({
+function TextSectionCard({
   icon,
-  iconColor,
-  iconBg,
+  color,
   title,
   body,
-  tint = CALENDAR_COLORS.card,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
-  iconColor: string;
-  iconBg: string;
+  color: string;
   title: string;
   body: string;
-  tint?: string;
 }) {
   return (
-    <View style={[styles.infoCard, { backgroundColor: tint }]}>
-      <View style={styles.infoHeader}>
-        <View style={[styles.infoIcon, { backgroundColor: iconBg }]}>
-          <Ionicons name={icon} size={16} color={iconColor} />
+    <View style={styles.card}>
+      <View style={styles.textSectionRow}>
+        <View style={[styles.sectionIcon, { backgroundColor: color }]}>
+          <Ionicons name={icon} size={15} color="#FFFFFF" />
         </View>
-        <Text style={styles.infoTitle}>{title}</Text>
+        <View style={styles.textSectionCopy}>
+          <AppText weight="bold" style={[styles.sectionTitle, { color }]}>
+            {title}
+          </AppText>
+          <AppText style={styles.sectionBody}>{body}</AppText>
+        </View>
       </View>
-      <Text style={styles.infoBody}>{body}</Text>
     </View>
   );
 }
 
-function SectionCard({
-  icon,
-  iconColor,
+function FactCard({
+  label,
   title,
-  children,
+  accent,
+  badgeColor,
+  confidence,
+  confidenceLabel,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
-  iconColor: string;
+  label: string;
   title: string;
-  children: ReactNode;
+  accent: string;
+  badgeColor: string;
+  confidence: number | null;
+  confidenceLabel: string;
 }) {
   return (
-    <View style={styles.sectionCard}>
-      <View style={styles.sectionHeader}>
-        <Ionicons name={icon} size={18} color={iconColor} />
-        <Text style={styles.sectionTitle}>{title}</Text>
-      </View>
-      {children}
+    <View style={[styles.card, styles.factCard]}>
+      <AppText weight="semibold" style={[styles.factLabel, { color: accent }]}>
+        {label}
+      </AppText>
+      <AppText weight="bold" style={styles.factTitle}>
+        {title}
+      </AppText>
+      {confidence != null ? (
+        <View style={[styles.confidenceBadge, { backgroundColor: badgeColor }]}>
+          <AppText weight="semibold" style={[styles.confidenceText, { color: accent }]}>
+            {confidenceLabel}
+          </AppText>
+        </View>
+      ) : null}
     </View>
   );
 }
+
+function RecommendationRow({
+  number,
+  title,
+  description,
+  showDivider,
+}: {
+  number: number;
+  title: string;
+  description: string;
+  showDivider: boolean;
+}) {
+  return (
+    <View>
+      <View style={styles.recommendRow}>
+        <View style={styles.recommendIndex}>
+          <AppText weight="bold" style={styles.recommendIndexText}>
+            {number}
+          </AppText>
+        </View>
+        <View style={styles.recommendCopy}>
+          <AppText weight="bold" style={styles.recommendTitle}>
+            {title}
+          </AppText>
+          {description ? (
+            <AppText style={styles.recommendBody}>{description}</AppText>
+          ) : null}
+        </View>
+      </View>
+      {showDivider ? <View style={styles.divider} /> : null}
+    </View>
+  );
+}
+
+function OriginalDiaryCard({ content }: { content: string }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const rotation = useSharedValue(0);
+
+  useEffect(() => {
+    rotation.value = withTiming(open ? 180 : 0, { duration: 200 });
+  }, [open, rotation]);
+
+  const chevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
+
+  return (
+    <View style={styles.card}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        onPress={() => setOpen((value) => !value)}
+        style={({ pressed }) => [
+          styles.diaryToggle,
+          pressed && styles.pressed,
+        ]}
+      >
+        <AppText weight="bold" style={styles.diaryToggleText}>
+          {t("calendar.journalDetail.originalDiary")}
+        </AppText>
+        <Animated.View style={chevronStyle}>
+          <Ionicons name="chevron-down" size={18} color={MUTED} />
+        </Animated.View>
+      </Pressable>
+      {open ? <AppText style={styles.diaryBody}>{content}</AppText> : null}
+    </View>
+  );
+}
+
+const CARD_SHADOW = {
+  shadowColor: "#000000",
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.06,
+  shadowRadius: 18,
+  elevation: 2,
+} as const;
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F7F4FC",
+    backgroundColor: PAGE_BG,
   },
   header: {
     flexDirection: "row",
@@ -441,7 +519,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#EEE9FF",
+    backgroundColor: "rgba(255,255,255,0.86)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -449,8 +527,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
     fontSize: 17,
-    fontWeight: "700",
-    color: CALENDAR_COLORS.title,
+    color: TEXT,
   },
   headerSpacer: {
     width: 40,
@@ -470,13 +547,13 @@ const styles = StyleSheet.create({
   },
   errorTitle: {
     fontSize: 18,
-    fontWeight: "700",
-    color: CALENDAR_COLORS.title,
+    color: TEXT,
+    textAlign: "center",
   },
   errorBody: {
     fontSize: 14,
     lineHeight: 20,
-    color: CALENDAR_COLORS.muted,
+    color: MUTED,
     textAlign: "center",
   },
   retryButton: {
@@ -484,288 +561,220 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: 20,
     borderRadius: 999,
-    backgroundColor: CALENDAR_COLORS.primary,
+    backgroundColor: GREEN,
     alignItems: "center",
     justifyContent: "center",
   },
   retryText: {
     color: "#FFFFFF",
-    fontWeight: "700",
   },
   content: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    gap: 12,
-  },
-  dateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 28,
+    gap: 14,
   },
   dateText: {
-    flex: 1,
     fontSize: 15,
-    fontWeight: "600",
-    color: CALENDAR_COLORS.title,
+    color: MUTED,
   },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: CALENDAR_COLORS.primary,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  statusPending: {
-    backgroundColor: "#E8E4F5",
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  statusPendingText: {
-    color: CALENDAR_COLORS.title,
-  },
-  heroCard: {
-    borderRadius: 24,
-    backgroundColor: "#FFFFFF",
+  card: {
+    backgroundColor: CARD_BG,
+    borderRadius: 20,
     padding: 18,
-    gap: 16,
+    ...CARD_SHADOW,
   },
-  heroTop: {
+  heroRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 14,
   },
   heroMascot: {
-    width: 96,
-    height: 96,
+    width: 88,
+    height: 88,
   },
   heroCopy: {
     flex: 1,
+    minWidth: 0,
   },
   heroLabel: {
     fontSize: 12,
-    color: CALENDAR_COLORS.muted,
+    lineHeight: 16,
+    color: BLUE,
     marginBottom: 4,
   },
   heroEmotion: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: CALENDAR_COLORS.title,
-    marginBottom: 10,
+    fontSize: 26,
+    lineHeight: 32,
+    color: TEXT,
+    letterSpacing: -0.4,
   },
-  heroScoreLabel: {
-    fontSize: 12,
-    color: CALENDAR_COLORS.muted,
-    marginBottom: 2,
-  },
-  heroScore: {
+  heroTitle: {
+    marginTop: 6,
     fontSize: 14,
-    color: CALENDAR_COLORS.muted,
-    fontWeight: "600",
+    lineHeight: 20,
+    color: MUTED,
   },
-  heroScoreValue: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#E6A23B",
-  },
-  scoreTrack: {
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: "#F0ECF8",
-    overflow: "hidden",
-  },
-  scoreFill: {
-    height: "100%",
-    borderRadius: 999,
-  },
-  infoCard: {
-    borderRadius: 20,
-    padding: 16,
-    gap: 10,
-  },
-  infoHeader: {
+  tagRow: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 10,
   },
-  infoIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
+  tagPill: {
+    backgroundColor: PILL_BG,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
-  infoTitle: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "700",
-    color: CALENDAR_COLORS.title,
+  tagText: {
+    fontSize: 12,
+    color: MUTED,
   },
-  infoBody: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: CALENDAR_COLORS.title,
-  },
-  sectionCard: {
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
-    padding: 16,
+  textSectionRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 12,
+  },
+  textSectionCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 8,
   },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
+    marginBottom: 14,
+  },
+  sectionIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
   sectionTitle: {
     flex: 1,
     fontSize: 15,
-    fontWeight: "700",
-    color: CALENDAR_COLORS.title,
+    lineHeight: 20,
   },
-  patternList: {
-    gap: 10,
+  sectionBody: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: TEXT,
   },
-  patternItem: {
+  splitRow: {
     flexDirection: "row",
+    alignItems: "stretch",
     gap: 10,
-    backgroundColor: "#F8F6FC",
-    borderRadius: 16,
-    padding: 12,
   },
-  patternIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: "#EEE9FF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  patternCopy: {
+  factCard: {
     flex: 1,
-    gap: 4,
-  },
-  triggerGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  triggerCard: {
-    width: "48%",
-    flexGrow: 1,
-    borderRadius: 16,
-    padding: 12,
+    minWidth: 0,
     gap: 8,
   },
-  triggerYellow: {
-    backgroundColor: "#FFF7E8",
+  factLabel: {
+    fontSize: 12,
+    lineHeight: 16,
   },
-  triggerPurple: {
-    backgroundColor: "#F3EEFF",
+  factTitle: {
+    fontSize: 16,
+    lineHeight: 22,
+    color: TEXT,
   },
-  recommendList: {
-    gap: 10,
+  confidenceBadge: {
+    alignSelf: "flex-start",
+    marginTop: 4,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  confidenceText: {
+    fontSize: 11,
+    lineHeight: 14,
   },
   recommendRow: {
     flexDirection: "row",
-    gap: 12,
     alignItems: "flex-start",
-    paddingVertical: 4,
+    gap: 12,
+    paddingVertical: 10,
   },
   recommendIndex: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#FFE4EE",
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: CORAL,
+
     alignItems: "center",
     justifyContent: "center",
   },
   recommendIndexText: {
     fontSize: 13,
-    fontWeight: "800",
-    color: "#E56B9A",
+    color: "#FFFFFF",
   },
   recommendCopy: {
     flex: 1,
+    minWidth: 0,
     gap: 4,
   },
-  itemTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: CALENDAR_COLORS.title,
+  recommendTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    color: TEXT,
   },
-  itemBody: {
+  recommendBody: {
     fontSize: 13,
     lineHeight: 19,
-    color: CALENDAR_COLORS.muted,
+    color: MUTED,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: DIVIDER,
+    marginLeft: 38,
   },
   diaryToggle: {
-    minHeight: 54,
-    borderRadius: 16,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-  diaryToggleLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    gap: 12,
   },
   diaryToggleText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: CALENDAR_COLORS.title,
-  },
-  diaryBodyCard: {
-    borderRadius: 16,
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    gap: 8,
-    marginTop: -4,
-  },
-  diaryTitle: {
+    flex: 1,
     fontSize: 15,
-    fontWeight: "700",
-    color: CALENDAR_COLORS.title,
+    color: TEXT,
   },
   diaryBody: {
+    marginTop: 12,
     fontSize: 14,
     lineHeight: 22,
-    color: CALENDAR_COLORS.title,
+    color: TEXT,
   },
-  diaryMeta: {
-    marginTop: 4,
+  metaBlock: {
+    alignItems: "center",
+    gap: 4,
+    paddingTop: 4,
+    paddingBottom: 8,
+  },
+  metaText: {
     fontSize: 12,
-    color: CALENDAR_COLORS.muted,
-  },
-  generatedAt: {
+    lineHeight: 18,
+    color: MUTED,
     textAlign: "center",
-    fontSize: 12,
-    color: CALENDAR_COLORS.muted,
-    marginTop: 4,
   },
   footer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 8,
   },
   doneButton: {
     minHeight: 54,
     borderRadius: 999,
-    backgroundColor: CALENDAR_COLORS.primary,
+    backgroundColor: PRIMARY,
     alignItems: "center",
     justifyContent: "center",
   },
   doneButtonText: {
     fontSize: 16,
-    fontWeight: "700",
     color: "#FFFFFF",
   },
 });

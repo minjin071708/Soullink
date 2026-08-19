@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const HERO_MASCOT_DAY = require("@/assets/mascotImages/maskot3dwhite.png");
+const HERO_MASCOT_DAY = require("@/assets/mascotImages/daymascot3d.png");
 const HERO_MASCOT_NIGHT = require("@/assets/mascotImages/nightmascot3dwhite.png");
 
 /** 4:5 hero — height ≈ width × 1.25 */
