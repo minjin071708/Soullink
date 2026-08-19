@@ -26,7 +26,6 @@ const COPY: Record<
   Language,
   {
     title: string;
-    subtitle: string;
     google: string;
     apple: string;
     or: string;
@@ -37,7 +36,6 @@ const COPY: Record<
 > = {
   EN: {
     title: "Welcome back",
-    subtitle: "Sign in to continue your journal",
     google: "Continue with Google",
     apple: "Continue with Apple",
     or: "or",
@@ -47,7 +45,6 @@ const COPY: Record<
   },
   MN: {
     title: "Тавтай морил",
-    subtitle: "Журнал руугаа үргэлжлүүлэн нэвтэрнэ үү",
     google: "Google-р үргэлжлүүлэх",
     apple: "Apple-р үргэлжлүүлэх",
     or: "эсвэл",
@@ -57,7 +54,6 @@ const COPY: Record<
   },
   KO: {
     title: "다시 오신 걸 환영해요",
-    subtitle: "저널을 이어가려면 로그인해 주세요",
     google: "Google로 계속하기",
     apple: "Apple로 계속하기",
     or: "또는",
@@ -83,8 +79,7 @@ export default function LoginScreen() {
         <View style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.title}>{copy.title}</Text>
-            <Text style={styles.subtitle}>{copy.subtitle}</Text>
-            <Image
+                    <Image
               source={LOGIN_LOGO_WHITE}
               style={styles.logo}
               resizeMode="contain"
@@ -217,9 +212,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    fontSize: 32,
+    fontSize: 27,
     lineHeight: 36,
-    fontWeight: "700",
+    fontWeight: "600",
     letterSpacing: -0.5,
     color: APPLE_INK,
     textAlign: "center",

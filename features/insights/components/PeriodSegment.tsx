@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   itemSelected: {
-    backgroundColor: INSIGHT_COLORS.accent,
+    backgroundColor: INSIGHT_COLORS.primary,
   },
   label: {
     fontSize: 14,

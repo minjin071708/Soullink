@@ -15,6 +15,8 @@ export const INSIGHT_COLORS = {
   angry: "#FF6F70",
   sad: "#9E9AEF",
   neutral: "#C9C7D8",
+  apple_ink : "#1d1d1f",
+  primary : "#8a6be8",
 } as const;
 
 export const EMOTION_CHART_COLORS: Record<InsightEmotionKey, string> = {

@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { Redirect } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-const BOOT_IMAGE = require("@/assets/images/loginBackground.png");
+const BOOT_IMAGE = require("@/assets/images/loginBackground.jpg");
 
 export default function IndexScreen() {
   const { status, hasCompletedBootstrap } = useAuthBootstrap();

@@ -1,4 +1,5 @@
-import { DailyInsightCard } from "@/features/insights/components/DailyInsightCard";
+import { JournalDetailScreen } from "@/features/calendar/components/JournalDetailScreen";
+import { useJournalByDate } from "@/features/calendar/hooks/useJournalByDate";
 import { MonthlyInsightCard } from "@/features/insights/components/MonthlyInsightCard";
 import { PeriodSegment } from "@/features/insights/components/PeriodSegment";
 import { WeeklyInsightCard } from "@/features/insights/components/WeeklyInsightCard";
@@ -37,7 +38,12 @@ export function InsightsScreen() {
 
   const weeklyQuery = useWeeklyEmotionStatistics({ baseDate }, isWeek);
   const monthlyQuery = useMonthlyEmotionStatistics({ baseDate }, isMonth);
+  const dayDiaryQuery = useJournalByDate(baseDate);
   const activeQuery = isMonth ? monthlyQuery : weeklyQuery;
+  const dayDiaryId =
+    dayDiaryQuery.data?.exists && (dayDiaryQuery.data.diaryId ?? 0) > 0
+      ? dayDiaryQuery.data.diaryId
+      : undefined;
 
   const weeklyCardData = useMemo(() => {
     if (!isWeek || !weeklyQuery.data) {
@@ -72,58 +78,76 @@ export function InsightsScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
+      <View style={styles.periodWrap}>
         <PeriodSegment value={period} onChange={setPeriod} />
+      </View>
 
-        <View style={styles.cardWrap}>
-          {isDay ? (
-            <DailyInsightCard baseDate={baseDate} />
-          ) : activeQuery.isLoading ? (
+      {isDay ? (
+        <View style={styles.dayWrap}>
+          {dayDiaryQuery.isLoading ? (
             <View style={styles.stateBox}>
               <ActivityIndicator color={INSIGHT_COLORS.accent} />
-              <Text style={styles.stateText}>{t("insights.loading")}</Text>
+              <Text style={styles.stateText}>{t("insights.daily.loading")}</Text>
             </View>
-          ) : activeQuery.isError ? (
+          ) : dayDiaryId == null ? (
             <View style={styles.stateBox}>
-              <Text style={styles.stateText}>{t("insights.error")}</Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  void activeQuery.refetch();
-                }}
-                style={({ pressed }) => [
-                  styles.retryButton,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text style={styles.retryText}>
-                  {activeQuery.isFetching
-                    ? t("insights.retrying")
-                    : t("insights.retry")}
-                </Text>
-              </Pressable>
+              <Text style={styles.stateText}>{t("insights.daily.noDiary")}</Text>
+              <Text style={styles.stateHint}>{t("insights.daily.noDiaryHint")}</Text>
             </View>
-          ) : isMonth && monthlyCardData ? (
-            <MonthlyInsightCard
-              data={monthlyCardData}
-              stats={
-                monthlyQuery.data
-                  ? {
-                      recordedDays: monthlyQuery.data.recordedDays,
-                      recordedRate: monthlyQuery.data.recordedRate,
-                      weeklyAverages: monthlyQuery.data.weeklyAverages,
-                    }
-                  : null
-              }
-            />
-          ) : isWeek && weeklyCardData ? (
-            <WeeklyInsightCard data={weeklyCardData} />
-          ) : null}
+          ) : (
+            <JournalDetailScreen diaryId={dayDiaryId} embedded />
+          )}
         </View>
-      </ScrollView>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
+        >
+          <View style={styles.cardWrap}>
+            {activeQuery.isLoading ? (
+              <View style={styles.stateBox}>
+                <ActivityIndicator color={INSIGHT_COLORS.accent} />
+                <Text style={styles.stateText}>{t("insights.loading")}</Text>
+              </View>
+            ) : activeQuery.isError ? (
+              <View style={styles.stateBox}>
+                <Text style={styles.stateText}>{t("insights.error")}</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    void activeQuery.refetch();
+                  }}
+                  style={({ pressed }) => [
+                    styles.retryButton,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text style={styles.retryText}>
+                    {activeQuery.isFetching
+                      ? t("insights.retrying")
+                      : t("insights.retry")}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : isMonth && monthlyCardData ? (
+              <MonthlyInsightCard
+                data={monthlyCardData}
+                stats={
+                  monthlyQuery.data
+                    ? {
+                        recordedDays: monthlyQuery.data.recordedDays,
+                        recordedRate: monthlyQuery.data.recordedRate,
+                        weeklyAverages: monthlyQuery.data.weeklyAverages,
+                      }
+                    : null
+                }
+              />
+            ) : isWeek && weeklyCardData ? (
+              <WeeklyInsightCard data={weeklyCardData} />
+            ) : null}
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -162,6 +186,13 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingBottom: 28,
+  },
+  periodWrap: {
+    paddingHorizontal: 16,
+  },
+  dayWrap: {
+    flex: 1,
+    marginTop: 8,
   },
   cardWrap: {
     marginTop: 16,

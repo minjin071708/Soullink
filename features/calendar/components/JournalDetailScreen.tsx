@@ -40,6 +40,8 @@ const PRIMARY = "#8a6be8";
 
 type JournalDetailScreenProps = {
   diaryId?: number;
+  /** When true, skip screen chrome so this can sit under Insights tabs. */
+  embedded?: boolean;
 };
 
 function isEmotionCode(value: string): value is EmotionCode {
@@ -84,7 +86,10 @@ function formatGeneratedAt(
   }).format(date);
 }
 
-export function JournalDetailScreen({ diaryId }: JournalDetailScreenProps) {
+export function JournalDetailScreen({
+  diaryId,
+  embedded = false,
+}: JournalDetailScreenProps) {
   const router = useRouter();
   const { t } = useTranslation();
   const language = useAppStore((state) => state.language);
@@ -125,23 +130,29 @@ export function JournalDetailScreen({ diaryId }: JournalDetailScreenProps) {
 
   const showLoading = isLoading || isProcessing;
   const showError = !showLoading && (isError || !diary || isFailed);
+  const Container = embedded ? View : SafeAreaView;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("calendar.journalDetail.back")}
-          onPress={() => router.back()}
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-        >
-          <Ionicons name="chevron-back" size={22} color={TEXT} />
-        </Pressable>
-        <AppText weight="bold" style={styles.headerTitle} numberOfLines={1}>
-          {t("calendar.journalDetail.title")}
-        </AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+    <Container
+      style={styles.safeArea}
+      {...(embedded ? {} : { edges: ["top", "bottom"] as const })}
+    >
+      {embedded ? null : (
+        <View style={styles.header}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("calendar.journalDetail.back")}
+            onPress={() => router.back()}
+            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+          >
+            <Ionicons name="chevron-back" size={22} color={TEXT} />
+          </Pressable>
+          <AppText weight="bold" style={styles.headerTitle} numberOfLines={1}>
+            {t("calendar.journalDetail.title")}
+          </AppText>
+          <View style={styles.headerSpacer} />
+        </View>
+      )}
 
       {showLoading ? (
         <View style={styles.centered}>
@@ -296,24 +307,26 @@ export function JournalDetailScreen({ diaryId }: JournalDetailScreenProps) {
             </View>
           </ScrollView>
 
-          <View style={styles.footer}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t("calendar.journalDetail.done")}
-              onPress={() => router.back()}
-              style={({ pressed }) => [
-                styles.doneButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <AppText weight="bold" style={styles.doneButtonText}>
-                {t("calendar.journalDetail.done")}
-              </AppText>
-            </Pressable>
-          </View>
+          {embedded ? null : (
+            <View style={styles.footer}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("calendar.journalDetail.done")}
+                onPress={() => router.back()}
+                style={({ pressed }) => [
+                  styles.doneButton,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <AppText weight="bold" style={styles.doneButtonText}>
+                  {t("calendar.journalDetail.done")}
+                </AppText>
+              </Pressable>
+            </View>
+          )}
         </>
       ) : null}
-    </SafeAreaView>
+    </Container>
   );
 }
 
