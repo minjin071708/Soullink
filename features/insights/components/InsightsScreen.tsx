@@ -1,9 +1,18 @@
+import {
+  Tabs,
+  TabsIndicator,
+  TabsList,
+  TabsTrigger,
+  TabsTriggerText,
+} from "@/components/ui/tabs";
 import { JournalDetailScreen } from "@/features/calendar/components/JournalDetailScreen";
 import { useJournalByDate } from "@/features/calendar/hooks/useJournalByDate";
 import { MonthlyInsightCard } from "@/features/insights/components/MonthlyInsightCard";
-import { PeriodSegment } from "@/features/insights/components/PeriodSegment";
 import { WeeklyInsightCard } from "@/features/insights/components/WeeklyInsightCard";
-import { INSIGHT_COLORS } from "@/features/insights/constants/insights.constants";
+import {
+  INSIGHT_COLORS,
+  PERIOD_OPTIONS,
+} from "@/features/insights/constants/insights.constants";
 import type { InsightPeriod } from "@/features/insights/types/insights.types";
 import {
   mapMonthlyEmotionStatisticsToCard,
@@ -18,6 +27,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  LayoutChangeEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -26,10 +36,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+function isInsightPeriod(value: string): value is InsightPeriod {
+  return value === "day" || value === "week" || value === "month";
+}
+
 export function InsightsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const [period, setPeriod] = useState<InsightPeriod>("week");
+  const [trackWidth, setTrackWidth] = useState(0);
   const baseDate = useMemo(() => formatEmotionDate(), []);
 
   const isDay = period === "day";
@@ -59,6 +74,12 @@ export function InsightsScreen() {
     return mapMonthlyEmotionStatisticsToCard(monthlyQuery.data, t);
   }, [isMonth, monthlyQuery.data, t]);
 
+  const handlePeriodChange = (next: string) => {
+    if (isInsightPeriod(next)) {
+      setPeriod(next);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.header}>
@@ -72,14 +93,52 @@ export function InsightsScreen() {
           }}
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
         >
-          <Ionicons name="chevron-back" size={22} color={INSIGHT_COLORS.title} />
+          <Ionicons name="chevron-back" size={22} color="#1D1D1F" />
         </Pressable>
         <Text style={styles.headerTitle}>{t("insights.title")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.periodWrap}>
-        <PeriodSegment value={period} onChange={setPeriod} />
+        <Tabs
+          value={period}
+          onValueChange={handlePeriodChange}
+          variant="filled"
+        >
+          <TabsList
+            className="h-[48px] w-full overflow-hidden rounded-full bg-[#F2F2F4] p-[4px]"
+            contentContainerStyle={styles.tabsRow}
+            scrollEnabled={false}
+            onLayout={(event: LayoutChangeEvent) => {
+              setTrackWidth(event.nativeEvent.layout.width);
+            }}
+          >
+            <TabsIndicator className="rounded-full bg-white" style={styles.tabIndicator} />
+            {PERIOD_OPTIONS.map((option) => (
+              <TabsTrigger
+                key={option.key}
+                value={option.key}
+                className="z-10 items-center justify-center p-0"
+                style={
+                  trackWidth > 0
+                    ? {
+                        width: trackWidth / PERIOD_OPTIONS.length,
+                        height: styles.tabIndicator.height,
+                      }
+                    : { height: styles.tabIndicator.height }
+                }
+              >
+                <TabsTriggerText
+                  className={`text-center text-[15px] font-semibold ${
+                    period === option.key ? "text-[#1D1D1F]" : "text-[#9A9A9A]"
+                  }`}
+                >
+                  {t(`insights.periods.${option.key}`)}
+                </TabsTriggerText>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </View>
 
       {isDay ? (
@@ -130,18 +189,7 @@ export function InsightsScreen() {
                 </Pressable>
               </View>
             ) : isMonth && monthlyCardData ? (
-              <MonthlyInsightCard
-                data={monthlyCardData}
-                stats={
-                  monthlyQuery.data
-                    ? {
-                        recordedDays: monthlyQuery.data.recordedDays,
-                        recordedRate: monthlyQuery.data.recordedRate,
-                        weeklyAverages: monthlyQuery.data.weeklyAverages,
-                      }
-                    : null
-                }
-              />
+              <MonthlyInsightCard data={monthlyCardData} />
             ) : isWeek && weeklyCardData ? (
               <WeeklyInsightCard data={weeklyCardData} />
             ) : null}
@@ -176,9 +224,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     textAlign: "center",
-    fontSize: 18,
-    fontWeight: "800",
-    color: INSIGHT_COLORS.title,
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#1D1D1F",
   },
   headerSpacer: {
     width: 40,
@@ -188,8 +236,11 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
   periodWrap: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 4,
   },
+
   dayWrap: {
     flex: 1,
     marginTop: 8,
@@ -228,5 +279,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: INSIGHT_COLORS.accent,
+  },
+  tabsRow: {
+    flexGrow: 1,
+    alignItems: "stretch",
+    justifyContent: "center",
+  },
+  tabIndicator: {
+    height: 40,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });

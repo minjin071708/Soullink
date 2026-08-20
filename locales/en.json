@@ -473,6 +473,7 @@
     },
     "weekly": {
       "periodLabel": "7-day report",
+      "metaLine": "{{dateRange}} · {{count}} days recorded",
       "headlineDominant": "This week you felt more {{emotion}}",
       "headlineEmpty": "No entries this week yet",
       "headlineFallback": "This week's emotion overview",
@@ -487,6 +488,7 @@
     "monthly": {
       "periodLabel": "Monthly report",
       "periodLabelMonth": "Month {{month}} report",
+      "metaLine": "{{dateRange}} · {{count}} days recorded",
       "headlineDominant": "This month you felt more {{emotion}}",
       "headlineEmpty": "No entries this month yet",
       "headlineAverage": "This month's average score is {{score}}",

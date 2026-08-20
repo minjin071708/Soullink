@@ -1,9 +1,13 @@
+import { fetchWeeklyReportDetailApi } from "@/api/emotionStatisticsApi";
 import { INSIGHT_COLORS } from "@/features/insights/constants/insights.constants";
 import type {
   InsightObservation,
   PreviousReport,
 } from "@/features/insights/types/insights.types";
+import type { WeeklyReportDetailData } from "@/types/emotionStatisticsType";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import axios from "axios";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -65,7 +69,10 @@ export function AiObservationSection({
 
 type PreviousReportsSectionProps = {
   reports: PreviousReport[];
-  onPressReport?: (report: PreviousReport) => void;
+  onPressReport?: (
+    report: PreviousReport,
+    detail: WeeklyReportDetailData
+  ) => void;
 };
 
 export function PreviousReportsSection({
@@ -73,6 +80,31 @@ export function PreviousReportsSection({
   onPressReport,
 }: PreviousReportsSectionProps) {
   const { t } = useTranslation();
+  const [loadingAnalysisId, setLoadingAnalysisId] = useState<number | null>(
+    null
+  );
+
+  const handlePressReport = async (report: PreviousReport) => {
+    if (loadingAnalysisId != null) {
+      return;
+    }
+
+    setLoadingAnalysisId(report.analysisId);
+    try {
+      const detail = await fetchWeeklyReportDetailApi(report.analysisId);
+      onPressReport?.(report, detail);
+    } catch (error) {
+      const payload = axios.isAxiosError(error)
+        ? error.response?.data ?? error
+        : error;
+      console.error(
+        "[Weekly report detail error]",
+        JSON.stringify(payload, null, 2)
+      );
+    } finally {
+      setLoadingAnalysisId(null);
+    }
+  };
 
   return (
     <View style={styles.section}>
@@ -82,7 +114,10 @@ export function PreviousReportsSection({
           <Pressable
             key={report.id}
             accessibilityRole="button"
-            onPress={() => onPressReport?.(report)}
+            disabled={loadingAnalysisId === report.analysisId}
+            onPress={() => {
+              void handlePressReport(report);
+            }}
             style={({ pressed }) => [
               styles.reportRow,
               pressed && styles.reportPressed,
@@ -92,7 +127,7 @@ export function PreviousReportsSection({
               <Ionicons
                 name={report.icon === "cloud" ? "cloud-outline" : "partly-sunny-outline"}
                 size={18}
-                color={INSIGHT_COLORS.sad}
+                color={INSIGHT_COLORS.primary}
               />
             </View>
             <Text style={styles.reportTitle}>{report.title}</Text>

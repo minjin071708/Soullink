@@ -1,11 +1,13 @@
 import {
   monthlyStatisticsResponseSchema,
+  weeklyReportDetailResponseSchema,
   weeklyStatisticsRequestSchema,
   weeklyStatisticsResponseSchema,
 } from "@/schemas/emotionStatisticsSchema";
 import type {
   GetMonthlyEmotionStatisticsParams,
   MonthlyStatisticsData,
+  WeeklyReportDetailData,
   WeeklyStatisticsData,
   WeeklyStatisticsRequest,
 } from "@/types/emotionStatisticsType";
@@ -49,5 +51,18 @@ export const getMonthlyEmotionStatisticsApi = async (
   );
 
   const parsed = monthlyStatisticsResponseSchema.parse(response.data);
+  return parsed.data;
+};
+
+/**
+ * GET /api/v1/emotion-statistics/weekly/{analysisId}
+ */
+export const fetchWeeklyReportDetailApi = async (
+  analysisId: number
+): Promise<WeeklyReportDetailData> => {
+  const response = await axiosInstance.get(
+    `api/v1/emotion-statistics/weekly/${analysisId}`
+  );
+  const parsed = weeklyReportDetailResponseSchema.parse(response.data);
   return parsed.data;
 };

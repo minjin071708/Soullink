@@ -25,6 +25,7 @@ export type InsightObservation = {
 
 export type PreviousReport = {
   id: string;
+  analysisId: number;
   title: string;
   moodLabel: string;
   moodColor: string;

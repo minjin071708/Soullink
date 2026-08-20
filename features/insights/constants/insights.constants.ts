@@ -1,7 +1,8 @@
 import type { InsightEmotionKey } from "@/features/insights/types/insights.types";
 
 export const INSIGHT_COLORS = {
-  background: "#F7F0F5",
+  // background: "#F4F1F8",
+  background: "#f9f9fa",
   card: "#FFFFFF",
   title: "#2A2A4A",
   muted: "#8B8BA3",
@@ -9,12 +10,12 @@ export const INSIGHT_COLORS = {
   accentSoft: "#FFE4EE",
   segmentTrack: "#EDE7F0",
   border: "#EFE7EE",
-  calm: "#8ED8BC",
-  happy: "#F58AC0",
-  anxious: "#FFAD5C",
-  angry: "#FF6F70",
-  sad: "#9E9AEF",
-  neutral: "#C9C7D8",
+  calm: "#AEC5EB",
+  happy: "#BDE4A7",
+  anxious: "#E4D9FF",
+  angry: "#9FBBCC",
+  sad: "#EAB464",
+  neutral: "#7388F2",
   apple_ink : "#1d1d1f",
   primary : "#8a6be8",
 } as const;

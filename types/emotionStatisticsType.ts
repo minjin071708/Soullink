@@ -13,6 +13,14 @@ import {
   weeklyStatisticsDataSchema,
   weeklyStatisticsRequestSchema,
   weeklyStatisticsResponseSchema,
+  weeklyReportPeriodSchema,
+  weeklyReportDailyScoreSchema,
+  weeklyReportEmotionDistributionSchema,
+  weeklyReportTopTagSchema,
+  weeklyReportAiInsightSchema,
+  recentWeeklyReportSchema,
+  weeklyReportDetailDataSchema,
+  weeklyReportDetailResponseSchema,
 } from "../schemas/emotionStatisticsSchema";
 
 export type StatisticsPeriod = z.infer<typeof statisticsPeriodSchema>;
@@ -61,3 +69,20 @@ export type GetMonthlyEmotionStatisticsParams = {
   /** yyyy-MM-dd, default: today */
   baseDate?: string;
 };
+
+export type WeeklyReportPeriod = z.infer<typeof weeklyReportPeriodSchema>;
+export type WeeklyReportDailyScore = z.infer<
+  typeof weeklyReportDailyScoreSchema
+>;
+export type WeeklyReportEmotionDistribution = z.infer<
+  typeof weeklyReportEmotionDistributionSchema
+>;
+export type WeeklyReportTopTag = z.infer<typeof weeklyReportTopTagSchema>;
+export type WeeklyReportAiInsight = z.infer<typeof weeklyReportAiInsightSchema>;
+export type RecentWeeklyReport = z.infer<typeof recentWeeklyReportSchema>;
+export type WeeklyReportDetailData = z.infer<
+  typeof weeklyReportDetailDataSchema
+>;
+export type WeeklyReportDetailResponse = z.infer<
+  typeof weeklyReportDetailResponseSchema
+>;

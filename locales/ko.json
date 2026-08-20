@@ -468,11 +468,12 @@
       "days": "{{count}}일"
     },
     "dateRange": {
-      "sameMonth": "{{month}}월 {{startDay}}–{{endDay}}일",
-      "crossMonth": "{{startMonth}}/{{startDay}} – {{endMonth}}/{{endDay}}"
+      "sameMonth": "{{month}}월 {{startDay}}일-{{endDay}}일",
+      "crossMonth": "{{startMonth}}월 {{startDay}}일-{{endMonth}}월 {{endDay}}일"
     },
     "weekly": {
       "periodLabel": "7일 리포트",
+      "metaLine": "{{dateRange}} · {{count}}일 기록",
       "headlineDominant": "이번 주에는 더 {{emotion}}한 느낌이었어요",
       "headlineEmpty": "이번 주 기록이 아직 없어요",
       "headlineFallback": "이번 주 감정 요약",
@@ -487,6 +488,7 @@
     "monthly": {
       "periodLabel": "월간 리포트",
       "periodLabelMonth": "{{month}}월 리포트",
+      "metaLine": "{{dateRange}} · {{count}}일 기록",
       "headlineDominant": "이번 달에는 더 {{emotion}}한 느낌이었어요",
       "headlineEmpty": "이번 달 기록이 아직 없어요",
       "headlineAverage": "이번 달 평균 점수는 {{score}}이에요",

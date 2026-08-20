@@ -11,6 +11,7 @@ import type {
   EmotionTopTag,
   MonthlyStatisticsData,
   RecentReport,
+  WeeklyReportDetailData,
   WeeklyStatisticsData,
 } from "@/types/emotionStatisticsType";
 import type { TFunction } from "i18next";
@@ -91,7 +92,7 @@ function findTopEmotion(
 }
 
 function buildWeeklyHeadline(
-  data: WeeklyStatisticsData,
+  data: Pick<WeeklyStatisticsData, "dominantEmotion" | "recordedDays">,
   t: TFunction
 ): string {
   if (data.dominantEmotion?.name) {
@@ -122,19 +123,6 @@ function buildMonthlyHeadline(
     return t("insights.monthly.headlineEmpty");
   }
 
-  const scoredWeeks = data.weeklyAverages.filter(
-    (week) => typeof week.averageScore === "number"
-  );
-  if (scoredWeeks.length > 0) {
-    const sum = scoredWeeks.reduce(
-      (total, week) => total + (week.averageScore ?? 0),
-      0
-    );
-    return t("insights.monthly.headlineAverage", {
-      score: (sum / scoredWeeks.length).toFixed(1),
-    });
-  }
-
   return t("insights.monthly.headlineFallback");
 }
 
@@ -142,7 +130,7 @@ function buildMonthlyHeadline(
  * Maps weekly emotion-statistics API data into the Insights card view model.
  */
 export function mapWeeklyEmotionStatisticsToCard(
-  data: WeeklyStatisticsData,
+  data: WeeklyStatisticsData | WeeklyReportDetailData,
   t: TFunction
 ): WeeklyInsightCardModel {
   const emotionShares = mapEmotionShares(data.emotionDistribution);
@@ -227,7 +215,7 @@ export function mapMonthlyEmotionStatisticsToCard(
         topEmotion != null
           ? t("insights.weekly.daysCount", { count: topEmotion.count })
           : t("insights.monthly.recordRateLabel", {
-              rate: Math.round(data.recordedRate),
+              rate: Math.round(data.recordRate),
             }),
       color: topColor,
     },
@@ -285,6 +273,7 @@ export function mapRecentReportsToPreviousReports(
     const key = toEmotionKey(report.resultCode);
     return {
       id: String(report.analysisId),
+      analysisId: report.analysisId,
       title: formatStatisticsDateRangeLabel(
         report.period.startDate,
         report.period.endDate,

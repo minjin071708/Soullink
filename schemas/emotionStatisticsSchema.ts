@@ -106,7 +106,7 @@ export const weeklyEmotionStatisticsResponseSchema =
 export const monthlyStatisticsPeriodSchema = statisticsPeriodSchema;
 
 /**
- * Тэмдэглэлгүй долоо хоногт averageScore / dominantEmotionCode ирэхгүй байж болно.
+ * Monthly STAT-002 weekly bucket. Response only includes week bounds.
  */
 export const weeklyAverageSchema = z.object({
   weekStartDate: z.string(),
@@ -122,14 +122,13 @@ export const monthlyStatisticsDataSchema = z.object({
   period: monthlyStatisticsPeriodSchema,
   /** Сонгосон хугацаанд тэмдэглэлтэй өдрийн тоо */
   recordedDays: z.number().int().nonnegative(),
-  /** Нийт хугацаанаас хэдэн хувьд нь тэмдэглэл бичсэн */
-  recordedRate: z.number().min(0).max(100),
+  /** Нийт хугацаанаас хэдэн хувьд нь тэмдэглэл бичсэн (API: recordRate) */
+  recordRate: z.number().min(0).max(100),
   weeklyAverages: z.array(weeklyAverageSchema),
   emotionDistribution: z.array(monthlyEmotionDistributionItemSchema),
-  /** Item бүтэц response-оос хараахан тодорхойгүй; хоосон ирж болно */
-  topTags: z.array(z.unknown()).default([]),
-  /** Хоосон/null ирж болно */
-  aiInsight: aiInsightSchema.nullable().default(null),
+  topTags: z.array(emotionTopTagSchema).default([]),
+  /** Monthly response may omit this field */
+  aiInsight: aiInsightSchema.nullable().optional().default(null),
 });
 
 /** @deprecated Prefer monthlyStatisticsDataSchema */
@@ -146,6 +145,59 @@ export const monthlyStatisticsResponseSchema = z.object({
 /** @deprecated Prefer monthlyStatisticsResponseSchema */
 export const monthlyEmotionStatisticsResponseSchema =
   monthlyStatisticsResponseSchema;
+
+export const weeklyReportPeriodSchema = statisticsPeriodSchema;
+
+export const weeklyReportEmotionSchema = dominantEmotionSchema;
+
+export const weeklyReportDailyScoreSchema = dailyEmotionScoreSchema;
+
+export const weeklyReportEmotionDistributionSchema =
+  emotionDistributionItemSchema;
+
+export const weeklyReportTopTagSchema = z.object({
+  tagId: z.number().int().positive(),
+  tagName: z.string(),
+  count: z.number().int().nonnegative(),
+});
+
+export const weeklyReportAiInsightSchema = z.object({
+  analysisId: z.number().int().positive(),
+  status: z.enum([
+    "NONE",
+    "REQUESTED",
+    "PROCESSING",
+    "READY",
+    "SUCCESS",
+    "FAILED",
+    "INVALIDATED",
+  ]),
+  title: z.string(),
+  content: z.string(),
+});
+
+export const recentWeeklyReportSchema = recentReportSchema;
+
+export const weeklyReportDetailDataSchema = z.object({
+  period: weeklyReportPeriodSchema,
+  recordedDays: z.number().int().nonnegative(),
+  totalRecordedDays: z.number().int().nonnegative(),
+  dominantEmotion: weeklyReportEmotionSchema.nullable(),
+  dailyScores: z.array(weeklyReportDailyScoreSchema),
+  emotionDistribution: z.array(weeklyReportEmotionDistributionSchema),
+  topTags: z.array(weeklyReportTopTagSchema),
+  aiInsight: weeklyReportAiInsightSchema.nullable(),
+  recentReports: z.array(recentWeeklyReportSchema),
+  hasMoreReports: z.boolean(),
+});
+
+export const weeklyReportDetailResponseSchema = z.object({
+  success: z.boolean(),
+  code: z.string(),
+  message: z.string(),
+  data: weeklyReportDetailDataSchema,
+  requestId: z.string(),
+});
 
 /** @deprecated Removed from monthly STAT response */
 export const monthlyScoreDaySchema = z.object({

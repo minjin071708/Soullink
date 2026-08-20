@@ -473,6 +473,7 @@
     },
     "weekly": {
       "periodLabel": "7 хоногийн тайлан",
+      "metaLine": "{{dateRange}} · {{count}} өдөр бичсэн",
       "headlineDominant": "Энэ долоо хоногт чи илүү {{emotion}} байлаа",
       "headlineEmpty": "Энэ долоо хоногт тэмдэглэл хараахан байхгүй",
       "headlineFallback": "Энэ долоо хоногийн сэтгэл хөдлөлийн тойм",
@@ -487,6 +488,7 @@
     "monthly": {
       "periodLabel": "Сарын тайлан",
       "periodLabelMonth": "{{month}}-р сарын тайлан",
+      "metaLine": "{{dateRange}} · {{count}} өдөр бичсэн",
       "headlineDominant": "Энэ сар чи илүү {{emotion}} байлаа",
       "headlineEmpty": "Энэ сар тэмдэглэл хараахан байхгүй",
       "headlineAverage": "Энэ сарын дундаж оноо {{score}}",

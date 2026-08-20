@@ -24,18 +24,17 @@ export function EmotionDonutChart({
           value: 1,
           color: INSIGHT_COLORS.neutral,
           stroke: "#FFFFFF",
-          strokeWidth: 3,
+          strokeWidth: 4,
           focused: true,
         },
       ];
     }
 
-    return active.map((item, index) => ({
+    return active.map((item) => ({
       value: item.count,
       color: item.color,
       stroke: "#FFFFFF",
-      strokeWidth: 3,
-      focused: index === 0,
+      strokeWidth: 4,
     }));
   }, [shares]);
 
@@ -45,14 +44,12 @@ export function EmotionDonutChart({
         <PieChart
           data={chartData}
           donut
-          radius={78}
-          innerRadius={52}
+          radius={74}
+          innerRadius={48}
           isAnimated
           animationDuration={900}
-          focusOnPress
-          sectionAutoFocus
           strokeColor="#FFFFFF"
-          strokeWidth={3}
+          strokeWidth={4}
           innerCircleColor={INSIGHT_COLORS.card}
           centerLabelComponent={() => (
             <View style={styles.centerLabel}>
@@ -65,7 +62,9 @@ export function EmotionDonutChart({
       </View>
 
       <View style={styles.legend}>
-        {shares.map((item) => (
+        {shares
+          .filter((item) => item.count > 0)
+          .map((item) => (
           <View key={item.key} style={styles.legendRow}>
             <View style={[styles.dot, { backgroundColor: item.color }]} />
             <Text style={styles.legendLabel} numberOfLines={1}>
@@ -86,8 +85,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   chartWrap: {
-    width: 168,
-    height: 168,
+    width: 156,
+    height: 156,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -109,7 +108,7 @@ const styles = StyleSheet.create({
   },
   legend: {
     flex: 1,
-    gap: 10,
+    gap: 14,
   },
   legendRow: {
     flexDirection: "row",
@@ -123,13 +122,13 @@ const styles = StyleSheet.create({
   },
   legendLabel: {
     flex: 1,
-    fontSize: 13,
-    color: INSIGHT_COLORS.title,
+    fontSize: 14,
+    color: "#6B6B78",
   },
   legendCount: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
-    color: INSIGHT_COLORS.title,
+    color: "#1D1D1F",
     minWidth: 16,
     textAlign: "right",
   },

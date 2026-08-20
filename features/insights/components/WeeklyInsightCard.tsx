@@ -1,128 +1,68 @@
 import { EmotionDonutChart } from "@/features/insights/components/EmotionDonutChart";
-import {
-  AiObservationSection,
-  PreviousReportsSection,
-} from "@/features/insights/components/InsightSections";
+import { PreviousReportsSection } from "@/features/insights/components/InsightSections";
 import { INSIGHT_COLORS } from "@/features/insights/constants/insights.constants";
 import type { WeeklyInsightCardModel } from "@/features/insights/types/insights.types";
+import { mapWeeklyEmotionStatisticsToCard } from "@/features/insights/utils/mapWeeklyEmotionStatistics";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Image } from "expo-image";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-
-const INSIGHT_MASCOT = require("@/assets/mascotImages/insightMascot.png");
+import { StyleSheet, Text, View } from "react-native";
 
 type WeeklyInsightCardProps = {
   data: WeeklyInsightCardModel;
+  metaKey?: "insights.weekly.metaLine" | "insights.monthly.metaLine";
 };
 
-export function WeeklyInsightCard({ data }: WeeklyInsightCardProps) {
+export function WeeklyInsightCard({
+  data,
+  metaKey = "insights.weekly.metaLine",
+}: WeeklyInsightCardProps) {
   const { t } = useTranslation();
+  const [selectedData, setSelectedData] =
+    useState<WeeklyInsightCardModel | null>(null);
+
+  useEffect(() => {
+    setSelectedData(null);
+  }, [data]);
+
+  const displayed = selectedData ?? data;
 
   return (
     <View>
       <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <Image
-            source={INSIGHT_MASCOT}
-            style={styles.mascot}
-            contentFit="contain"
-            accessibilityLabel="AI Insight mascot"
-          />
-
-          <View style={styles.headerCopy}>
-            <View style={styles.periodRow}>
-              <Ionicons
-                name="calendar"
-                size={14}
-                color={INSIGHT_COLORS.accent}
-              />
-              <Text style={styles.periodLabel}>{data.periodLabel}</Text>
-            </View>
-            <Text style={styles.dateRange}>{data.dateRangeLabel}</Text>
-          </View>
-        </View>
-
-        <Text style={styles.headline}>{data.headline}</Text>
-
-        <View style={styles.metricRow}>
-          <View style={styles.metricBox}>
-            <Text style={styles.metricTitle}>
-              {t("insights.weekly.recordedDays")}
-            </Text>
-            <Text style={styles.metricValue}>{data.recordedDays}</Text>
-            <Text style={styles.metricHint}>
-              {t("insights.weekly.withinWeek")}
-            </Text>
-          </View>
-          <View style={styles.metricBox}>
-            <Text style={styles.metricTitle}>
-              {t("insights.weekly.totalRecordedDays")}
-            </Text>
-            <Text style={styles.metricValue}>{data.totalRecordedDays}</Text>
-            <Text style={styles.metricHint}>
-              {t("insights.weekly.totalEntries")}
-            </Text>
-          </View>
-        </View>
+        <Text style={styles.meta}>
+          {t(metaKey, {
+            dateRange: displayed.dateRangeLabel,
+            count: displayed.recordedDays,
+          })}
+        </Text>
+        <Text style={styles.headline}>{displayed.headline}</Text>
 
         <View style={styles.chartSection}>
           <EmotionDonutChart
-            shares={data.emotionShares}
-            totalDays={data.totalDays}
+            shares={displayed.emotionShares}
+            totalDays={displayed.totalDays}
           />
         </View>
 
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryBox}>
-            <Ionicons name="leaf" size={20} color={data.dominantEmotion.color} />
-            <View style={styles.summaryCopy}>
-              <Text
-                style={[
-                  styles.summaryTitle,
-                  { color: data.dominantEmotion.color },
-                ]}
-              >
-                {data.dominantEmotion.label}
-              </Text>
-              <Text style={styles.summaryValue}>
-                {data.dominantEmotion.daysLabel}
-              </Text>
-            </View>
+        <View style={styles.observationBox}>
+          <View style={styles.observationTitleRow}>
+            <Ionicons name="sparkles" size={15} color="#7388F2" />
+            <Text style={styles.observationTitle}>
+              {t("insights.aiObservation")}
+            </Text>
           </View>
-
-          <View style={styles.summaryBox}>
-            <Ionicons
-              name="document-text-outline"
-              size={20}
-              color={INSIGHT_COLORS.sad}
-            />
-            <View style={styles.summaryCopy}>
-              <Text style={styles.summaryValue}>{data.recordedDays}</Text>
-              <Text style={styles.summaryCaption}>
-                {t("insights.weekly.journalCaption")}
-              </Text>
-            </View>
-          </View>
+          <Text style={styles.observationBody}>{displayed.aiObservation}</Text>
         </View>
       </View>
 
-      <AiObservationSection
-        observation={data.aiObservation}
-        items={data.observations}
-      />
-
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t("insights.detailReport")}
-        style={({ pressed }) => [styles.detailButton, pressed && styles.pressed]}
-      >
-        <Ionicons name="stats-chart" size={18} color="#FFFFFF" />
-        <Text style={styles.detailButtonText}>{t("insights.detailReport")}</Text>
-      </Pressable>
-
       {data.previousReports.length > 0 ? (
-        <PreviousReportsSection reports={data.previousReports} />
+        <PreviousReportsSection
+          reports={data.previousReports}
+          onPressReport={(_report, detail) => {
+            setSelectedData(mapWeeklyEmotionStatisticsToCard(detail, t));
+          }}
+        />
       ) : null}
     </View>
   );
@@ -131,140 +71,54 @@ export function WeeklyInsightCard({ data }: WeeklyInsightCardProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: INSIGHT_COLORS.card,
-    borderRadius: 28,
-    paddingHorizontal: 18,
-    paddingTop: 16,
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 20,
     paddingBottom: 18,
-    shadowColor: "#2A2A4A",
+    shadowColor: "#1D1D1F",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.07,
-    shadowRadius: 18,
-    elevation: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
   },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 8,
-    marginBottom: 8,
+  meta: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#9A9AA8",
+    marginBottom: 10,
   },
-  mascot: {
-    width: 108,
-    height: 100,
-    marginLeft: -4,
-    marginTop: -4,
+  headline: {
+    fontSize: 21,
+    lineHeight: 32,
+    fontWeight: "800",
+    color: "#1D1D1F",
+    letterSpacing: -0.5,
+    marginBottom: 18,
   },
-  headerCopy: {
-    flex: 1,
-    alignItems: "flex-end",
-    paddingTop: 8,
+  chartSection: {
+    marginBottom: 18,
   },
-  periodRow: {
+  observationBox: {
+    backgroundColor: "#F0F5FF",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  observationTitleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginBottom: 4,
+    marginBottom: 8,
   },
-  periodLabel: {
-    fontSize: 13,
+  observationTitle: {
+    fontSize: 14,
     fontWeight: "700",
-    color: INSIGHT_COLORS.accent,
+    color: "#7388F2",
   },
-  dateRange: {
-    fontSize: 13,
-    color: INSIGHT_COLORS.muted,
-  },
-  headline: {
-    fontSize: 23,
-    lineHeight: 31,
-    fontWeight: "800",
-    color: INSIGHT_COLORS.title,
-    letterSpacing: -0.4,
-    marginBottom: 14,
-  },
-  metricRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 14,
-  },
-  metricBox: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: INSIGHT_COLORS.border,
-    borderRadius: 14,
-    padding: 10,
-    backgroundColor: "#FCFBFD",
-  },
-  metricTitle: {
-    fontSize: 12,
-    color: INSIGHT_COLORS.muted,
-    marginBottom: 4,
-  },
-  metricValue: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: INSIGHT_COLORS.title,
-  },
-  metricHint: {
-    marginTop: 2,
-    fontSize: 11,
-    color: INSIGHT_COLORS.muted,
-  },
-  chartSection: {
-    marginBottom: 16,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  summaryBox: {
-    flex: 1,
-    minHeight: 68,
-    borderWidth: 1,
-    borderColor: INSIGHT_COLORS.border,
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "#FCFBFD",
-  },
-  summaryCopy: {
-    flex: 1,
-  },
-  summaryTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 2,
-  },
-  summaryValue: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: INSIGHT_COLORS.title,
-  },
-  summaryCaption: {
-    marginTop: 1,
-    fontSize: 12,
-    fontWeight: "600",
-    color: INSIGHT_COLORS.muted,
-  },
-  detailButton: {
-    marginTop: 20,
-    minHeight: 54,
-    borderRadius: 999,
-    backgroundColor: INSIGHT_COLORS.accent,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  detailButtonText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  pressed: {
-    opacity: 0.85,
+  observationBody: {
+    fontSize: 14,
+    lineHeight: 22,
+    fontWeight: "400",
+    color: "#3A3A45",
   },
 });

@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   title: {
     maxWidth: 330,
     color: COLORS.text,
-    fontSize: 28,
+    fontSize: 24,
     lineHeight: 36,
     fontWeight: "800",
     letterSpacing: -0.5,
