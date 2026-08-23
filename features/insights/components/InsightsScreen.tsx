@@ -154,7 +154,11 @@ export function InsightsScreen() {
               <Text style={styles.stateHint}>{t("insights.daily.noDiaryHint")}</Text>
             </View>
           ) : (
-            <JournalDetailScreen diaryId={dayDiaryId} embedded />
+            <JournalDetailScreen
+              diaryId={dayDiaryId}
+              embedded
+              backgroundColor={INSIGHT_COLORS.background}
+            />
           )}
         </View>
       ) : (

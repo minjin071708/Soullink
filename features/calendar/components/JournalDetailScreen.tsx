@@ -24,7 +24,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const PAGE_BG = "#F4F1F8";
+const DEFAULT_PAGE_BG = "#F4F1F8";
 const CARD_BG = "#FFFFFF";
 const TEXT = "#1C1C1E";
 const MUTED = "#6C6C70";
@@ -42,6 +42,7 @@ type JournalDetailScreenProps = {
   diaryId?: number;
   /** When true, skip screen chrome so this can sit under Insights tabs. */
   embedded?: boolean;
+  backgroundColor?: string;
 };
 
 function isEmotionCode(value: string): value is EmotionCode {
@@ -89,6 +90,7 @@ function formatGeneratedAt(
 export function JournalDetailScreen({
   diaryId,
   embedded = false,
+  backgroundColor = DEFAULT_PAGE_BG,
 }: JournalDetailScreenProps) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -134,7 +136,7 @@ export function JournalDetailScreen({
 
   return (
     <Container
-      style={styles.safeArea}
+      style={[styles.safeArea, { backgroundColor }]}
       {...(embedded ? {} : { edges: ["top", "bottom"] as const })}
     >
       {embedded ? null : (
@@ -520,7 +522,7 @@ const CARD_SHADOW = {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PAGE_BG,
+    backgroundColor: DEFAULT_PAGE_BG,
   },
   header: {
     flexDirection: "row",

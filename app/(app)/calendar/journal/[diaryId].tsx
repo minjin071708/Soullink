@@ -15,5 +15,5 @@ export default function JournalDetailRoute() {
   const params = useLocalSearchParams<{ diaryId?: string | string[] }>();
   const diaryId = parseDiaryId(params.diaryId);
 
-  return <JournalDetailScreen diaryId={diaryId} />;
+  return <JournalDetailScreen diaryId={diaryId} backgroundColor="#F4F1F8" />;
 }
