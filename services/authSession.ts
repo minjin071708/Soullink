@@ -1,12 +1,12 @@
 import { refreshSession } from "@/api/sessionRefresh";
 import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
+    clearTokens,
+    getAccessToken,
+    getRefreshToken,
 } from "@/api/tokenManager";
 import {
-  getBiometricCapability,
-  promptBiometricUnlock,
+    getBiometricCapability,
+    promptBiometricUnlock,
 } from "@/services/biometricService";
 import { useAuthStore } from "@/store/authStore";
 import { useAppStore } from "@/store/use-language-store";
@@ -57,7 +57,7 @@ export async function unlockWithBiometric(): Promise<
   }
 
   const biometric = await promptBiometricUnlock(
-    "Unlock SoulLink to continue"
+    "Unlock SoulCity to continue"
   );
 
   if (!biometric.success) {

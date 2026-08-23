@@ -1,9 +1,9 @@
 
 import {
-  Toast,
-  ToastDescription,
-  ToastTitle,
-  useToast,
+    Toast,
+    ToastDescription,
+    ToastTitle,
+    useToast,
 } from "@/components/ui/toast";
 import { VStack } from '@/components/ui/vstack';
 import { useLogin } from "@/hooks/auth/useLogin";
@@ -16,15 +16,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -194,7 +194,7 @@ export default function EmailLoginScreen() {
                 source={LOGO_DEFAULT}
                 style={styles.logo}
                 resizeMode="contain"
-                accessibilityLabel="SoulLink"
+                accessibilityLabel="SoulCity"
               />
 </View>
 

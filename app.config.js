@@ -3,15 +3,15 @@ const appJson = require("./app.json");
 /** @type {import('expo/config').ExpoConfig} */
 const expo = {
   ...appJson.expo,
-  scheme: "soullink",
+  scheme: "SoulCity",
   ios: {
     ...appJson.expo.ios,
-    bundleIdentifier: "com.soullink.app",
+    bundleIdentifier: "com.SoulCity.app",
     usesAppleSignIn: true,
   },
   android: {
     ...appJson.expo.android,
-    package: "com.soullink.app",
+    package: "com.SoulCity.app",
   },
   plugins: [
     ...(appJson.expo.plugins ?? []).filter((plugin) => {
@@ -28,14 +28,14 @@ const expo = {
       "expo-audio",
       {
         microphonePermission:
-          "Allow SoulLink to record voice journals for transcription.",
+          "Allow SoulCity to record voice journals for transcription.",
       },
     ],
     [
       "expo-image-picker",
       {
         photosPermission:
-          "Allow SoulLink to access your photos for community posts.",
+          "Allow SoulCity to access your photos for community posts.",
         cameraPermission: false,
         microphonePermission: false,
       },

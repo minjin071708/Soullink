@@ -41,16 +41,37 @@
       "submit": "Sign up",
       "hasAccount": "Already have an account?",
       "login": "Log in"
+    },
+    "socialProfileSetup": {
+      "title": "Set up your profile",
+      "subtitle": "Add a nickname to continue. A photo is optional.",
+      "nickname": "Nickname",
+      "nicknamePlaceholder": "Enter nickname",
+      "nicknameRequired": "Enter a nickname.",
+      "nicknameLength": "Nickname must be 1–30 characters.",
+      "continue": "Continue",
+      "skipPhoto": "Skip photo",
+      "addPhoto": "Add photo",
+      "photoHint": "Tap to choose a photo",
+      "errorTitle": "Couldn't save profile",
+      "imageFailedTitle": "Photo wasn't uploaded",
+      "imageFailedMessage": "Your nickname was saved. Retry the photo or continue without it.",
+      "retryPhoto": "Retry photo",
+      "continueWithoutPhoto": "Continue without photo"
     }
   },
   "onboarding": {
-    "understand": {
-      "title": "UNDERSTAND YOUR ANXIETY",
-      "description": "Record your emotions and discover the triggers and patterns behind your anxious moments."
+    "discover": {
+      "title": "Welcome to SoulCity",
+      "description": "SoulCity is a safe, private space to work with your inner world — without hiding your feelings or judging yourself.\n\nThis is where you begin the journey of understanding yourself more clearly."
     },
-    "balance": {
-      "title": "NOTICE WHAT LIFTS YOU UP",
-      "description": "Remember your calm and happy moments, and learn what helps you feel emotionally balanced."
+    "analyze": {
+      "title": "Record. Notice. Don't judge yourself.",
+      "description": "When do you feel calm, and when do you feel vulnerable?\nWhat restores you, and what pulls you down again?\n\nBy regularly recording your feelings, experiences, and changes, you start to recognize repeating patterns and understand what you need.\n\nEvery feeling you have is trying to tell you something."
+    },
+    "help": {
+      "title": "From journaling to real insight",
+      "description": "AI brings together your repeating feelings, changes, and journal entries to help you write and reflect.\n\nWhen a professional psychologist uses these AI-gathered insights, they can support your patterns and progress more quickly and effectively.\n\nThat saves you time and money, helps you recognize the root of the issue, and makes your next step clearer."
     },
     "next": "Next",
     "start": "Let's Start"

@@ -1,11 +1,11 @@
 {
     "expo": {
-      "name": "Soullink",
-      "slug": "Soullink",
+      "name": "SoulCity",
+      "slug": "SoulCity",
       "version": "1.0.0",
       "orientation": "portrait",
       "icon": "./assets/images/icon.png",
-      "scheme": "soullink",
+      "scheme": "SoulCity",
       "userInterfaceStyle": "automatic",
       "newArchEnabled": true,
       "ios": {
@@ -30,7 +30,7 @@
         [
           "expo-audio",
           {
-            "microphonePermission": "Allow SoulLink to access your microphone for voice journaling.",
+            "microphonePermission": "Allow SoulCity to access your microphone for voice journaling.",
             "recordAudioAndroid": true
           }
         ],
@@ -38,7 +38,7 @@
           "expo-splash-screen",
           {
             "image": "./assets/images/logo_default.png",
-            "imageWidth": 260,
+            "imageWidth": 300,
             "backgroundColor": "#fffefa",
             "dark": {
               "backgroundColor": "#17181C"
@@ -50,7 +50,7 @@
         [
           "expo-local-authentication",
           {
-            "faceIDPermission": "Allow SoulLink to use Face ID to securely sign you in."
+            "faceIDPermission": "Allow SoulCity to use Face ID to securely sign you in."
           }
         ]
       ],

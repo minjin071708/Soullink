@@ -7,7 +7,9 @@ import {
 } from "@/services/socialAuth";
 import { useAuthStore } from "@/store/authStore";
 import {
+  clearSocialProfileSetupRequired,
   clearSocialSignupPending,
+  markSocialProfileSetupRequired,
   setSocialSignupPending,
 } from "@/store/socialSignupStore";
 import type { SocialProvider } from "@/types/authType";
@@ -15,7 +17,7 @@ import { getDeviceMeta } from "@/utils/deviceInfo";
 import { useMutation } from "@tanstack/react-query";
 
 export type SocialLoginResult =
-  | { kind: "authenticated" }
+  | { kind: "authenticated"; needsProfileSetup: boolean }
   | {
       kind: "signup_required";
       suggestedNickname: string | null;
@@ -72,7 +74,16 @@ export const useSocialLogin = () => {
           setAuthenticated(true);
         }
 
-        return { kind: "authenticated" };
+        const needsProfileSetup = response.data.newMember === true;
+        if (needsProfileSetup) {
+          markSocialProfileSetupRequired(
+            response.data.member?.nickname ?? null
+          );
+        } else {
+          clearSocialProfileSetupRequired();
+        }
+
+        return { kind: "authenticated", needsProfileSetup };
       } catch (error) {
         if (error instanceof SocialAuthCancelledError) {
           return { kind: "cancelled" };

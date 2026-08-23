@@ -2,7 +2,7 @@ import * as Crypto from "expo-crypto";
 
 /**
  * Apple Sign In nonce pair.
- * - `rawNonce`: sent to SoulLink `/auth/social/login` (never log or persist)
+ * - `rawNonce`: sent to SoulCity `/auth/social/login` (never log or persist)
  * - `hashedNonce`: SHA-256 hex, passed to AppleAuthentication.signInAsync
  */
 export type AppleNoncePair = {

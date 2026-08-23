@@ -33,7 +33,7 @@ export type BiometricPromptResult =
   | { success: false; reason: "cancel" | "fail" | "unavailable" };
 
 export async function promptBiometricUnlock(
-  promptMessage = "Unlock SoulLink"
+  promptMessage = "Unlock SoulCity"
 ): Promise<BiometricPromptResult> {
   try {
     const capability = await getBiometricCapability();

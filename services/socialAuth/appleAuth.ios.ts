@@ -1,11 +1,11 @@
-import * as AppleAuthentication from "expo-apple-authentication";
 import { createAppleNoncePair } from "@/utils/appleNonce";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { SocialAuthCancelledError } from "./errors";
 
 export type AppleCredential = {
   provider: "APPLE";
   idToken: string;
-  /** Raw nonce (not hashed). Send to SoulLink; never log or persist. */
+  /** Raw nonce (not hashed). Send to SoulCity; never log or persist. */
   nonce: string;
   displayName: string | null;
 };

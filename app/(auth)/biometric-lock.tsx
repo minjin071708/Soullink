@@ -1,6 +1,6 @@
 import {
-  clearLocalSession,
-  unlockWithBiometric,
+    clearLocalSession,
+    unlockWithBiometric,
 } from "@/services/authSession";
 import { useAuthStore } from "@/store/authStore";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -8,11 +8,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, type Href } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -71,7 +71,7 @@ export default function BiometricLockScreen() {
             <Ionicons name="finger-print" size={56} color={APPLE_INK} />
           </View>
 
-          <Text style={styles.title}>Unlock SoulLink</Text>
+          <Text style={styles.title}>Unlock SoulCity</Text>
           <Text style={styles.subtitle}>
             Confirm it&apos;s you with fingerprint or Face ID
           </Text>

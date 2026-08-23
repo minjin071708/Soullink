@@ -1,9 +1,9 @@
+import type { DeviceType } from "@/types/authType";
 import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
-import type { DeviceType } from "@/types/authType";
 
-const DEVICE_ID_KEY = "soullink_device_id";
+const DEVICE_ID_KEY = "SoulCity_device_id";
 
 export function getDeviceType(): DeviceType {
   return Platform.OS === "ios" ? "IOS" : "ANDROID";

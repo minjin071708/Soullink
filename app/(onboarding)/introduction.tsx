@@ -19,29 +19,29 @@ import { useAppStore } from "@/store/use-language-store";
 
 type Slide = {
   id: string;
-  mood: "anxious" | "happy";
   image: ImageSourcePropType;
   titleKey: string;
   descriptionKey: string;
-  bgColor: string;
 };
 
 const SLIDES: Slide[] = [
   {
-    id: "understand",
-    mood: "anxious",
-    image: require("@/assets/images/onboardAnxiety.png"),
-    titleKey: "onboarding.understand.title",
-    descriptionKey: "onboarding.understand.description",
-    bgColor: "#f3dff5",
+    id: "discover",
+    image: require("@/assets/images/onboarding1.png"),
+    titleKey: "onboarding.discover.title",
+    descriptionKey: "onboarding.discover.description",
   },
   {
-    id: "balance",
-    mood: "happy",
-    image: require("@/assets/images/onboardHappy.png"),
-    titleKey: "onboarding.balance.title",
-    descriptionKey: "onboarding.balance.description",
-    bgColor: "#F5ECFF",
+    id: "analyze",
+    image: require("@/assets/images/onboarding2.png"),
+    titleKey: "onboarding.analyze.title",
+    descriptionKey: "onboarding.analyze.description",
+  },
+  {
+    id: "help",
+    image: require("@/assets/images/onboarding3.png"),
+    titleKey: "onboarding.help.title",
+    descriptionKey: "onboarding.help.description",
   },
 ];
 
@@ -109,7 +109,7 @@ export default function IntroductionScreen() {
           itemVisiblePercentThreshold: 60,
         }}
         renderItem={({ item }) => (
-          <View style={{ width: cardWidth, height: cardHeight, backgroundColor: item.bgColor }}>
+          <View style={{ width: cardWidth, height: cardHeight, }}>
             <Image
               source={item.image}
               style={StyleSheet.absoluteFillObject}
@@ -172,7 +172,7 @@ export default function IntroductionScreen() {
                         <Ionicons
                           name="arrow-up"
                           size={22}
-                          color="#1d1d1f"
+                          color="#FFFFFF"
                           style={styles.nextArrow}
                         />
                       </View>
@@ -219,15 +219,15 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     width: 24,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#7388F2",
   },
   dotInactive: {
     width: 8,
-    backgroundColor: "rgba(255,255,255,0.4)",
+    backgroundColor: "rgba(114, 134, 201, 0.4)",
   },
   title: {
     maxWidth: 320,
-    color: "#FFFFFF",
+    color: "#444444",
     fontSize: 32,
     lineHeight: 38,
     fontWeight: "900",
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   description: {
     maxWidth: 320,
     marginTop: 14,
-    color: "rgba(255,255,255,0.9)",
+    color: "rgb(68, 67, 67)",
     fontSize: 15,
     lineHeight: 22,
     fontWeight: "500",
@@ -250,14 +250,14 @@ const styles = StyleSheet.create({
     marginRight: 14,
     fontSize: 16,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: "#7388F2",
   },
   nextRingOuter: {
     width: 64,
     height: 64,
     borderRadius: 32,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    borderColor: "rgba(148, 173, 253, 0.5)",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "transparent",
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 27,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.5)",
+    borderColor: "rgba(88, 126, 252, 0.5)",
     alignItems: "center",
     justifyContent: "center",
     
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#7388F2",
     alignItems: "center",
     justifyContent: "center",
   },

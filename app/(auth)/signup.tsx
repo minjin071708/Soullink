@@ -41,7 +41,7 @@ export default function SignupScreen() {
               source={SIGNUP_LOGO}
               style={styles.logo}
               resizeMode="contain"
-              accessibilityLabel="SoulLink"
+              accessibilityLabel="SoulCity"
             />
             <Text style={styles.subtitle}>{t("auth.signup.subtitle")}</Text>
           </View>

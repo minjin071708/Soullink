@@ -1,4 +1,5 @@
 import { useAuthBootstrap } from "@/hooks/auth/useAuthBootstrap";
+import { isSocialProfileSetupRequired } from "@/store/socialSignupStore";
 import { useAppStore } from "@/store/use-language-store";
 import { Image } from "expo-image";
 import { Redirect } from "expo-router";
@@ -20,7 +21,7 @@ export default function IndexScreen() {
           source={BOOT_IMAGE}
           style={styles.bootImage}
           contentFit="cover"
-          accessibilityLabel="SoulLink"
+          accessibilityLabel="SoulCity"
         />
       </View>
     );
@@ -39,6 +40,9 @@ export default function IndexScreen() {
   }
 
   if (status === "authenticated") {
+    if (isSocialProfileSetupRequired()) {
+      return <Redirect href="/(auth)/social-profile-setup" />;
+    }
     return <Redirect href="/(tabs)" />;
   }
 

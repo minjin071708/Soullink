@@ -4,6 +4,7 @@ import { useAuthStore } from "@/store/authStore";
 import {
   clearSocialSignupPending,
   getSocialSignupPending,
+  markSocialProfileSetupRequired,
 } from "@/store/socialSignupStore";
 import { getDeviceMeta } from "@/utils/deviceInfo";
 import { useMutation } from "@tanstack/react-query";
@@ -46,12 +47,19 @@ export const useSocialSignup = () => {
       });
 
       await saveTokens(response.data.accessToken, response.data.refreshToken);
+
+      const suggestedNickname =
+        response.data.member?.nickname ?? pending.suggestedNickname ?? null;
       clearSocialSignupPending();
 
       if (response.data.member) {
         setMember(response.data.member);
       } else {
         setAuthenticated(true);
+      }
+
+      if (response.data.newMember !== false) {
+        markSocialProfileSetupRequired(suggestedNickname);
       }
 
       return response;

@@ -38,3 +38,30 @@ export function getSocialSignupPending(): SocialSignupPending | null {
 export function clearSocialSignupPending(): void {
   pending = null;
 }
+
+/**
+ * In-memory only. Marks a newly created social member who still needs
+ * nickname (required) + optional photo setup before landing on Home.
+ */
+let socialProfileSetupRequired = false;
+let suggestedProfileNickname: string | null = null;
+
+export function markSocialProfileSetupRequired(
+  nickname?: string | null
+): void {
+  socialProfileSetupRequired = true;
+  suggestedProfileNickname = nickname?.trim() ? nickname.trim() : null;
+}
+
+export function isSocialProfileSetupRequired(): boolean {
+  return socialProfileSetupRequired;
+}
+
+export function getSuggestedSocialProfileNickname(): string | null {
+  return suggestedProfileNickname;
+}
+
+export function clearSocialProfileSetupRequired(): void {
+  socialProfileSetupRequired = false;
+  suggestedProfileNickname = null;
+}

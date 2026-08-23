@@ -171,8 +171,12 @@ export default function TermsAgreementScreen() {
         marketingAgree,
       },
       {
-        onSuccess: () => {
-          router.replace("/(tabs)");
+        onSuccess: (response) => {
+          if (response.data.newMember === false) {
+            router.replace("/(tabs)");
+            return;
+          }
+          router.replace("/(auth)/social-profile-setup");
         },
         onError: (error) => {
           if (error instanceof SocialSignupSessionExpiredError) {

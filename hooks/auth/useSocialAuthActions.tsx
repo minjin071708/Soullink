@@ -15,6 +15,8 @@ import { router, type Href } from "expo-router";
 import { useCallback } from "react";
 
 const TERMS_HREF = "/(auth)/terms" as Href;
+const SOCIAL_PROFILE_SETUP_HREF = "/(auth)/social-profile-setup" as Href;
+const HOME_HREF = "/(tabs)" as Href;
 
 const ERROR_TITLE: Record<Language, string> = {
   EN: "Sign-in failed",
@@ -69,7 +71,12 @@ export function useSocialAuthActions() {
           return;
         }
 
-        router.replace("/(tabs)");
+        if (result.needsProfileSetup) {
+          router.replace(SOCIAL_PROFILE_SETUP_HREF);
+          return;
+        }
+
+        router.replace(HOME_HREF);
       } catch (error) {
         if (error instanceof SocialAuthConfigError) {
           showError(error.message);

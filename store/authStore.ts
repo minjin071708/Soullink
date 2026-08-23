@@ -1,3 +1,4 @@
+import { clearSocialProfileSetupRequired } from "@/store/socialSignupStore";
 import type { MemberType } from "@/types/authType";
 import { create } from "zustand";
 
@@ -50,11 +51,13 @@ export const useAuthStore = create<AuthStoreType>((set) => ({
   setHasCompletedBootstrap: (value) =>
     set({ hasCompletedBootstrap: value }),
 
-  clearAuth: () =>
+  clearAuth: () => {
+    clearSocialProfileSetupRequired();
     set({
       member: null,
       isAuthenticated: false,
       accessToken: null,
       status: "unauthenticated",
-    }),
+    });
+  },
 }));

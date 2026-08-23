@@ -4,14 +4,14 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { BlurView } from "expo-blur";
 import { router, type Href } from "expo-router";
 import {
-  ActivityIndicator,
-  Image,
-  ImageBackground,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Image,
+    ImageBackground,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -83,7 +83,7 @@ export default function LoginScreen() {
               source={LOGIN_LOGO_WHITE}
               style={styles.logo}
               resizeMode="contain"
-              accessibilityLabel="SoulLink"
+              accessibilityLabel="SoulCity"
             />
           </View>
 
