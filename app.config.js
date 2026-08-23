@@ -6,12 +6,12 @@ const expo = {
   scheme: "SoulCity",
   ios: {
     ...appJson.expo.ios,
-    bundleIdentifier: "com.SoulCity.app",
+    bundleIdentifier: "com.soulcity.app",
     usesAppleSignIn: true,
   },
   android: {
     ...appJson.expo.android,
-    package: "com.SoulCity.app",
+    package: "com.soulcity.app",
   },
   plugins: [
     ...(appJson.expo.plugins ?? []).filter((plugin) => {

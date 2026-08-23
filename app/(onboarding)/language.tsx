@@ -51,7 +51,7 @@ const LANGUAGES: LanguageItem[] = [
 
 const TIP_BY_LANGUAGE: Record<Language, string> = {
   EN: "You can change this later in Settings",
-  MN: "Үүнийг дараа Settings-ээс өөрчилж болно",
+  MN: "дараа нь Settings-ээс өөрчилж болно",
   KO: "나중에 설정에서 변경할 수 있습니다",
 };
 

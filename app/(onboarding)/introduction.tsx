@@ -116,69 +116,70 @@ export default function IntroductionScreen() {
               contentFit="cover"
             />
 
-            <View
-              style={[
-                styles.overlay,
-                {
-                  paddingTop: insets.top + 24,
-                  paddingBottom: Math.max(insets.bottom, 16) + 16,
-                },
-              ]}
-            >
-              <View style={styles.copyArea}>
-                <Text style={styles.title}>{t(item.titleKey)}</Text>
-                <Text style={styles.description}>
-                  {t(item.descriptionKey)}
-                </Text>
-              </View>
-
-              <View style={styles.footer}>
-                <View style={styles.dots}>
-                  {SLIDES.map((slide, index) => (
-                    <View
-                      key={slide.id}
-                      style={[
-                        styles.dot,
-                        index === activeIndex
-                          ? styles.dotActive
-                          : styles.dotInactive,
-                      ]}
-                    />
-                  ))}
+            <View style={styles.overlay}>
+              <View
+                style={[
+                  styles.whiteSheet,
+                  {
+                    paddingBottom: Math.max(insets.bottom, 16) + 16,
+                  },
+                ]}
+              >
+                <View style={styles.copyArea}>
+                  <Text style={styles.title}>{t(item.titleKey)}</Text>
+                  <Text style={styles.description}>
+                    {t(item.descriptionKey)}
+                  </Text>
                 </View>
 
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    isLastSlide
-                      ? t("onboarding.start")
-                      : t("onboarding.next")
-                  }
-                  onPress={handleNext}
-                  style={({ pressed }) => [
-                    styles.nextButton,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <Text style={styles.nextLabel}>
-                    {isLastSlide
-                      ? t("onboarding.start")
-                      : t("onboarding.next")}
-                  </Text>
+                <View style={styles.footer}>
+                  <View style={styles.dots}>
+                    {SLIDES.map((slide, index) => (
+                      <View
+                        key={slide.id}
+                        style={[
+                          styles.dot,
+                          index === activeIndex
+                            ? styles.dotActive
+                            : styles.dotInactive,
+                        ]}
+                      />
+                    ))}
+                  </View>
 
-                  <View style={styles.nextRingOuter}>
-                    <View style={styles.nextRingInner}>
-                      <View style={styles.nextCircle}>
-                        <Ionicons
-                          name="arrow-up"
-                          size={22}
-                          color="#FFFFFF"
-                          style={styles.nextArrow}
-                        />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      isLastSlide
+                        ? t("onboarding.start")
+                        : t("onboarding.next")
+                    }
+                    onPress={handleNext}
+                    style={({ pressed }) => [
+                      styles.nextButton,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text style={styles.nextLabel}>
+                      {isLastSlide
+                        ? t("onboarding.start")
+                        : t("onboarding.next")}
+                    </Text>
+
+                    <View style={styles.nextRingOuter}>
+                      <View style={styles.nextRingInner}>
+                        <View style={styles.nextCircle}>
+                          <Ionicons
+                            name="arrow-up"
+                            size={22}
+                            color="#FFFFFF"
+                            style={styles.nextArrow}
+                          />
+                        </View>
                       </View>
                     </View>
-                  </View>
-                </Pressable>
+                  </Pressable>
+                </View>
               </View>
             </View>
           </View>
@@ -199,7 +200,13 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: "flex-end",
+  },
+  whiteSheet: {
+    backgroundColor: "rgba(255, 255, 255, 0.67)",
+    borderTopLeftRadius: 44,
+    borderTopRightRadius: 44,
     paddingHorizontal: 24,
+    paddingTop: 28,
   },
   copyArea: {
     paddingBottom: 28,
@@ -219,27 +226,30 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     width: 24,
-    backgroundColor: "#7388F2",
+    backgroundColor: "#304b71",
   },
   dotInactive: {
     width: 8,
     backgroundColor: "rgba(114, 134, 201, 0.4)",
   },
   title: {
-    maxWidth: 320,
-    color: "#444444",
-    fontSize: 32,
+    maxWidth: 280,
+    color: "#304b71",
+    fontSize: 30,
     lineHeight: 38,
     fontWeight: "900",
     letterSpacing: -0.7,
+    textAlign: "center",
+    marginHorizontal: "auto",
   },
   description: {
-    maxWidth: 320,
-    marginTop: 14,
-    color: "rgb(68, 67, 67)",
-    fontSize: 15,
+    maxWidth: 300,
+    marginTop: 20,
+    color: "#304b71",
+    fontSize: 16,
     lineHeight: 22,
     fontWeight: "500",
+    marginHorizontal: "auto",
   },
   nextButton: {
     flexDirection: "row",
@@ -250,7 +260,7 @@ const styles = StyleSheet.create({
     marginRight: 14,
     fontSize: 16,
     fontWeight: "600",
-    color: "#7388F2",
+    color: "#304b71",
   },
   nextRingOuter: {
     width: 64,
@@ -268,7 +278,7 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 27,
     borderWidth: 1,
-    borderColor: "rgba(88, 126, 252, 0.5)",
+    borderColor: "rgba(51, 85, 158, 0.5)",
     alignItems: "center",
     justifyContent: "center",
     
@@ -277,7 +287,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#7388F2",
+    backgroundColor: "#304b71",
     alignItems: "center",
     justifyContent: "center",
   },
