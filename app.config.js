@@ -19,11 +19,20 @@ const expo = {
       return (
         name !== "@react-native-google-signin/google-signin" &&
         name !== "expo-apple-authentication" &&
-        name !== "expo-audio"
+        name !== "expo-audio" &&
+        name !== "expo-build-properties"
       );
     }),
     "@react-native-google-signin/google-signin",
     "expo-apple-authentication",
+    [
+      "expo-build-properties",
+      {
+        android: {
+          usesCleartextTraffic: true,
+        },
+      },
+    ],
     [
       "expo-audio",
       {
