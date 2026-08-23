@@ -3,7 +3,7 @@ const appJson = require("./app.json");
 /** @type {import('expo/config').ExpoConfig} */
 const expo = {
   ...appJson.expo,
-  scheme: "SoulCity",
+  scheme: "soulcity",
   ios: {
     ...appJson.expo.ios,
     bundleIdentifier: "com.soulcity.app",
