@@ -27,6 +27,7 @@ const expo = {
   android: {
     ...appJson.expo.android,
     package: "com.soulcity.app",
+    googleServicesFile: "./google-services.json",
   },
 
   plugins: [

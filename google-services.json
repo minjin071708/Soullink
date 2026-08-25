@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "65274382934",
+    "project_id": "soulcity-6475a",
+    "storage_bucket": "soulcity-6475a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:65274382934:android:6c24754504f933408289f7",
+        "android_client_info": {
+          "package_name": "com.soulcity.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAazSMFbJcncR-pSbS6dCV3JWBCwi8YfmY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

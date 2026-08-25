@@ -302,19 +302,6 @@
         "retry": "Try again"
       }
     },
-    "result": {
-      "title": "Journal result",
-      "missingIdTitle": "Journal not found",
-      "missingIdBody": "We could not find a journal to show. Start a new entry from Home.",
-      "loading": "Loading your journal analysis...",
-      "errorTitle": "Could not load result",
-      "errorBody": "Something went wrong while loading your journal result.",
-      "apiTodo": "Could not load GET api/v1/emotion-diaries/:diaryId.",
-      "successTitle": "Journal saved",
-      "successBody": "Diary {{diaryId}} was created successfully.",
-      "analysisTodo": "AI analysis will appear here once the result API is connected.",
-      "goHome": "Back to Home"
-    },
     "success": {
       "successBadge": "Journal saved",
       "successTitle": "You made time for yourself and took one step forward",

@@ -1,7 +1,32 @@
 import { registerPushDeviceApi } from "@/api/pushNotificationApi";
+import { getAccessToken } from "@/api/tokenManager";
+import { dailyAnalysisReadyPayloadSchema } from "@/schemas/pushNotificationSchema";
 import { createPushDeviceRegistration } from "@/services/pushNotificationService";
 import { useAuthStore } from "@/store/authStore";
+import * as Notifications from "expo-notifications";
+import { router } from "expo-router";
 import { useEffect, useRef } from "react";
+import { AppState } from "react-native";
+
+function openDailyAnalysisFromNotification(data: unknown) {
+  const parsed = dailyAnalysisReadyPayloadSchema.safeParse(data);
+  if (!parsed.success) {
+    if (__DEV__) {
+      console.warn(
+        "Invalid daily analysis notification payload:",
+        parsed.error.flatten()
+      );
+    }
+    return;
+  }
+
+  router.push({
+    pathname: "/calendar/analysis/[date]",
+    params: {
+      date: parsed.data.emotionDate,
+    },
+  });
+}
 
 /**
  * Registers this install for push after auth bootstrap and login.
@@ -13,56 +38,98 @@ export function usePushNotificationRegistration() {
   );
   const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
   const accessToken = useAuthStore((state) => state.accessToken);
-  const hasAttemptedPushRegistrationRef = useRef(false);
+  const hasSucceededRef = useRef(false);
+  const inFlightRef = useRef(false);
+  const handledLastResponseRef = useRef(false);
 
   useEffect(() => {
-    if (!isLoggedIn || !accessToken) {
-      hasAttemptedPushRegistrationRef.current = false;
+    if (!isLoggedIn) {
+      hasSucceededRef.current = false;
+      inFlightRef.current = false;
+      handledLastResponseRef.current = false;
     }
-  }, [isLoggedIn, accessToken]);
+  }, [isLoggedIn]);
 
   useEffect(() => {
-    if (
-      !hasCompletedBootstrap ||
-      !isLoggedIn ||
-      !accessToken ||
-      hasAttemptedPushRegistrationRef.current
-    ) {
+    if (!hasCompletedBootstrap || !isLoggedIn) {
       return;
     }
 
-    hasAttemptedPushRegistrationRef.current = true;
+    const register = async () => {
+      if (hasSucceededRef.current || inFlightRef.current) {
+        return;
+      }
 
-    let cancelled = false;
+      inFlightRef.current = true;
 
-    const initializePushNotifications = async () => {
       try {
-        const registration = await createPushDeviceRegistration();
-
-        if (!registration || cancelled) {
+        const token = accessToken ?? (await getAccessToken());
+        if (!token) {
+          if (__DEV__) {
+            console.warn("Push registration skipped: no access token yet");
+          }
           return;
         }
 
-        await registerPushDeviceApi(registration);
+        if (__DEV__) {
+          console.log("Push registration: starting");
+        }
 
-        if (__DEV__) {
-          console.log("Push device registered:", {
-            deviceId: registration.deviceId,
-            deviceType: registration.deviceType,
-            hasPushToken: Boolean(registration.pushToken),
-          });
+        const registration = await createPushDeviceRegistration();
+        if (!registration) {
+          return;
         }
-      } catch (error) {
-        if (__DEV__) {
-          console.warn("Push notification registration failed:", error);
-        }
+
+        console.warn("TEMP EXPO PUSH TOKEN:", registration.pushToken);
+
+        await registerPushDeviceApi(registration);
+        hasSucceededRef.current = true;
+
+      } finally {
+        inFlightRef.current = false;
       }
     };
 
-    void initializePushNotifications();
+    void register();
+
+    const appStateSub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        void register();
+      }
+    });
 
     return () => {
-      cancelled = true;
+      appStateSub.remove();
     };
   }, [hasCompletedBootstrap, isLoggedIn, accessToken]);
+
+  useEffect(() => {
+    if (!hasCompletedBootstrap || !isLoggedIn) {
+      return;
+    }
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        openDailyAnalysisFromNotification(
+          response.notification.request.content.data
+        );
+      }
+    );
+
+    if (!handledLastResponseRef.current) {
+      handledLastResponseRef.current = true;
+      void Notifications.getLastNotificationResponseAsync().then((response) => {
+        if (!response) {
+          return;
+        }
+        openDailyAnalysisFromNotification(
+          response.notification.request.content.data
+        );
+      });
+    }
+
+    return () => {
+      subscription.remove();
+    };
+  }, [hasCompletedBootstrap, isLoggedIn]);
 }

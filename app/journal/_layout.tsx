@@ -22,13 +22,6 @@ export default function JournalLayout() {
         }}
       />
       <Stack.Screen
-        name="result"
-        options={{
-          title: t("journal.result.title"),
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
         name="success"
         options={{
           headerShown: false,

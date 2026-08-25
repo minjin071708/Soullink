@@ -31,17 +31,33 @@ async function configureAndroidNotificationChannel() {
 async function requestNotificationPermission() {
   const currentPermission = await Notifications.getPermissionsAsync();
 
-  if (currentPermission.status === "granted") {
+  if (currentPermission.granted || currentPermission.status === "granted") {
     return true;
   }
 
-  if (currentPermission.status === "denied") {
+  // Android can report "denied" before the first prompt. Only stop if the OS
+  // will not show the dialog again.
+  if (
+    currentPermission.status === "denied" &&
+    currentPermission.canAskAgain === false
+  ) {
+    if (__DEV__) {
+      console.warn(
+        "Push registration skipped: notification permission is denied. Enable it in system settings."
+      );
+    }
     return false;
   }
 
   const requestedPermission = await Notifications.requestPermissionsAsync();
 
-  return requestedPermission.status === "granted";
+  if (!requestedPermission.granted) {
+    if (__DEV__) {
+      console.warn("Push registration skipped: notification permission not granted");
+    }
+  }
+
+  return requestedPermission.granted;
 }
 
 function getEasProjectId() {
@@ -64,7 +80,11 @@ function getDeviceType(): PushDeviceType {
 
 export async function createPushDeviceRegistration(): Promise<PushDeviceRegistrationRequest | null> {
   if (!Device.isDevice) {
-    console.warn("Push notification requires a physical device.");
+    if (__DEV__) {
+      console.warn(
+        "Push registration skipped: Expo push tokens require a physical device."
+      );
+    }
 
     return null;
   }
@@ -85,6 +105,8 @@ export async function createPushDeviceRegistration(): Promise<PushDeviceRegistra
     }),
     getOrCreateInstallationId(),
   ]);
+
+
 
   return {
     pushToken: tokenResponse.data,

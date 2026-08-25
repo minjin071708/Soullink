@@ -1,4 +1,3 @@
-import "@/ReactotronConfig";
 import { DayNightProvider } from "@/components/day-night/DayNightProvider";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
@@ -23,6 +22,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
+import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -32,14 +32,21 @@ import "react-native-reanimated";
 
 void SplashScreen.preventAutoHideAsync();
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 export const unstable_settings = {
   anchor: "(tabs)",
 };
 
 export default function RootLayout() {
-  if (__DEV__) {
-    require("@/ReactotronConfig");
-  }
+
 
   const { isDark, mode, colors } = useAppTheme();
   const language = useAppStore((state) => state.language);
@@ -104,6 +111,8 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) {
     return null;
   }
+
+
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
