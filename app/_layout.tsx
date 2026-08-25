@@ -3,6 +3,7 @@ import { DayNightProvider } from "@/components/day-night/DayNightProvider";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { usePushNotificationRegistration } from "@/hooks/usePushNotificationRegistration";
 import i18n from "@/i18n";
 import { toI18nLanguage, useAppStore } from "@/store/use-language-store";
 import {
@@ -43,6 +44,7 @@ export default function RootLayout() {
   const { isDark, mode, colors } = useAppTheme();
   const language = useAppStore((state) => state.language);
   const hasHydrated = useAppStore((state) => state.hasHydrated);
+  usePushNotificationRegistration();
 
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
