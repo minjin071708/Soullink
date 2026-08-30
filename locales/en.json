@@ -516,6 +516,36 @@
     }
   },
   "calendar": {
+    "title": "Emotion calendar",
+    "back": "Back",
+    "mascot": "Calendar mascot",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "dayAccessibilityLabel": "Day {{day}}",
+    "weekdaysShort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "empty": {
+      "title": "No journal entry for this day",
+      "body": "Choose another day to see your emotion journals."
+    },
+    "preview": {
+      "viewJournal": "View journal",
+      "editJournal": "Edit journal",
+      "viewAiAnalysis": "View AI analysis"
+    },
+    "mood": {
+      "bad": "Bad",
+      "sad": "Sad",
+      "normal": "Okay",
+      "good": "Good",
+      "happy": "Happy"
+    },
+    "dailyAnalysis": {
+      "title": "Daily AI analysis",
+      "missingDateTitle": "Date not found",
+      "missingDateBody": "Please pass a valid YYYY-MM-DD date.",
+      "notFoundTitle": "AI analysis not found",
+      "notFoundBody": "There is no analysis for this day yet."
+    },
     "selectedDateSection": {
       "noEntry": "No journal entry for this day",
       "writeEntry": "Write a journal entry"

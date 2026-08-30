@@ -141,6 +141,45 @@ export function formatAnalysisDateMn(dateString: string): string {
   return `${date.getFullYear()} оны ${date.getMonth() + 1} сарын ${date.getDate()}`;
 }
 
+/** Formats `YYYY-MM` month heading for the current app language. */
+export function formatMonthTitleLocalized(
+  year: number,
+  month: number,
+  language: "EN" | "KO" | "MN" | null | undefined
+): string {
+  if (language === "MN" || !language) {
+    return formatMonthTitleMn(year, month);
+  }
+
+  const date = new Date(year, month - 1, 1);
+  const locale = language === "KO" ? "ko-KR" : "en-US";
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
+
+export function formatAnalysisDateLocalized(
+  dateString: string,
+  language: "EN" | "KO" | "MN" | null | undefined
+): string {
+  try {
+    const date = parseLocalDate(dateString);
+    if (language === "MN" || !language) {
+      return `${date.getFullYear()} оны ${date.getMonth() + 1} сарын ${date.getDate()}`;
+    }
+
+    const locale = language === "KO" ? "ko-KR" : "en-US";
+    return new Intl.DateTimeFormat(locale, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(date);
+  } catch {
+    return dateString;
+  }
+}
+
 export function formatCreatedTime(createdAt: string): string {
   const timeMatch = /T(\d{2}:\d{2})/.exec(createdAt);
   if (timeMatch) {

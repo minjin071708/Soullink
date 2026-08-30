@@ -1,13 +1,14 @@
 import { CALENDAR_COLORS } from "@/features/calendar/constants/calendar.constants";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 
 export function CalendarEmptyState() {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Энэ өдөр тэмдэглэл байхгүй байна</Text>
-      <Text style={styles.body}>
-        Өөр өдөр сонгоод өөрийн сэтгэл хөдлөлийн тэмдэглэлүүдийг харна уу.
-      </Text>
+      <Text style={styles.title}>{t("calendar.empty.title")}</Text>
+      <Text style={styles.body}>{t("calendar.empty.body")}</Text>
     </View>
   );
 }

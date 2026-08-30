@@ -9,6 +9,7 @@ import type { EmotionCode } from "@/types/emotionType";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type JournalPreviewCardProps = {
@@ -27,6 +28,7 @@ export function JournalPreviewCard({
   onPressAiAnalysis,
 }: JournalPreviewCardProps) {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const mood = MOOD_CONFIG[item.mood];
   const emotionCode = item.emotionCode?.toUpperCase() ?? "";
@@ -34,7 +36,10 @@ export function JournalPreviewCard({
     emotionCode && isEmotionCode(emotionCode)
       ? MOOD_IMAGES[emotionCode]
       : mood.image;
-  const emotionLabel = item.emotionName?.trim() || emotionCode || mood.label;
+  const emotionLabel =
+    item.emotionName?.trim() ||
+    emotionCode ||
+    t(`calendar.mood.${item.mood}`);
   const previewText =
     item.aiAnalysisSummary?.trim() || item.contentPreview?.trim() || "";
 
@@ -53,7 +58,7 @@ export function JournalPreviewCard({
       <View style={styles.mainRow}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Тэмдэглэл харах"
+          accessibilityLabel={t("calendar.preview.viewJournal")}
           onPress={onPress}
           style={({ pressed }) => [
             styles.mainPressable,
@@ -90,7 +95,7 @@ export function JournalPreviewCard({
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Тэмдэглэл засах"
+          accessibilityLabel={t("calendar.preview.editJournal")}
           hitSlop={8}
           onPress={handlePressEdit}
           style={({ pressed }) => [styles.penButton, pressed && styles.pressed]}
@@ -102,14 +107,16 @@ export function JournalPreviewCard({
       {item.hasAiAnalysis ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="AI анализ харах"
+          accessibilityLabel={t("calendar.preview.viewAiAnalysis")}
           onPress={() => {
             onPressAiAnalysis?.();
           }}
           style={({ pressed }) => [styles.aiButton, pressed && styles.pressed]}
         >
           <Ionicons name="sparkles" size={14} color="#FFFFFF" />
-          <Text style={styles.aiButtonText}>AI анализ харах</Text>
+          <Text style={styles.aiButtonText}>
+            {t("calendar.preview.viewAiAnalysis")}
+          </Text>
         </Pressable>
       ) : null}
     </View>

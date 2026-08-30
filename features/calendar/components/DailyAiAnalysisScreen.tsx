@@ -2,10 +2,12 @@ import {
   CALENDAR_COLORS,
 } from "@/features/calendar/constants/calendar.constants";
 import { useDailyAiAnalysis } from "@/features/calendar/hooks/useDailyAiAnalysis";
-import { formatAnalysisDateMn } from "@/features/calendar/utils/calendar.utils";
+import { formatAnalysisDateLocalized } from "@/features/calendar/utils/calendar.utils";
+import { useAppStore } from "@/store/use-language-store";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Pressable,
@@ -22,6 +24,8 @@ type DailyAiAnalysisScreenProps = {
 
 export function DailyAiAnalysisScreen({ date }: DailyAiAnalysisScreenProps) {
   const router = useRouter();
+  const { t } = useTranslation();
+  const language = useAppStore((state) => state.language);
   const { data, isLoading, isError } = useDailyAiAnalysis(date);
 
   return (
@@ -29,15 +33,17 @@ export function DailyAiAnalysisScreen({ date }: DailyAiAnalysisScreenProps) {
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Буцах"
+          accessibilityLabel={t("calendar.back")}
           onPress={() => router.back()}
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
         >
           <Ionicons name="chevron-back" size={22} color={CALENDAR_COLORS.primary} />
         </Pressable>
         <View style={styles.headerCopy}>
-          <Text style={styles.title}>Өдрийн AI дүгнэлт</Text>
-          <Text style={styles.subtitle}>{formatAnalysisDateMn(date)}</Text>
+          <Text style={styles.title}>{t("calendar.dailyAnalysis.title")}</Text>
+          <Text style={styles.subtitle}>
+            {formatAnalysisDateLocalized(date, language)}
+          </Text>
         </View>
       </View>
 
@@ -49,10 +55,11 @@ export function DailyAiAnalysisScreen({ date }: DailyAiAnalysisScreenProps) {
 
       {isError || (!isLoading && !data) ? (
         <View style={styles.centered}>
-          <Text style={styles.errorTitle}>AI дүгнэлт олдсонгүй</Text>
+          <Text style={styles.errorTitle}>
+            {t("calendar.dailyAnalysis.notFoundTitle")}
+          </Text>
           <Text style={styles.errorBody}>
-            {/* TODO: Connect real daily AI analysis API when backend is ready. */}
-            Analysis API холбогдоогүй эсвэл энэ өдрийн дүгнэлт байхгүй байна.
+            {t("calendar.dailyAnalysis.notFoundBody")}
           </Text>
         </View>
       ) : null}
@@ -75,7 +82,7 @@ export function DailyAiAnalysisScreen({ date }: DailyAiAnalysisScreenProps) {
             icon="heart"
             iconColor="#F08BB0"
             iconBg="#FFE8F1"
-            label="Гол мэдрэмж"
+            label={t("calendar.dailyAnalysis.primaryEmotion")}
             labelColor="#E56B9A"
             value={data.primaryEmotion}
           />
@@ -83,7 +90,7 @@ export function DailyAiAnalysisScreen({ date }: DailyAiAnalysisScreenProps) {
             icon="sunny"
             iconColor="#E6A23B"
             iconBg="#FFF4DD"
-            label="Өдөөгч"
+            label={t("calendar.dailyAnalysis.trigger")}
             labelColor="#D9922A"
             value={data.trigger}
           />
@@ -91,7 +98,7 @@ export function DailyAiAnalysisScreen({ date }: DailyAiAnalysisScreenProps) {
             icon="chatbubble-ellipses"
             iconColor="#5B8DEF"
             iconBg="#EAF2FF"
-            label="Бодлын хэв маяг"
+            label={t("calendar.dailyAnalysis.thoughtPattern")}
             labelColor="#5B8DEF"
             value={data.thoughtPattern}
           />

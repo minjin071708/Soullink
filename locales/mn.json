@@ -516,6 +516,36 @@
     }
   },
   "calendar": {
+    "title": "Сэтгэл хөдлөлийн календарь",
+    "back": "Буцах",
+    "mascot": "Календарийн маскот",
+    "previousMonth": "Өмнөх сар",
+    "nextMonth": "Дараагийн сар",
+    "dayAccessibilityLabel": "{{day}} өдөр",
+    "weekdaysShort": ["Да", "Мя", "Лх", "Пү", "Ба", "Бя", "Ня"],
+    "empty": {
+      "title": "Энэ өдөр тэмдэглэл байхгүй байна",
+      "body": "Өөр өдөр сонгоод өөрийн сэтгэл хөдлөлийн тэмдэглэлүүдийг харна уу."
+    },
+    "preview": {
+      "viewJournal": "Тэмдэглэл харах",
+      "editJournal": "Тэмдэглэл засах",
+      "viewAiAnalysis": "AI анализ харах"
+    },
+    "mood": {
+      "bad": "Муу",
+      "sad": "Гунигтай",
+      "normal": "Энгийн",
+      "good": "Сайн",
+      "happy": "Баяртай"
+    },
+    "dailyAnalysis": {
+      "title": "Өдрийн AI дүгнэлт",
+      "missingDateTitle": "Огноо олдсонгүй",
+      "missingDateBody": "Зөв YYYY-MM-DD огноо дамжуулна уу.",
+      "notFoundTitle": "AI дүгнэлт олдсонгүй",
+      "notFoundBody": "Энэ өдрийн дүгнэлт байхгүй байна."
+    },
     "selectedDateSection": {
       "noEntry": "Энэ өдрийн тэмдэглэл ороогүй байна",
       "writeEntry": "Тэмдэглэл оруулах"

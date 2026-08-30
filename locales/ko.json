@@ -516,6 +516,36 @@
     }
   },
   "calendar": {
+    "title": "감정 캘린더",
+    "back": "뒤로",
+    "mascot": "캘린더 마스코트",
+    "previousMonth": "이전 달",
+    "nextMonth": "다음 달",
+    "dayAccessibilityLabel": "{{day}}일",
+    "weekdaysShort": ["월", "화", "수", "목", "금", "토", "일"],
+    "empty": {
+      "title": "이 날짜의 일기가 없어요",
+      "body": "다른 날을 선택해 감정 일기를 확인해 보세요."
+    },
+    "preview": {
+      "viewJournal": "일기 보기",
+      "editJournal": "일기 수정",
+      "viewAiAnalysis": "AI 분석 보기"
+    },
+    "mood": {
+      "bad": "나쁨",
+      "sad": "슬픔",
+      "normal": "보통",
+      "good": "좋음",
+      "happy": "행복"
+    },
+    "dailyAnalysis": {
+      "title": "오늘의 AI 분석",
+      "missingDateTitle": "날짜를 찾을 수 없어요",
+      "missingDateBody": "올바른 YYYY-MM-DD 날짜를 전달해 주세요.",
+      "notFoundTitle": "AI 분석을 찾을 수 없어요",
+      "notFoundBody": "이 날짜의 분석이 아직 없어요."
+    },
     "selectedDateSection": {
       "noEntry": "이 날짜의 일기가 없어요",
       "writeEntry": "일기 작성하기"

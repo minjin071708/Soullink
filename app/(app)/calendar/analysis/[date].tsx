@@ -1,6 +1,7 @@
 import { DailyAiAnalysisScreen } from "@/features/calendar/components/DailyAiAnalysisScreen";
 import { isValidDateString } from "@/features/calendar/utils/calendar.utils";
 import { useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 
 function parseDateParam(value: string | string[] | undefined): string | undefined {
@@ -12,14 +13,19 @@ function parseDateParam(value: string | string[] | undefined): string | undefine
 }
 
 export default function DailyAnalysisRoute() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ date?: string | string[] }>();
   const date = parseDateParam(params.date);
 
   if (!date) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.title}>Огноо олдсонгүй</Text>
-        <Text style={styles.body}>Зөв YYYY-MM-DD огноо дамжуулна уу.</Text>
+        <Text style={styles.title}>
+          {t("calendar.dailyAnalysis.missingDateTitle")}
+        </Text>
+        <Text style={styles.body}>
+          {t("calendar.dailyAnalysis.missingDateBody")}
+        </Text>
       </View>
     );
   }

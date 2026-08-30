@@ -1,8 +1,5 @@
 import { CalendarDay } from "@/features/calendar/components/CalendarDay";
-import {
-  CALENDAR_COLORS,
-  WEEKDAY_LABELS,
-} from "@/features/calendar/constants/calendar.constants";
+import { CALENDAR_COLORS } from "@/features/calendar/constants/calendar.constants";
 import type { CalendarMood } from "@/features/calendar/types/calendar.types";
 import {
   buildMonthGrid,
@@ -11,6 +8,7 @@ import {
 } from "@/features/calendar/utils/calendar.utils";
 import type { EmotionDiariesListItem } from "@/types/journalType";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 
 type MoodCalendarProps = {
@@ -30,7 +28,14 @@ export function MoodCalendar({
   diariesByDate,
   onSelectDate,
 }: MoodCalendarProps) {
+  const { t } = useTranslation();
   const today = getTodayDateString();
+  const weekdayLabels = t("calendar.weekdaysShort", {
+    returnObjects: true,
+  });
+  const weekdays = Array.isArray(weekdayLabels)
+    ? weekdayLabels
+    : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   const cells = useMemo(() => {
     return buildMonthGrid({
@@ -44,8 +49,8 @@ export function MoodCalendar({
   return (
     <View style={styles.card}>
       <View style={styles.weekRow}>
-        {WEEKDAY_LABELS.map((label) => (
-          <Text key={label} style={styles.weekLabel}>
+        {weekdays.map((label, index) => (
+          <Text key={`${label}-${index}`} style={styles.weekLabel}>
             {label}
           </Text>
         ))}

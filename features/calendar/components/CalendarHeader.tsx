@@ -1,22 +1,22 @@
 import { CALENDAR_COLORS } from "@/features/calendar/constants/calendar.constants";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type CalendarHeaderProps = {
   title?: string;
 };
 
-export function CalendarHeader({
-  title = "Сэтгэл хөдлөлийн календарь",
-}: CalendarHeaderProps) {
+export function CalendarHeader({ title }: CalendarHeaderProps) {
   const router = useRouter();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.header}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Буцах"
+        accessibilityLabel={t("calendar.back")}
         onPress={() => {
           if (router.canGoBack()) {
             router.back();
@@ -28,7 +28,7 @@ export function CalendarHeader({
       >
         <Ionicons name="chevron-back" size={22} color={CALENDAR_COLORS.primary} />
       </Pressable>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.title}>{title ?? t("calendar.title")}</Text>
       <View style={styles.spacer} />
     </View>
   );

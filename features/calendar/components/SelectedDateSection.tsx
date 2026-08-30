@@ -2,7 +2,8 @@ import { CalendarEmptyState } from "@/features/calendar/components/CalendarEmpty
 import { JournalPreviewCard } from "@/features/calendar/components/JournalPreviewCard";
 import { CALENDAR_COLORS } from "@/features/calendar/constants/calendar.constants";
 import type { CalendarJournalPreview } from "@/features/calendar/types/calendar.types";
-import { formatSelectedDateMn } from "@/features/calendar/utils/calendar.utils";
+import { formatEmotionDateLocalized } from "@/features/calendar/utils/calendar.utils";
+import { useAppStore } from "@/store/use-language-store";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -36,10 +37,13 @@ export function SelectedDateSection({
 }: SelectedDateSectionProps) {
   const { t } = useTranslation();
   const router = useRouter();
+  const language = useAppStore((state) => state.language);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.dateTitle}>{formatSelectedDateMn(selectedDate)}</Text>
+      <Text style={styles.dateTitle}>
+        {formatEmotionDateLocalized(selectedDate, language)}
+      </Text>
 
       {isLoading ? (
         <View style={styles.loadingBox}>

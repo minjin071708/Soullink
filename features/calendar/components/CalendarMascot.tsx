@@ -1,15 +1,18 @@
 import { CALENDAR_MASCOT } from "@/features/calendar/constants/calendar.constants";
 import { Image } from "expo-image";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 
 export function CalendarMascot() {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.wrap} pointerEvents="none">
       <Image
         source={CALENDAR_MASCOT}
         style={styles.image}
         contentFit="contain"
-        accessibilityLabel="Календарийн маскот"
+        accessibilityLabel={t("calendar.mascot")}
       />
     </View>
   );

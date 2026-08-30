@@ -7,6 +7,7 @@ import type { CalendarDayCell } from "@/features/calendar/types/calendar.types";
 import type { EmotionCode } from "@/types/emotionType";
 import type { EmotionDiariesListItem } from "@/types/journalType";
 import { Image } from "expo-image";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type CalendarDayProps = {
@@ -26,6 +27,8 @@ export function CalendarDay({
   diary,
   onSelect,
 }: CalendarDayProps) {
+  const { t } = useTranslation();
+
   if (!cell.isCurrentMonth || !cell.date || cell.dayNumber === null) {
     return <View style={styles.cell} />;
   }
@@ -42,7 +45,9 @@ export function CalendarDay({
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected, disabled }}
-      accessibilityLabel={`${cell.dayNumber} өдөр`}
+      accessibilityLabel={t("calendar.dayAccessibilityLabel", {
+        day: cell.dayNumber,
+      })}
       disabled={disabled}
       onPress={() => onSelect(cell.date as string)}
       style={({ pressed }) => [

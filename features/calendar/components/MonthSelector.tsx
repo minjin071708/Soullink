@@ -1,6 +1,8 @@
 import { CALENDAR_COLORS } from "@/features/calendar/constants/calendar.constants";
-import { formatMonthTitleMn } from "@/features/calendar/utils/calendar.utils";
+import { formatMonthTitleLocalized } from "@/features/calendar/utils/calendar.utils";
+import { useAppStore } from "@/store/use-language-store";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type MonthSelectorProps = {
@@ -16,22 +18,27 @@ export function MonthSelector({
   onPreviousMonth,
   onNextMonth,
 }: MonthSelectorProps) {
+  const { t } = useTranslation();
+  const language = useAppStore((state) => state.language);
+
   return (
     <View style={styles.container}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Өмнөх сар"
+        accessibilityLabel={t("calendar.previousMonth")}
         onPress={onPreviousMonth}
         style={({ pressed }) => [styles.arrowButton, pressed && styles.pressed]}
       >
         <Ionicons name="chevron-back" size={20} color={CALENDAR_COLORS.primary} />
       </Pressable>
 
-      <Text style={styles.title}>{formatMonthTitleMn(year, month)}</Text>
+      <Text style={styles.title}>
+        {formatMonthTitleLocalized(year, month, language)}
+      </Text>
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Дараагийн сар"
+        accessibilityLabel={t("calendar.nextMonth")}
         onPress={onNextMonth}
         style={({ pressed }) => [styles.arrowButton, pressed && styles.pressed]}
       >
